@@ -1,0 +1,6 @@
+{
+  "name": "ExamIntel - Past Paper Intelligence & Revision Planner",
+  "description": "AI-powered exam intelligence system that analyzes past question papers (PYQs), syllabus weightage trends, teacher expectations, and reference books to create high-yield study plans with spaced repetition.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
