@@ -17,7 +17,7 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // Server-side Gemini API client initialization
-const apiKey = process.env.GEMINI_API_KEY || 'AQ.Ab8RN6KI1IqF03lqu8umi0mlkoQ4hPCDVXxQCJ1jvkUjLXKLdQ';
+const apiKey = process.env.GEMINI_API_KEY || process.env.REACT_APP_GEMINI_API_KEY;
 let ai: GoogleGenAI | null = null;
 
 if (apiKey) {
@@ -1364,7 +1364,7 @@ Return ONLY JSON:
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
-    hasApiKey: !!process.env.GEMINI_API_KEY,
+    hasApiKey: !!apiKey,
     timestamp: new Date().toISOString()
   });
 });
