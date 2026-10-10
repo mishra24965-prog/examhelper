@@ -144,6 +144,10 @@ export const UploadPaperModal: React.FC<Props> = ({
           courseName: course.name
         });
 
+        if (!data || !data.rawExtractedText || !data.rawExtractedText.trim()) {
+          throw new Error('No readable text could be extracted from this document. Please check file clarity or paste questions in the "Paste Text" tab.');
+        }
+
         setRawText(data.rawExtractedText || '');
         setCleanedText(data.cleanedText || data.rawExtractedText || '');
         setExtractionMethod(data.method || 'gemini-vision-ocr');

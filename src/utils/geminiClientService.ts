@@ -25,7 +25,7 @@ export function getClientGeminiSDK(): GoogleGenAI | null {
   return aiClient;
 }
 
-const CANDIDATE_MODELS = ['gemini-3.8-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest'];
+const CANDIDATE_MODELS = ['gemini-3.1-flash-lite', 'gemini-flash-latest', 'gemini-3.8-flash'];
 
 async function safeGenerateContent(buildConfig: (model: string) => any): Promise<any> {
   const ai = getClientGeminiSDK();
@@ -165,10 +165,38 @@ export async function extractTextApi(params: {
   fileName?: string;
   courseName: string;
 }): Promise<any> {
-  return safeApiCall(
-    '/api/extract-text',
-    params,
-    async () => {
+  // 1. Try server endpoint first
+  try {
+    const res = await fetch('/api/extract-text', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(params)
+    });
+
+    const contentType = res.headers.get('content-type') || '';
+    if (contentType.includes('application/json')) {
+      const data = await res.json();
+      if (res.ok && data.success && data.rawExtractedText) {
+        return data;
+      }
+      if (data.error) {
+        throw new Error(data.error);
+      }
+    } else if (!res.ok) {
+      throw new Error(`Server returned HTTP ${res.status}: ${res.statusText}`);
+    }
+  } catch (err: any) {
+    // If it was an explicit server validation/extraction error, don't fallback to fake text!
+    if (err?.message && !err.message.includes('fetch') && !err.message.includes('NetworkError') && !err.message.includes('Failed to fetch')) {
+      throw err;
+    }
+    console.warn('/api/extract-text server error, checking client fallback:', err);
+  }
+
+  // 2. Try client-side Gemini API if configured
+  const ai = getClientGeminiSDK();
+  if (ai) {
+    try {
       const cleanBase64 = params.fileBase64.replace(/^data:[^;]+;base64,/, '');
       const isPdf = params.mimeType?.includes('pdf') || params.fileName?.endsWith('.pdf');
       const targetMime = isPdf ? 'application/pdf' : (params.mimeType || 'image/jpeg');
@@ -190,24 +218,22 @@ CRITICAL REQUIREMENTS:
         }
       }));
 
-      return {
-        success: true,
-        rawExtractedText: transcribedText,
-        cleanedText: transcribedText,
-        method: 'gemini-vision-ocr',
-        detectedInfo: { year: 2024, examType: 'MST-1' },
-        dictionaryMatches: []
-      };
-    },
-    () => ({
-      success: true,
-      rawExtractedText: `INSTITUTE OF ENGINEERING & TECHNOLOGY\nEXAMINATION PAPER: ${params.courseName}\n\nQ1. (a) State and prove the fundamental governing theorem for this module. [8 Marks]\nQ1. (b) Solve the accompanying numerical problem with dimensional verification. [6 Marks]\nQ2. (a) Formulate the mathematical model and evaluate the resulting system equations. [7 Marks]`,
-      cleanedText: `INSTITUTE OF ENGINEERING & TECHNOLOGY\nEXAMINATION PAPER: ${params.courseName}\n\nQ1. (a) State and prove the fundamental governing theorem for this module. [8 Marks]\nQ1. (b) Solve the accompanying numerical problem with dimensional verification. [6 Marks]\nQ2. (a) Formulate the mathematical model and evaluate the resulting system equations. [7 Marks]`,
-      method: 'preset-archive',
-      detectedInfo: { year: 2024, examType: 'MST-1' },
-      dictionaryMatches: []
-    })
-  );
+      if (transcribedText && transcribedText.trim()) {
+        return {
+          success: true,
+          rawExtractedText: transcribedText.trim(),
+          cleanedText: transcribedText.trim(),
+          method: 'gemini-vision-ocr',
+          detectedInfo: { year: 2024, examType: 'MST-1' },
+          dictionaryMatches: []
+        };
+      }
+    } catch (clientErr: any) {
+      console.warn('Client Gemini OCR execution failed:', clientErr);
+    }
+  }
+
+  throw new Error('Could not extract text from document. Please ensure the document is clear and legible, or paste the text directly into the "Paste Text" tab.');
 }
 
 // ---------------------------------------------------------------------------

@@ -36,8 +36,8 @@ export function createApiApp() {
     return new GoogleGenAI({ apiKey });
   }
 
-  // Candidate models prioritizing valid, reliable flash tiers
-  const CANDIDATE_MODELS = ['gemini-3.8-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest'];
+  // Candidate models prioritizing fast, reliable flash tiers
+  const CANDIDATE_MODELS = ['gemini-3.1-flash-lite', 'gemini-flash-latest', 'gemini-3.8-flash'];
 
   async function generateContentSafely(buildOptions: (model: string) => any): Promise<any> {
     const ai = getAiClient();
@@ -204,8 +204,28 @@ export function createApiApp() {
     try {
       const cleanBase64 = fileBase64.replace(/^data:[^;]+;base64,/, '');
       const buffer = Buffer.from(cleanBase64, 'base64');
-      const isPdf = (mimeType && mimeType.includes('pdf')) || (fileName && fileName.toLowerCase().endsWith('.pdf'));
-      const isTextFile = (mimeType && mimeType.includes('text')) || (fileName && fileName.toLowerCase().endsWith('.txt'));
+
+      let resolvedMime = (mimeType || '').toLowerCase().trim();
+      const mimeMatch = fileBase64.match(/^data:([^;]+);base64,/i);
+      if (mimeMatch && mimeMatch[1]) {
+        resolvedMime = mimeMatch[1].toLowerCase().trim();
+      }
+
+      const lowerName = (fileName || '').toLowerCase().trim();
+      if (!resolvedMime || resolvedMime === 'application/octet-stream') {
+        if (lowerName.endsWith('.pdf')) resolvedMime = 'application/pdf';
+        else if (lowerName.endsWith('.png')) resolvedMime = 'image/png';
+        else if (lowerName.endsWith('.jpg') || lowerName.endsWith('.jpeg')) resolvedMime = 'image/jpeg';
+        else if (lowerName.endsWith('.webp')) resolvedMime = 'image/webp';
+        else if (lowerName.endsWith('.txt')) resolvedMime = 'text/plain';
+      }
+
+      if (resolvedMime === 'image/jpg' || resolvedMime === 'image/pjpeg') {
+        resolvedMime = 'image/jpeg';
+      }
+
+      const isPdf = resolvedMime.includes('pdf') || lowerName.endsWith('.pdf');
+      const isTextFile = resolvedMime.includes('text') || lowerName.endsWith('.txt');
 
       let rawExtractedText = '';
       let method: 'gemini-vision-ocr' | 'pdf-native' | 'direct-text' = 'gemini-vision-ocr';
@@ -221,36 +241,53 @@ export function createApiApp() {
       if (isPdf && !rawExtractedText) {
         try {
           const pdfModule: any = await import('pdf-parse');
-          const PDFParseClass = pdfModule.PDFParse || pdfModule.default || pdfModule;
-          if (typeof PDFParseClass === 'function') {
-            const parser = new PDFParseClass(new Uint8Array(buffer));
-            if (parser && typeof parser.getText === 'function') {
-              const textResult = await parser.getText();
-              if (textResult && typeof textResult.text === 'string' && textResult.text.trim().length > 60) {
-                rawExtractedText = textResult.text.trim();
-                pagesCount = textResult.total || 1;
+          // Handle function-style export (v1)
+          if (typeof pdfModule === 'function') {
+            const data = await pdfModule(buffer);
+            if (data && typeof data.text === 'string' && data.text.trim().length > 0) {
+              const cleaned = data.text.replace(/--\s*\d+\s*of\s*\d+\s*--/gi, '').trim();
+              if (cleaned.length > 0) {
+                rawExtractedText = cleaned;
+                pagesCount = data.numpages || 1;
                 method = 'pdf-native';
+              }
+            }
+          } else {
+            // Handle class-style export (v2)
+            const PDFParseClass = pdfModule.PDFParse || pdfModule.default?.PDFParse || pdfModule.default;
+            if (typeof PDFParseClass === 'function') {
+              const parser = new PDFParseClass({ data: buffer });
+              if (parser && typeof parser.getText === 'function') {
+                const textResult = await parser.getText();
+                if (textResult && typeof textResult.text === 'string') {
+                  const cleaned = textResult.text.replace(/--\s*\d+\s*of\s*\d+\s*--/gi, '').trim();
+                  if (cleaned.length > 0) {
+                    rawExtractedText = cleaned;
+                    pagesCount = textResult.total || 1;
+                    method = 'pdf-native';
+                  }
+                }
               }
             }
           }
         } catch (pdfErr: any) {
-          console.log('PDF native parse unavailable; falling back to Gemini.');
+          console.warn('PDF native parse note; falling back to Gemini Vision OCR:', pdfErr?.message || pdfErr);
         }
       }
 
-      // 2. If text is empty/sparse (e.g. scanned image PDF or smartphone photo), use Gemini Flash Vision OCR
+      // 2. If text is empty/sparse (e.g. scanned image PDF or smartphone photo), use Gemini Vision OCR
       const ai = getAiClient();
       if (!rawExtractedText && ai) {
         try {
-          const targetMime = isPdf ? 'application/pdf' : (mimeType || 'image/jpeg');
+          const targetMime = isPdf ? 'application/pdf' : (resolvedMime || 'image/jpeg');
           const ocrPrompt = `You are a high-accuracy document transcription and exam paper OCR expert.
-  Transcribe ALL text from this examination question paper document verbatim into clean text format.
-  CRITICAL REQUIREMENTS:
-  1. Preserve every question number cleanly (e.g., Q1. (a), Q1. (b), Q2. (a), Q3.).
-  2. Preserve marks indications in square brackets (e.g., [8 Marks], [6 Marks]).
-  3. Accurately transcribe mathematical formulas, Greek letters, equations, and expressions (e.g., y = (sin^-1 x)^2, ∂u/∂x, Leibnitz theorem, Euler's formula, integrals ∬, Jacobians).
-  4. Remove camera glare, shadows, skew lines, scanner artifacts, and stray paper borders.
-  5. Return ONLY the transcribed text content in clean text format.`;
+Transcribe ALL text from this examination question paper document verbatim into clean text format.
+CRITICAL REQUIREMENTS:
+1. Preserve every question number cleanly (e.g., Q1. (a), Q1. (b), Q2. (a), Q3.).
+2. Preserve marks indications in square brackets (e.g., [8 Marks], [6 Marks]).
+3. Accurately transcribe mathematical formulas, Greek letters, equations, and expressions (e.g., y = (sin^-1 x)^2, ∂u/∂x, Leibnitz theorem, Euler's formula, integrals ∬, Jacobians).
+4. Remove camera glare, shadows, skew lines, scanner artifacts, and stray paper borders.
+5. Return ONLY the transcribed text content in clean text format.`;
 
           const response = await generateContentSafely((model) => ({
             model,
@@ -262,18 +299,21 @@ export function createApiApp() {
             }
           }));
 
-          if (response && response.text) {
+          if (response && response.text && response.text.trim().length > 0) {
             rawExtractedText = response.text.trim();
             method = 'gemini-vision-ocr';
           }
-        } catch {
-          // Silently activate local document text synthesis
+        } catch (ocrErr: any) {
+          console.error('Gemini Vision OCR error in /api/extract-text:', ocrErr?.message || ocrErr);
         }
       }
 
-      // Fallback if still empty
-      if (!rawExtractedText) {
-        rawExtractedText = `INSTITUTE OF ENGINEERING & TECHNOLOGY (IET-DAVV)\nEXAMINATION PAPER: ${courseName || 'Applied Course'}\n\nQ1. (a) State and prove the fundamental governing theorem for this module. [8 Marks]\nQ1. (b) Solve the accompanying numerical problem with dimensional verification. [6 Marks]\nQ2. (a) Formulate the mathematical model and evaluate the resulting system equations. [7 Marks]\nQ2. (b) Explain the step-by-step physical interpretation and engineering applications. [7 Marks]`;
+      // If document yielded no text after both PDF-native parse and Gemini OCR
+      if (!rawExtractedText || rawExtractedText.trim().length === 0) {
+        return res.status(422).json({
+          success: false,
+          error: 'No readable text could be extracted from this document. Please ensure the document contains legible questions, or paste your questions in the "Paste Text" tab.'
+        });
       }
 
       // 3. Clean and normalize the text format
@@ -294,8 +334,8 @@ export function createApiApp() {
         charCount: cleanedText.length
       });
     } catch (err: any) {
-      console.error('Document text extraction failed.');
-      return res.status(500).json({ error: 'Failed to extract text from document' });
+      console.error('Document text extraction failed:', err);
+      return res.status(500).json({ error: 'Failed to extract text from document: ' + (err?.message || 'Server error') });
     }
   }));
 
