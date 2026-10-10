@@ -25,7 +25,7 @@ export function getClientGeminiSDK(): GoogleGenAI | null {
   return aiClient;
 }
 
-const CANDIDATE_MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-2.5-flash-lite'];
+const CANDIDATE_MODELS = ['gemini-3.8-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest'];
 
 async function safeGenerateContent(buildConfig: (model: string) => any): Promise<any> {
   const ai = getClientGeminiSDK();

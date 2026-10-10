@@ -37,7 +37,7 @@ export function createApiApp() {
   }
 
   // Candidate models prioritizing valid, reliable flash tiers
-  const CANDIDATE_MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+  const CANDIDATE_MODELS = ['gemini-3.8-flash', 'gemini-3.1-flash-lite', 'gemini-flash-latest'];
 
   async function generateContentSafely(buildOptions: (model: string) => any): Promise<any> {
     const ai = getAiClient();
