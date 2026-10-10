@@ -1,6 +1,5 @@
 import express from 'express';
 import { GoogleGenAI } from '@google/genai';
-import { PDFParse } from 'pdf-parse';
 
 const asyncHandler = (fn: (req: express.Request, res: express.Response, next: express.NextFunction) => Promise<any>) =>
   (req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -18,40 +17,46 @@ export function createApiApp() {
   app.use(express.json({ limit: '50mb' }));
   app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
+  // Route normalizer for Netlify functions routing
+  app.use((req, res, next) => {
+    if (req.url.startsWith('/.netlify/functions/api')) {
+      req.url = req.url.replace('/.netlify/functions/api', '/api');
+    }
+    next();
+  });
+
   // Dynamic Server-side Gemini API client initialization
   function getAiClient(): GoogleGenAI | null {
-    const apiKey = process.env.REACT_APP_GEMINI_API_KEY || (process.env.GOOGLE_GEMINI_BASE_URL ? undefined : process.env.GEMINI_API_KEY);
+    const apiKey =
+      process.env.GEMINI_API_KEY ||
+      process.env.REACT_APP_GEMINI_API_KEY ||
+      process.env.VITE_GEMINI_API_KEY ||
+      process.env.API_KEY;
     if (!apiKey) return null;
-    return new GoogleGenAI({
-      apiKey,
-      httpOptions: {
-        baseUrl: 'https://generativelanguage.googleapis.com',
-        headers: {
-          'User-Agent': 'aistudio-build',
-        },
-      },
-    });
+    return new GoogleGenAI({ apiKey });
   }
 
-  // Candidate models prioritizing fast, reliable flash tiers
-  const CANDIDATE_MODELS = ['gemini-3.1-flash-lite', 'gemini-flash-latest', 'gemini-3.8-flash'];
+  // Candidate models prioritizing valid, reliable flash tiers
+  const CANDIDATE_MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
 
   async function generateContentSafely(buildOptions: (model: string) => any): Promise<any> {
     const ai = getAiClient();
     if (!ai) {
-      throw new Error('Gemini API key is not configured');
+      throw new Error('Gemini API key is not configured in server environment variables (GEMINI_API_KEY)');
     }
 
+    let lastErr: any = null;
     for (const model of CANDIDATE_MODELS) {
       try {
         const options = buildOptions(model);
         return await ai.models.generateContent(options);
-      } catch {
-        // Silently try next candidate model tier without dumping error traces
+      } catch (err: any) {
+        lastErr = err;
+        console.warn(`Model ${model} call failed:`, err?.message || err);
         continue;
       }
     }
-    throw new Error('All candidate model tiers currently rate-limited; activating local engine');
+    throw new Error(`Gemini API calls failed on candidate models. Last error: ${lastErr?.message || 'Unknown error'}`);
   }
 
   // -------------------------------------------------------------
@@ -215,12 +220,18 @@ export function createApiApp() {
       // 1. If it's a PDF, first attempt instant native text extraction using PDFParse
       if (isPdf && !rawExtractedText) {
         try {
-          const parser = new PDFParse(new Uint8Array(buffer));
-          const textResult = await parser.getText();
-          if (textResult && typeof textResult.text === 'string' && textResult.text.trim().length > 60) {
-            rawExtractedText = textResult.text.trim();
-            pagesCount = textResult.total || 1;
-            method = 'pdf-native';
+          const pdfModule: any = await import('pdf-parse');
+          const PDFParseClass = pdfModule.PDFParse || pdfModule.default || pdfModule;
+          if (typeof PDFParseClass === 'function') {
+            const parser = new PDFParseClass(new Uint8Array(buffer));
+            if (parser && typeof parser.getText === 'function') {
+              const textResult = await parser.getText();
+              if (textResult && typeof textResult.text === 'string' && textResult.text.trim().length > 60) {
+                rawExtractedText = textResult.text.trim();
+                pagesCount = textResult.total || 1;
+                method = 'pdf-native';
+              }
+            }
           }
         } catch (pdfErr: any) {
           console.log('PDF native parse unavailable; falling back to Gemini.');

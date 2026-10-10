@@ -3,75 +3,79 @@ import serverless from 'serverless-http';
 import { createApiApp } from '../../server/api.ts';
 
 const app = createApiApp();
-const handler = serverless(app);
+const serverlessHandler = serverless(app);
 
-type ApiResponse = {
-  statusCode: number;
-  headers?: Record<string, string>;
-  cookies?: string[];
-  body: string;
-  isBase64Encoded?: boolean;
+export const handler = async (event: any, context: any) => {
+  try {
+    return await serverlessHandler(event, context);
+  } catch (err: any) {
+    console.error('Netlify Function Error:', err);
+    return {
+      statusCode: 500,
+      headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+      body: JSON.stringify({ error: 'API request failed', message: err?.message || 'Server error' })
+    };
+  }
 };
 
-export default async (request: Request) => {
-  try {
-    const url = new URL(request.url);
-    const headers: Record<string, string> = {};
-    request.headers.forEach((value, key) => {
-      headers[key.toLowerCase()] = value;
-    });
-
-    let bodyStr = '';
-    if (request.method !== 'GET' && request.method !== 'HEAD') {
-      try {
-        bodyStr = await request.text();
-      } catch {
-        bodyStr = '';
+export default async (request: any, context: any) => {
+  // Check if standard Web Request (Netlify Functions v2)
+  if (request && typeof request.text === 'function') {
+    try {
+      const url = new URL(request.url);
+      const headers: Record<string, string> = {};
+      if (request.headers && typeof request.headers.forEach === 'function') {
+        request.headers.forEach((val: string, key: string) => {
+          headers[key.toLowerCase()] = val;
+        });
       }
-    }
 
-    const event = {
-      version: '2.0',
-      rawPath: url.pathname,
-      rawQueryString: url.search.slice(1),
-      headers,
-      body: bodyStr,
-      isBase64Encoded: false,
-      requestContext: {
-        http: {
-          method: request.method,
-          path: url.pathname,
-          protocol: 'HTTP/1.1',
-          sourceIp: headers['x-nf-client-connection-ip'] || '127.0.0.1',
-          userAgent: headers['user-agent'] || '',
-        },
-      },
-    };
+      let bodyStr = '';
+      if (request.method !== 'GET' && request.method !== 'HEAD') {
+        try {
+          bodyStr = await request.text();
+        } catch {
+          bodyStr = '';
+        }
+      }
 
-    const result = (await handler(event as any, {} as any)) as ApiResponse;
-    const responseHeaders = new Headers(result.headers || {});
-    responseHeaders.set('cache-control', 'no-store');
+      const event = {
+        httpMethod: request.method || 'POST',
+        path: url.pathname,
+        rawPath: url.pathname,
+        queryStringParameters: Object.fromEntries(url.searchParams.entries()),
+        headers,
+        body: bodyStr,
+        isBase64Encoded: false,
+        requestContext: {
+          http: {
+            method: request.method || 'POST',
+            path: url.pathname
+          }
+        }
+      };
 
-    for (const cookie of result.cookies || []) {
-      responseHeaders.append('set-cookie', cookie);
-    }
+      const result: any = await serverlessHandler(event, context || {});
+      const responseHeaders = new Headers(result.headers || {});
+      responseHeaders.set('Cache-Control', 'no-store');
 
-    const resBody = result.isBase64Encoded ? Buffer.from(result.body, 'base64') : result.body;
+      const resBody = result.isBase64Encoded ? Buffer.from(result.body, 'base64').toString('utf-8') : (result.body || '');
 
-    return new Response(
-      request.method === 'HEAD' || result.statusCode === 204 || result.statusCode === 304 ? null : resBody,
-      {
+      return new Response(resBody, {
         status: result.statusCode || 200,
-        headers: responseHeaders,
-      }
-    );
-  } catch (error: any) {
-    console.error('Netlify API Function Error:', error);
-    return Response.json(
-      { error: 'API request failed', message: error?.message || 'Server error' },
-      { status: 500 }
-    );
+        headers: responseHeaders
+      });
+    } catch (err: any) {
+      console.error('Netlify Functions v2 Request Error:', err);
+      return Response.json(
+        { error: 'API request failed', message: err?.message || 'Server error' },
+        { status: 500 }
+      );
+    }
   }
+
+  // Otherwise delegate to standard AWS Lambda handler
+  return handler(request, context);
 };
 
 export const config: Config = {
