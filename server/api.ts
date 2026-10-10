@@ -2,18 +2,27 @@ import express from 'express';
 import { GoogleGenAI } from '@google/genai';
 import { PDFParse } from 'pdf-parse';
 
+const asyncHandler = (fn: (req: express.Request, res: express.Response, next: express.NextFunction) => Promise<any>) =>
+  (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    Promise.resolve(fn(req, res, next)).catch((err) => {
+      console.error('Unhandled API error:', err);
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Internal server error', message: err?.message || 'Unknown error' });
+      }
+    });
+  };
+
 export function createApiApp() {
   const app = express();
 
   app.use(express.json({ limit: '50mb' }));
   app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-  // Server-side Gemini API client initialization
-  const apiKey = process.env.REACT_APP_GEMINI_API_KEY || (process.env.GOOGLE_GEMINI_BASE_URL ? undefined : process.env.GEMINI_API_KEY);
-  let ai: GoogleGenAI | null = null;
-
-  if (apiKey) {
-    ai = new GoogleGenAI({
+  // Dynamic Server-side Gemini API client initialization
+  function getAiClient(): GoogleGenAI | null {
+    const apiKey = process.env.REACT_APP_GEMINI_API_KEY || (process.env.GOOGLE_GEMINI_BASE_URL ? undefined : process.env.GEMINI_API_KEY);
+    if (!apiKey) return null;
+    return new GoogleGenAI({
       apiKey,
       httpOptions: {
         baseUrl: 'https://generativelanguage.googleapis.com',
@@ -28,6 +37,7 @@ export function createApiApp() {
   const CANDIDATE_MODELS = ['gemini-3.1-flash-lite', 'gemini-flash-latest', 'gemini-3.8-flash'];
 
   async function generateContentSafely(buildOptions: (model: string) => any): Promise<any> {
+    const ai = getAiClient();
     if (!ai) {
       throw new Error('Gemini API key is not configured');
     }
@@ -179,8 +189,8 @@ export function createApiApp() {
   // -------------------------------------------------------------
   // Endpoint 1: Extract Text from Uploaded PDF / Image / Document
   // -------------------------------------------------------------
-  app.post('/api/extract-text', async (req, res) => {
-    const { fileBase64, mimeType, fileName, courseName } = req.body;
+  app.post('/api/extract-text', asyncHandler(async (req, res) => {
+    const { fileBase64, mimeType, fileName, courseName } = req.body || {};
 
     if (!fileBase64) {
       return res.status(400).json({ error: 'No file data received' });
@@ -218,6 +228,7 @@ export function createApiApp() {
       }
 
       // 2. If text is empty/sparse (e.g. scanned image PDF or smartphone photo), use Gemini Flash Vision OCR
+      const ai = getAiClient();
       if (!rawExtractedText && ai) {
         try {
           const targetMime = isPdf ? 'application/pdf' : (mimeType || 'image/jpeg');
@@ -275,13 +286,13 @@ export function createApiApp() {
       console.error('Document text extraction failed.');
       return res.status(500).json({ error: 'Failed to extract text from document' });
     }
-  });
+  }));
 
   // -------------------------------------------------------------
   // Endpoint 2: Clean Messy OCR Text & Normalize Equations
   // -------------------------------------------------------------
-  app.post('/api/clean-text', async (req, res) => {
-    const { rawText, courseName, syllabusUnits } = req.body;
+  app.post('/api/clean-text', asyncHandler(async (req, res) => {
+    const { rawText, courseName, syllabusUnits } = req.body || {};
     if (!rawText) {
       return res.status(400).json({ error: 'No raw text provided' });
     }
@@ -290,6 +301,7 @@ export function createApiApp() {
       let cleanedText = cleanExamPaperText(rawText, courseName);
 
       // If Gemini is available, run an intelligent equation and question structuring pass
+      const ai = getAiClient();
       if (ai) {
         try {
           const cleanPrompt = `You are a mathematical typography and exam question formatting specialist.
@@ -327,13 +339,13 @@ export function createApiApp() {
     } catch (err: any) {
       return res.status(500).json({ error: 'Failed to clean text' });
     }
-  });
+  }));
 
   // -------------------------------------------------------------
   // Endpoint 3: Check Paper Text Against Course Dictionary
   // -------------------------------------------------------------
-  app.post('/api/check-dictionary', async (req, res) => {
-    const { text, syllabusUnits } = req.body;
+  app.post('/api/check-dictionary', asyncHandler(async (req, res) => {
+    const { text, syllabusUnits } = req.body || {};
     const matches = detectDictionaryTerms(text || '');
     return res.json({
       success: true,
@@ -341,13 +353,13 @@ export function createApiApp() {
       totalTermsChecked: CANONICAL_DICTIONARY.length,
       canonicalDictionary: CANONICAL_DICTIONARY
     });
-  });
+  }));
 
   // -------------------------------------------------------------
   // Endpoint 4: Analyze Paper & Extract Questions (Messy OCR / PDF / Image / Text past papers)
   // -------------------------------------------------------------
-  app.post('/api/analyze-paper', async (req, res) => {
-    const { rawText, cleanedText, imageBase64, imageMimeType, courseName, syllabusUnits, paperYear, examType } = req.body;
+  app.post('/api/analyze-paper', asyncHandler(async (req, res) => {
+    const { rawText, cleanedText, imageBase64, imageMimeType, courseName, syllabusUnits, paperYear, examType } = req.body || {};
     const paperTextToUse = cleanedText || rawText || '';
 
     try {
@@ -385,6 +397,7 @@ export function createApiApp() {
   ]
   IMPORTANT: Return ONLY the JSON array without any markdown fences, backticks, or extra commentary.`;
 
+      const ai = getAiClient();
       if (ai) {
         const response = await generateContentSafely((model) => {
           if (imageBase64 && imageMimeType && !paperTextToUse) {
@@ -507,12 +520,13 @@ export function createApiApp() {
 
       return res.json({ success: true, questions: fallbackQuestions, fallback: true });
     }
-  });
+  }));
 
   // 2. Teacher Demands & Reference Book Analysis
-  app.post('/api/analyze-teacher-demands', async (req, res) => {
-    const { courseName, topicName, referenceBooks, questionsSample } = req.body;
+  app.post('/api/analyze-teacher-demands', asyncHandler(async (req, res) => {
+    const { courseName, topicName, referenceBooks, questionsSample } = req.body || {};
     try {
+      const ai = getAiClient();
       if (!ai) {
         throw new Error('Gemini API key is not configured.');
       }
@@ -576,12 +590,13 @@ export function createApiApp() {
         fallback: true
       });
     }
-  });
+  }));
 
   // 3. Solve PYQ with Teacher-Graded Model Answer
-  app.post('/api/solve-pyq', async (req, res) => {
-    const { questionText, marks, topicName, courseName, referenceBook } = req.body;
+  app.post('/api/solve-pyq', asyncHandler(async (req, res) => {
+    const { questionText, marks, topicName, courseName, referenceBook } = req.body || {};
     try {
+      const ai = getAiClient();
       if (!ai) {
         throw new Error('Gemini API key is not configured.');
       }
@@ -838,7 +853,7 @@ export function createApiApp() {
         fallback: true
       });
     }
-  });
+  }));
 
   // 4. Video Recommendations via Gemini AI
   function generateServerTopicThumbnail(params: {
@@ -909,8 +924,8 @@ export function createApiApp() {
     return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
   }
 
-  app.post('/api/suggest-videos', async (req, res) => {
-    const { topicName, courseName, subtopics, unitNumber, subtopicName, queryType } = req.body;
+  app.post('/api/suggest-videos', asyncHandler(async (req, res) => {
+    const { topicName, courseName, subtopics, unitNumber, subtopicName, queryType } = req.body || {};
     const activeSubtopic = subtopicName || (subtopics && subtopics.length > 0 ? subtopics[0] : topicName);
     const isDerivationIntent =
       queryType === 'derivation' ||
@@ -921,6 +936,7 @@ export function createApiApp() {
     const querySuffix = isDerivationIntent ? 'derivation' : 'university lecture';
 
     try {
+      const ai = getAiClient();
       if (!ai) {
         throw new Error('Gemini API key is not configured.');
       }
@@ -1096,22 +1112,22 @@ export function createApiApp() {
       ];
       res.json({ success: true, videos: fallbackList, fallback: true });
     }
-  });
+  }));
 
   // Endpoint alias for explicit Gemini Video Suggest
-  app.post('/api/gemini-suggest-videos', async (req, res) => {
+  app.post('/api/gemini-suggest-videos', asyncHandler(async (req, res) => {
     // Delegate directly to the suggest-videos handler
-    const { topicName, courseName, subtopics, unitNumber, subtopicName, queryType } = req.body;
     req.url = '/api/suggest-videos';
     app._router.handle(req, res, () => {});
-  });
+  }));
 
   // Dedicated Gemini AI Video Lecture Breakdown & Concept Intel
-  app.post('/api/gemini-video-breakdown', async (req, res) => {
-    const { topicName, subtopicName, courseName, videoTitle, conceptFocus, level } = req.body;
+  app.post('/api/gemini-video-breakdown', asyncHandler(async (req, res) => {
+    const { topicName, subtopicName, courseName, videoTitle, conceptFocus, level } = req.body || {};
     const effectiveSubtopic = subtopicName || topicName;
 
     try {
+      const ai = getAiClient();
       if (!ai) {
         throw new Error('Gemini API key is not configured');
       }
@@ -1238,14 +1254,15 @@ export function createApiApp() {
         source: 'curated-academic-engine'
       });
     }
-  });
+  }));
 
   // 4b. Interactive Gemini Video Lecture Tutor (Ask questions about the video lecture / derivation)
-  app.post('/api/gemini-video-ask', async (req, res) => {
-    const { courseName, unitNumber, topicName, subtopicName, videoTitle, question } = req.body;
+  app.post('/api/gemini-video-ask', asyncHandler(async (req, res) => {
+    const { courseName, unitNumber, topicName, subtopicName, videoTitle, question } = req.body || {};
     const effectiveSubtopic = subtopicName || topicName;
 
     try {
+      const ai = getAiClient();
       if (!ai) {
         throw new Error('Gemini API key is not configured');
       }
@@ -1283,12 +1300,13 @@ export function createApiApp() {
         source: 'curated-tutor-fallback'
       });
     }
-  });
+  }));
 
   // 5. Fast Concept Explainer ("Low Time Investment, High Output")
-  app.post('/api/explain-concept', async (req, res) => {
-    const { courseName, unitNumber, topicTitle, subtopics, referenceBook } = req.body;
+  app.post('/api/explain-concept', asyncHandler(async (req, res) => {
+    const { courseName, unitNumber, topicTitle, subtopics, referenceBook } = req.body || {};
     try {
+      const ai = getAiClient();
       if (!ai) {
         throw new Error('Gemini API key is not configured.');
       }
@@ -1351,13 +1369,14 @@ export function createApiApp() {
         fallback: true
       });
     }
-  });
+  }));
 
   // 6. Health Check
   app.get('/api/health', (req, res) => {
+    const ai = getAiClient();
     res.json({
       status: 'ok',
-      hasApiKey: !!apiKey,
+      hasApiKey: !!ai,
       timestamp: new Date().toISOString()
     });
   });
