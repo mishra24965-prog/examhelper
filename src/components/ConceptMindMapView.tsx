@@ -14,6 +14,7 @@ import {
   ChevronRight,
   FileText
 } from 'lucide-react';
+import { explainConceptApi } from '../utils/geminiClientService';
 
 interface Props {
   course: Course;
@@ -58,20 +59,15 @@ export const ConceptMindMapView: React.FC<Props> = ({
     setAiBreakdown(null);
 
     try {
-      const res = await fetch('/api/explain-concept', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          courseName: course.name,
-          unitNumber: currentTopic.unit,
-          topicTitle: currentTopic.title,
-          subtopics: currentTopic.subtopics,
-          referenceBook: course.referenceBooks[0]?.title
-        })
+      const data = await explainConceptApi({
+        courseName: course.name,
+        unitNumber: currentTopic.unit,
+        topicTitle: currentTopic.title,
+        subtopics: currentTopic.subtopics,
+        referenceBook: course.referenceBooks[0]?.title
       });
 
-      const data = await res.json();
-      if (data.success && data.breakdown) {
+      if (data && data.breakdown) {
         setAiBreakdown(data.breakdown);
       }
     } catch (err) {

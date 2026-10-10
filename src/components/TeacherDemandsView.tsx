@@ -16,6 +16,7 @@ import {
   BookmarkCheck,
   Brain
 } from 'lucide-react';
+import { analyzeTeacherDemandsApi } from '../utils/geminiClientService';
 
 interface Props {
   course: Course;
@@ -68,27 +69,18 @@ export const TeacherDemandsView: React.FC<Props> = ({
 
     try {
       const topicQuestions = course.questions.filter((q) => q.topicId === selectedTopic.id);
-      const res = await fetch('/api/analyze-teacher-demands', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          courseName: course.name,
-          topicName: selectedTopic.title,
-          referenceBooks: customBookName || course.referenceBooks.map((b) => b.title).join(', '),
-          questionsSample: topicQuestions.map((q) => ({
-            text: q.text,
-            marks: q.marks,
-            type: q.questionType
-          }))
-        })
+      const data = await analyzeTeacherDemandsApi({
+        courseName: course.name,
+        topicName: selectedTopic.title,
+        referenceBooks: customBookName || course.referenceBooks.map((b) => b.title).join(', '),
+        questionsSample: topicQuestions.map((q) => ({
+          text: q.text,
+          marks: q.marks,
+          type: q.questionType
+        }))
       });
 
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || 'Server error while analyzing teacher demands');
-      }
-
-      if (data.insight) {
+      if (data && data.insight) {
         const newInsight: TeacherDemandInsight = {
           topicId: selectedTopic.id,
           topicName: selectedTopic.title,

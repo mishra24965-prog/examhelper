@@ -39,6 +39,10 @@ import {
   getDistinctVideoThumbnail,
   generateSystemicTopicThumbnail
 } from '../utils/thumbnailSystem';
+import {
+  geminiVideoBreakdownApi,
+  geminiVideoAskApi
+} from '../utils/geminiClientService';
 
 interface Props {
   course: Course;
@@ -113,21 +117,16 @@ export const VideoLecturesView: React.FC<Props> = ({ course, onNavigateTab }) =>
 
     let isMounted = true;
     setInPlayerBreakdownLoading(true);
-    fetch('/api/gemini-video-breakdown', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        topicName: playingVideo.topicName,
-        subtopicName: playingVideo.subtopicName || playingVideo.topicName,
-        courseName: course.name,
-        videoTitle: playingVideo.title,
-        conceptFocus: playingVideo.conceptFocus,
-        level: playingVideo.level
-      })
+    geminiVideoBreakdownApi({
+      topicName: playingVideo.topicName,
+      subtopicName: playingVideo.subtopicName || playingVideo.topicName,
+      courseName: course.name,
+      videoTitle: playingVideo.title,
+      conceptFocus: playingVideo.conceptFocus,
+      level: playingVideo.level
     })
-      .then((res) => res.json())
       .then((data) => {
-        if (isMounted && data.breakdown) {
+        if (isMounted && data && data.breakdown) {
           setInPlayerBreakdownData(data.breakdown);
         }
       })
@@ -147,20 +146,15 @@ export const VideoLecturesView: React.FC<Props> = ({ course, onNavigateTab }) =>
 
     setIsAskingInPlayer(true);
     try {
-      const res = await fetch('/api/gemini-video-ask', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          courseName: course.name,
-          unitNumber: playingVideo.unitNumber,
-          topicName: playingVideo.topicName,
-          subtopicName: playingVideo.subtopicName || playingVideo.topicName,
-          videoTitle: playingVideo.title,
-          question: q
-        })
+      const data = await geminiVideoAskApi({
+        courseName: course.name,
+        unitNumber: playingVideo.unitNumber,
+        topicName: playingVideo.topicName,
+        subtopicName: playingVideo.subtopicName || playingVideo.topicName,
+        videoTitle: playingVideo.title,
+        question: q
       });
-      const data = await res.json();
-      if (data.answer) {
+      if (data && data.answer) {
         setInPlayerChatLog((prev) => [
           ...prev,
           {
@@ -448,28 +442,19 @@ export const VideoLecturesView: React.FC<Props> = ({ course, onNavigateTab }) =>
     setBreakdownData(null);
 
     try {
-      const res = await fetch('/api/gemini-video-breakdown', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          topicName: video.topicName,
-          subtopicName: video.subtopicName || video.topicName,
-          courseName: course.name,
-          videoTitle: video.title,
-          conceptFocus: video.conceptFocus,
-          level: video.level
-        })
+      const json = await geminiVideoBreakdownApi({
+        topicName: video.topicName,
+        subtopicName: video.subtopicName || video.topicName,
+        courseName: course.name,
+        videoTitle: video.title,
+        conceptFocus: video.conceptFocus,
+        level: video.level
       });
 
-      if (res.ok) {
-        const json = await res.json();
-        if (json.breakdown) {
-          setBreakdownData(json.breakdown);
-        } else {
-          throw new Error('Breakdown data structure was invalid.');
-        }
+      if (json && json.breakdown) {
+        setBreakdownData(json.breakdown);
       } else {
-        throw new Error('Could not contact Gemini API.');
+        throw new Error('Breakdown data structure was invalid.');
       }
     } catch (err: any) {
       setBreakdownError(err.message || 'Failed to load Gemini AI lecture breakdown.');

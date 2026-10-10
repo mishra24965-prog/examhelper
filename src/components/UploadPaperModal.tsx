@@ -3,6 +3,7 @@ import { Course, Question, ExamType, ExamPaperRecord } from '../types';
 import { inferQuestionMapping } from '../utils/analyticsEngine';
 import { getPresetPapersForCourse } from '../utils/paperStorage';
 import { checkTextAgainstDictionary, DEFAULT_MATH1_DICTIONARY } from '../utils/courseDictionary';
+import { extractTextApi, cleanTextApi, analyzePaperApi } from '../utils/geminiClientService';
 import {
   X,
   UploadCloud,
@@ -136,21 +137,12 @@ export const UploadPaperModal: React.FC<Props> = ({
 
       setIsProcessing(true);
       try {
-        const res = await fetch('/api/extract-text', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            fileBase64,
-            mimeType: uploadedFile?.type || (fileType === 'pdf' ? 'application/pdf' : 'image/jpeg'),
-            fileName: uploadedFile?.name,
-            courseName: course.name
-          })
+        const data = await extractTextApi({
+          fileBase64,
+          mimeType: uploadedFile?.type || (fileType === 'pdf' ? 'application/pdf' : 'image/jpeg'),
+          fileName: uploadedFile?.name,
+          courseName: course.name
         });
-
-        const data = await res.json();
-        if (!res.ok) {
-          throw new Error(data.error || 'Failed to extract text from document');
-        }
 
         setRawText(data.rawExtractedText || '');
         setCleanedText(data.cleanedText || data.rawExtractedText || '');
@@ -168,7 +160,7 @@ export const UploadPaperModal: React.FC<Props> = ({
           setDictionaryMatches(localDict.matchedTerms);
         }
 
-        setSuccessNote(`Successfully converted ${uploadedFile?.name} to formatted text format!`);
+        setSuccessNote(`Successfully converted ${uploadedFile?.name || 'document'} to formatted text format!`);
         setStep('text_review');
       } catch (err: any) {
         setError(err.message || 'Error extracting text from document');
@@ -183,18 +175,11 @@ export const UploadPaperModal: React.FC<Props> = ({
     setIsCleaning(true);
     setError(null);
     try {
-      const res = await fetch('/api/clean-text', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          rawText: cleanedText || rawText,
-          courseName: course.name,
-          syllabusUnits: course.syllabus
-        })
+      const data = await cleanTextApi({
+        rawText: cleanedText || rawText,
+        courseName: course.name,
+        syllabusUnits: course.syllabus
       });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to clean text');
 
       setCleanedText(data.cleanedText);
       if (data.dictionaryMatches) {
@@ -229,21 +214,14 @@ export const UploadPaperModal: React.FC<Props> = ({
     setError(null);
 
     try {
-      const res = await fetch('/api/analyze-paper', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          rawText: rawText,
-          cleanedText: cleanedText,
-          courseName: course.name,
-          syllabusUnits: course.syllabus,
-          paperYear,
-          examType
-        })
+      const data = await analyzePaperApi({
+        rawText: rawText,
+        cleanedText: cleanedText,
+        courseName: course.name,
+        syllabusUnits: course.syllabus,
+        paperYear,
+        examType
       });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to analyze exam paper');
 
       if (data.questions && Array.isArray(data.questions) && data.questions.length > 0) {
         const formatted: Question[] = data.questions.map((q: any, idx: number) => {

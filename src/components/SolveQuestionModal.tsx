@@ -22,6 +22,7 @@ import {
   ParsedDerivationStep,
   DerivationLine
 } from '../utils/mathNotationFormatter';
+import { solvePyqApi } from '../utils/geminiClientService';
 
 interface Props {
   question: Question;
@@ -52,24 +53,15 @@ export const SolveQuestionModal: React.FC<Props> = ({
       setError(null);
 
       try {
-        const res = await fetch('/api/solve-pyq', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            questionText: question.text,
-            marks: question.marks,
-            topicName: question.topicName,
-            courseName,
-            referenceBook: referenceBook || 'Standard University Textbook'
-          })
+        const data = await solvePyqApi({
+          questionText: question.text,
+          marks: question.marks,
+          topicName: question.topicName,
+          courseName,
+          referenceBook: referenceBook || 'Standard University Textbook'
         });
 
-        const data = await res.json();
-        if (!res.ok) {
-          throw new Error(data.error || 'Failed to fetch model answer');
-        }
-
-        if (isMounted) {
+        if (isMounted && data && data.solution) {
           setSolution({
             questionId: question.id,
             questionText: question.text,
