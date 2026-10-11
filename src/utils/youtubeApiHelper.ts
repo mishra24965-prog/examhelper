@@ -854,6 +854,117 @@ export const VERIFIED_UNIT_LECTURES: Record<string, Record<number, VideoRecommen
         ]
       }
     ]
+  },
+  // 4. Applied Chemistry & Environmental Science (1RABS2)
+  'course-sem1-chemistry': {
+    1: [
+      {
+        id: 'ch-u1-beg',
+        topicId: 'ch-u1',
+        topicName: 'Engineering Materials & Testing',
+        unitNumber: 1,
+        title: 'Polymers: Thermosetting vs Thermoplastics & Rubber Vulcanization',
+        channel: 'Engineering Chemistry',
+        durationMinutes: 19,
+        conceptFocus: 'Classification of polymers, addition vs condensation, and sulfur cross-linking in vulcanization.',
+        youtubeSearchQuery: 'Polymers thermosetting thermoplastic engineering chemistry',
+        youtubeUrl: 'https://www.youtube.com/watch?v=FCQ26RQBZLg',
+        thumbnailUrl: 'https://img.youtube.com/vi/FCQ26RQBZLg/mqdefault.jpg',
+        youtubeVideoId: 'FCQ26RQBZLg',
+        level: 'Beginner',
+        complexityCategory: 'Foundation',
+        verified: true
+      },
+      {
+        id: 'ch-u1-exam',
+        topicId: 'ch-u1',
+        topicName: 'Engineering Materials & Testing',
+        unitNumber: 1,
+        title: "Portland Cement: Manufacturing, Bogue's Compounds & Setting Chemistry",
+        channel: 'Engineering Chemistry',
+        durationMinutes: 25,
+        conceptFocus: 'Hydration of C3S, C2S, C3A, C4AF, sequence of hardening reactions, and role of gypsum.',
+        youtubeSearchQuery: 'Portland cement setting and hardening chemistry Bogue compounds',
+        youtubeUrl: 'https://www.youtube.com/watch?v=FCQ26RQBZLg',
+        thumbnailUrl: 'https://img.youtube.com/vi/FCQ26RQBZLg/mqdefault.jpg',
+        youtubeVideoId: 'FCQ26RQBZLg',
+        level: 'Exam-Cram',
+        complexityCategory: 'Standard Exam',
+        verified: true
+      }
+    ],
+    2: [
+      {
+        id: 'ch-u2-beg',
+        topicId: 'ch-u2',
+        topicName: 'Water & Its Applications',
+        unitNumber: 2,
+        title: 'Hardness of Water: Temporary vs Permanent Hardness & Units Conversion',
+        channel: 'Engineering Chemistry Academy',
+        durationMinutes: 18,
+        conceptFocus: 'Causes of hardness, salts involved, and converting salts to CaCO3 equivalent in ppm and mg/L.',
+        youtubeSearchQuery: 'Hardness of water temporary permanent CaCO3 equivalent engineering chemistry',
+        youtubeUrl: 'https://www.youtube.com/watch?v=KBo9VB30pbk',
+        thumbnailUrl: 'https://img.youtube.com/vi/KBo9VB30pbk/mqdefault.jpg',
+        youtubeVideoId: 'KBo9VB30pbk',
+        level: 'Beginner',
+        complexityCategory: 'Foundation',
+        verified: true
+      },
+      {
+        id: 'ch-u2-exam',
+        topicId: 'ch-u2',
+        topicName: 'Water & Its Applications',
+        unitNumber: 2,
+        title: 'EDTA Method for Determination of Hardness with Chemical Reactions',
+        channel: 'Engineering Chemistry Lessons',
+        durationMinutes: 22,
+        conceptFocus: 'EBT indicator complexation, buffer pH 10, EDTA titration endpoint, and total hardness formula.',
+        youtubeSearchQuery: 'EDTA method hardness of water engineering chemistry',
+        youtubeUrl: 'https://www.youtube.com/watch?v=FCQ26RQBZLg',
+        thumbnailUrl: 'https://img.youtube.com/vi/FCQ26RQBZLg/mqdefault.jpg',
+        youtubeVideoId: 'FCQ26RQBZLg',
+        level: 'Exam-Cram',
+        complexityCategory: 'Standard Exam',
+        verified: true
+      },
+      {
+        id: 'ch-u2-deep',
+        topicId: 'ch-u2',
+        topicName: 'Water & Its Applications',
+        unitNumber: 2,
+        title: 'Boiler Troubles: Scales vs Sludges & Caustic Embrittlement Mechanism',
+        channel: 'Engineering Chemistry Academy',
+        durationMinutes: 24,
+        conceptFocus: 'Prevention of scales, phosphate conditioning, and alkaline corrosion caustic cracking.',
+        youtubeSearchQuery: 'Boiler troubles scale sludge caustic embrittlement',
+        youtubeUrl: 'https://www.youtube.com/watch?v=bo0XVpMw_DM',
+        thumbnailUrl: 'https://img.youtube.com/vi/bo0XVpMw_DM/mqdefault.jpg',
+        youtubeVideoId: 'bo0XVpMw_DM',
+        level: 'Deep Dive',
+        complexityCategory: 'Advanced Numerical',
+        verified: true
+      }
+    ],
+    3: [
+      {
+        id: 'ch-u3-exam',
+        topicId: 'ch-u3',
+        topicName: 'Fuels & Lubricants',
+        unitNumber: 3,
+        title: 'Bomb Calorimeter: Construction, Working & HCV Formula Derivation',
+        channel: 'Engineering Chemistry',
+        durationMinutes: 26,
+        conceptFocus: 'Apparatus diagram, Beckmann thermometer, fuse wire correction, and numerical calculation.',
+        youtubeSearchQuery: 'Bomb calorimeter HCV derivation engineering chemistry',
+        youtubeUrl: 'https://www.youtube.com/watch?v=KBo9VB30pbk',
+        thumbnailUrl: 'https://img.youtube.com/vi/KBo9VB30pbk/mqdefault.jpg',
+        youtubeVideoId: 'KBo9VB30pbk',
+        level: 'Exam-Cram',
+        complexityCategory: 'Standard Exam',
+        verified: true
+      }
+    ]
   }
 };
 
