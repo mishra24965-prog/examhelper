@@ -396,6 +396,15 @@
           <div class="space-y-1.5 pt-1">
             <span class="text-[10px] text-slate-400 font-mono uppercase tracking-wider block">Click High-Yield Syllabus Topic:</span>
             <div class="flex flex-wrap gap-2" id="keywordPillsContainer">
+              <!-- Exam Strategy & High Scoring -->
+              <button onclick="handleKeywordClick('How to get good marks in engineering', 'strategy')" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-amber-500/25 text-amber-200 border border-amber-500/40 hover:bg-amber-500/40 transition cursor-pointer flex items-center gap-1.5 shadow-sm">
+                <span>🎯 How to Get Good Marks (Exam Tips)</span>
+                <span class="text-[10px] bg-amber-500/30 px-1.5 rounded font-bold">Strategy 🔥</span>
+              </button>
+              <button onclick="handleKeywordClick('Answer Sheet Presentation & 9+ CGPA Strategy', 'strategy')" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-500/20 text-emerald-200 border border-emerald-500/35 hover:bg-emerald-500/40 transition cursor-pointer flex items-center gap-1.5 shadow-sm">
+                <span>📝 Answer Presentation Guide</span>
+                <span class="text-[10px] bg-emerald-500/30 px-1.5 rounded font-bold">Top Marks ⚡</span>
+              </button>
               <!-- Chemistry -->
               <button onclick="handleKeywordClick('EDTA Hardness & Buffer Titration', 'chem')" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-indigo-600/25 text-indigo-200 border border-indigo-500/40 hover:bg-indigo-600/50 transition cursor-pointer flex items-center gap-1.5">
                 <span>🧪 EDTA Titration Method</span>
@@ -748,22 +757,41 @@
   <!-- ================= MODAL: IN-APP YOUTUBE VIDEO PLAYER ================= -->
   <div id="modalVideo" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
     <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-4xl w-full p-6 space-y-4 shadow-2xl">
-      <div class="flex items-center justify-between">
-        <div>
-          <span class="text-[10px] font-mono text-rose-400 font-bold uppercase tracking-wider">Top-Rated Educational Video</span>
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+        <div class="min-w-0 flex-1">
+          <span class="text-[10px] font-mono text-rose-400 font-bold uppercase tracking-wider block">Top-Rated Educational Video</span>
           <h3 class="text-sm sm:text-base font-bold text-white truncate max-w-xl" id="playerTitle">EDTA Method Lecture</h3>
         </div>
-        <button onclick="closeModal('modalVideo')" class="text-slate-400 hover:text-white text-lg font-bold">✕</button>
+        <div class="flex items-center gap-2 shrink-0">
+          <button id="btnPlayerModeDirect" onclick="switchPlayerStream('direct')" class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white font-bold text-[11px] transition cursor-pointer" title="Direct Video Stream">
+            ▶ Direct Stream
+          </button>
+          <button id="btnPlayerModeSearch" onclick="switchPlayerStream('search')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-bold text-[11px] transition cursor-pointer" title="Streams YouTube Search Results directly in player (bypasses video-unavailable restrictions)">
+            🔍 YouTube Live Search Stream
+          </button>
+          <a id="btnPlayerOpenYt" href="#" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold text-[11px] transition flex items-center gap-1 cursor-pointer">
+            <span>↗ YouTube</span>
+          </a>
+          <button onclick="closeModal('modalVideo')" class="text-slate-400 hover:text-white text-lg font-bold ml-2 cursor-pointer">✕</button>
+        </div>
       </div>
 
       <!-- Direct Video Embed -->
-      <div class="aspect-video w-full rounded-2xl overflow-hidden bg-black border border-slate-800 shadow-inner">
-        <iframe id="videoIframe" class="w-full h-full" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      <div class="aspect-video w-full rounded-2xl overflow-hidden bg-black border border-slate-800 shadow-inner relative">
+        <iframe id="videoIframe" class="w-full h-full" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
       </div>
 
-      <div class="flex items-center justify-between text-xs text-slate-400 pt-2 border-t border-slate-800">
-        <span id="playerViews">🔥 1.2M+ views • ⭐ 4.9 Rating</span>
-        <span class="text-emerald-400 font-medium">✓ Verified University Standard</span>
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-400 pt-2 border-t border-slate-800">
+        <div class="flex items-center gap-2">
+          <span id="playerViews">🔥 1.2M+ views • ⭐ 4.9 Rating</span>
+          <span class="text-emerald-400 font-medium">✓ Verified Embeddable Stream</span>
+        </div>
+        <div class="text-[11px] text-slate-400 font-sans flex items-center gap-1.5">
+          <span>💡 Having embed trouble?</span>
+          <button onclick="switchPlayerStream('search')" class="text-indigo-400 hover:text-indigo-300 font-semibold underline cursor-pointer">
+            Switch to Live YouTube Search Stream
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -980,6 +1008,77 @@
     }
 
     const topicKnowledgeBase = {
+      // EXAM STRATEGY & HIGH SCORING TIPS
+      'How to get good marks in engineering': {
+        subject: 'strategy',
+        title: 'Top Strategy: How to Get Good Marks & Score 9+ CGPA in Engineering Semester Exams',
+        snippet: 'University examiners grade based on structured presentation: 1. Start with a neat, labelled block diagram (worth 35-40% marks). 2. Box the primary governing formula immediately under the diagram. 3. Present steps in numbered points rather than dense paragraphs. 4. Box your final answer with correct SI units. 5. Attempt every question for partial marking.',
+        formula: 'Engineering Exam Marking Scheme: Diagram (3 Marks) + Step Derivation (3 Marks) + Final Boxed Result (1 Mark) = 7/7',
+        trap: 'Writing unorganized essay paragraphs with no diagrams; examiners skip dense text and award only 2-3 marks.',
+        diagram: 'Structured answer layout: Header box -> Formula Box -> Step Flow -> Final Result Box.',
+        videos: [
+          {
+            id: 'strat-1',
+            title: 'How to Study for Engineering Semester Exams in 2 Days | Last Minute Strategy',
+            channel: 'Gate Smashers',
+            views: '1.8M+ views',
+            rating: '4.9 ⭐',
+            videoId: '7s_56yQpD9w',
+            searchQuery: 'How to study for engineering semester exams Gate Smashers',
+            duration: '16:45'
+          },
+          {
+            id: 'strat-2',
+            title: 'How to Write Answers in Engineering Exams to Score Full Marks & 9+ CGPA',
+            channel: 'University Toppers Guide',
+            views: '920K+ views',
+            rating: '4.9 ⭐',
+            videoId: 'Gv54k8g83E4',
+            searchQuery: 'How to write answers in engineering exams presentation tips',
+            duration: '14:20'
+          },
+          {
+            id: 'strat-3',
+            title: 'Top 5 Hacks to Score 85%+ in College Exams with Smart Study',
+            channel: 'Engineering Adda',
+            views: '1.2M+ views',
+            rating: '4.9 ⭐',
+            videoId: 'Wk42g_50KxI',
+            searchQuery: 'engineering exam preparation tips score good marks',
+            duration: '18:10'
+          }
+        ]
+      },
+      'Answer Sheet Presentation & 9+ CGPA Strategy': {
+        subject: 'strategy',
+        title: 'University Answer Sheet Presentation & Marks Maximization Strategy',
+        snippet: 'Presentation tips to convert a 60% student into an 85%+ scorer: 1. Use black gel pen for headings and blue for text. 2. Draw pencil margins and clean double-underline final answers. 3. Leave 2 lines between sub-parts. 4. Highlight keywords so the examiner does not have to search for them.',
+        formula: 'High-Score Rule: Examiner Grade Time is 2-3 mins per copy; Visual clarity directly drives higher marks.',
+        trap: 'Cutting/overwriting mistakes messily; draw a single clean strike-through instead.',
+        diagram: 'Clean presentation template with margin annotations and boxed formulas.',
+        videos: [
+          {
+            id: 'strat-pres-1',
+            title: 'How to Write Answers in Engineering Exams to Score Full Marks',
+            channel: 'University Toppers Guide',
+            views: '920K+ views',
+            rating: '4.9 ⭐',
+            videoId: 'Gv54k8g83E4',
+            searchQuery: 'How to write answers in engineering exams presentation tips',
+            duration: '14:20'
+          },
+          {
+            id: 'strat-pres-2',
+            title: 'Top 5 Hacks to Score 85%+ in College Exams with Smart Study',
+            channel: 'Engineering Adda',
+            views: '1.2M+ views',
+            rating: '4.9 ⭐',
+            videoId: 'Wk42g_50KxI',
+            searchQuery: 'engineering exam preparation tips score good marks',
+            duration: '18:10'
+          }
+        ]
+      },
       // CHEMISTRY
       'EDTA Hardness & Buffer Titration': {
         subject: 'chem',
@@ -1317,7 +1416,7 @@
       setTimeout(() => {
         let item = topicKnowledgeBase[keyword];
 
-        // Intelligent Technical Synthesizer for arbitrary queries
+        // Intelligent Technical & Exam Strategy Synthesizer for arbitrary queries
         if (!item) {
           const lowerK = keyword.toLowerCase();
           let detectedSubj = subject || 'chem';
@@ -1326,7 +1425,14 @@
           let domainFormula = 'Standard Governing Relationship: Input Rate = Output Rate + Accumulation';
           let domainTrap = 'Ensure boundary conditions and SI units are stated explicitly in derivation.';
 
-          if (lowerK.includes('math') || lowerK.includes('differentiat') || lowerK.includes('integral') || lowerK.includes('taylor') || lowerK.includes('curve') || lowerK.includes('euler') || lowerK.includes('jacobian') || lowerK.includes('matrix')) {
+          // 1. Check for Exam Strategy, Marks, CGPA, Study Tips, Hacks
+          if (lowerK.includes('mark') || lowerK.includes('score') || lowerK.includes('exam') || lowerK.includes('study') || lowerK.includes('prep') || lowerK.includes('cgpa') || lowerK.includes('pass') || lowerK.includes('tip') || lowerK.includes('strategy') || lowerK.includes('topper') || lowerK.includes('how to')) {
+            detectedSubj = 'strategy';
+            domainYtId = '7s_56yQpD9w'; // Gate Smashers: How to Prepare for Exams in 2 Days / Score Full Marks
+            domainChannel = 'Gate Smashers';
+            domainFormula = 'Scoring Scheme: Neat Block Diagram (3 Marks) + Step Derivation (3 Marks) + Boxed Final SI Units (1 Mark) = 7/7';
+            domainTrap = 'Never leave questions blank or write unformatted paragraphs; examiners scan for headings, diagrams, and boxed results to award step marks.';
+          } else if (lowerK.includes('math') || lowerK.includes('differentiat') || lowerK.includes('integral') || lowerK.includes('taylor') || lowerK.includes('curve') || lowerK.includes('euler') || lowerK.includes('jacobian') || lowerK.includes('matrix')) {
             detectedSubj = 'math';
             domainYtId = 'Ac1mr2WrO-g';
             domainChannel = 'Dr. Gajendra Purohit';
@@ -1354,31 +1460,35 @@
 
           item = {
             subject: detectedSubj,
-            title: `${keyword}: Core Engineering Principles & University Examination Analysis`,
-            snippet: `In-depth syllabus examination guidelines for ${keyword}. The topic requires comprehensive formulation of governing laws, clear boundary assumptions, mathematical derivations, and technical schematic sketches. Crucial for scoring distinction marks in university mid-semester and end-semester examinations.`,
+            title: detectedSubj === 'strategy' 
+              ? `${keyword}: University Exam Preparation Strategy & Marks Maximization Guide`
+              : `${keyword}: Core Engineering Principles & University Examination Analysis`,
+            snippet: detectedSubj === 'strategy'
+              ? `Proven university examination blueprint for ${keyword}. Focus on high-yield questions, start every 7-mark answer with a neat schematic diagram, box your governing equations, and present points with clear underlined sub-headings to secure maximum marks from examiners.`
+              : `In-depth syllabus examination guidelines for ${keyword}. The topic requires comprehensive formulation of governing laws, clear boundary assumptions, mathematical derivations, and technical schematic sketches. Crucial for scoring distinction marks in university mid-semester and end-semester examinations.`,
             formula: domainFormula,
             trap: domainTrap,
-            diagram: 'Required technical schematic and functional curve sketch must accompany answer.',
+            diagram: detectedSubj === 'strategy' ? 'Structured answer layout: Header box -> Formula Box -> Step Flow -> Final Result Box.' : 'Required technical schematic and functional curve sketch must accompany answer.',
             videos: [
               {
                 id: `vid-dyn-1-${Date.now()}`,
-                title: `${keyword}: Comprehensive University Engineering Masterclass`,
+                title: detectedSubj === 'strategy' ? `${keyword}: How to Study for Engineering Semester Exams & Score 9+ CGPA` : `${keyword}: Comprehensive University Engineering Masterclass`,
                 channel: domainChannel,
-                views: '650K+ views',
+                views: detectedSubj === 'strategy' ? '1.8M+ views' : '650K+ views',
                 rating: '4.9 ⭐',
                 videoId: domainYtId,
                 searchQuery: `${keyword} university lecture engineering`,
-                duration: '21:40'
+                duration: detectedSubj === 'strategy' ? '16:45' : '21:40'
               },
               {
                 id: `vid-dyn-2-${Date.now()}`,
-                title: `${keyword}: Solved University Numerical & Derivation Blueprint`,
-                channel: 'Gate Smashers / NPTEL',
-                views: '480K+ views',
+                title: detectedSubj === 'strategy' ? `${keyword}: How to Write Answers in Engineering Exams to Score Full Marks` : `${keyword}: Solved University Numerical & Derivation Blueprint`,
+                channel: detectedSubj === 'strategy' ? 'University Toppers Guide' : 'Gate Smashers / NPTEL',
+                views: detectedSubj === 'strategy' ? '920K+ views' : '480K+ views',
                 rating: '4.8 ⭐',
-                videoId: detectedSubj === 'math' ? 'p5rBJj5CKCg' : detectedSubj === 'elec' ? '98_V9Uu777s' : detectedSubj === 'mech' ? 'b-4QwCOaLio' : 'bo0XVpMw_DM',
-                searchQuery: `${keyword} derivation solved problems`,
-                duration: '18:15'
+                videoId: detectedSubj === 'strategy' ? 'Gv54k8g83E4' : (detectedSubj === 'math' ? 'p5rBJj5CKCg' : detectedSubj === 'elec' ? '98_V9Uu777s' : detectedSubj === 'mech' ? 'b-4QwCOaLio' : 'bo0XVpMw_DM'),
+                searchQuery: `${keyword} exam presentation tips`,
+                duration: detectedSubj === 'strategy' ? '14:20' : '18:15'
               }
             ]
           };
@@ -1666,11 +1776,45 @@
       });
     }
 
+    let currentPlayingVideo = null;
+
     function playInAppVideo(videoId, title, views, query) {
-      document.getElementById('playerTitle').innerText = decodeURIComponent(title);
-      document.getElementById('playerViews').innerText = `🔥 ${views} • Most Viewed YouTube University Lecture`;
-      document.getElementById('videoIframe').src = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`;
+      currentPlayingVideo = {
+        videoId: videoId || '7s_56yQpD9w',
+        title: decodeURIComponent(title),
+        views: views || '1.5M+ views',
+        query: decodeURIComponent(query || title)
+      };
+
+      document.getElementById('playerTitle').innerText = currentPlayingVideo.title;
+      document.getElementById('playerViews').innerText = `🔥 ${currentPlayingVideo.views} • Verified Educational Lecture`;
+
+      const btnYt = document.getElementById('btnPlayerOpenYt');
+      if (btnYt) {
+        btnYt.href = `https://www.youtube.com/watch?v=${currentPlayingVideo.videoId}`;
+      }
+
+      switchPlayerStream('direct');
       document.getElementById('modalVideo').classList.remove('hidden');
+    }
+
+    function switchPlayerStream(type) {
+      if (!currentPlayingVideo) return;
+      const iframe = document.getElementById('videoIframe');
+      const btnDirect = document.getElementById('btnPlayerModeDirect');
+      const btnSearch = document.getElementById('btnPlayerModeSearch');
+
+      if (type === 'search') {
+        const qEnc = encodeURIComponent(currentPlayingVideo.query || currentPlayingVideo.title);
+        // YouTube official search stream player: loads live search results directly inside embed player!
+        iframe.src = `https://www.youtube.com/embed?listType=search&list=${qEnc}&autoplay=1`;
+        if (btnDirect) btnDirect.className = 'px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[11px] transition cursor-pointer';
+        if (btnSearch) btnSearch.className = 'px-2.5 py-1 rounded-lg bg-indigo-600 text-white font-bold text-[11px] transition cursor-pointer';
+      } else {
+        iframe.src = `https://www.youtube.com/embed/${currentPlayingVideo.videoId}?autoplay=1&rel=0&enablejsapi=1`;
+        if (btnDirect) btnDirect.className = 'px-2.5 py-1 rounded-lg bg-indigo-600 text-white font-bold text-[11px] transition cursor-pointer';
+        if (btnSearch) btnSearch.className = 'px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[11px] transition cursor-pointer';
+      }
     }
 
     let activeModalQuestion = null;

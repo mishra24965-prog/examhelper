@@ -1145,28 +1145,32 @@ export const VideoLecturesView: React.FC<Props> = ({ course, onNavigateTab }) =>
                   if (!embedUrl) {
                     const courseLower = course.name.toLowerCase();
                     const subLower = (playingVideo.subtopicName || playingVideo.title || '').toLowerCase();
-                    let fallbackId = 'FCQ26RQBZLg'; // Default chemistry
+                    let fallbackId = 'P16E6T8kO_Y'; // Default verified chemistry EDTA
 
-                    if (courseLower.includes('math')) {
+                    if (subLower.includes('mark') || subLower.includes('score') || subLower.includes('exam') || subLower.includes('study') || subLower.includes('prep') || subLower.includes('cgpa') || subLower.includes('pass') || subLower.includes('tip')) {
+                      fallbackId = '7s_56yQpD9w'; // Gate Smashers: How to Study & Score High Marks in Exams
+                    } else if (courseLower.includes('math')) {
                       // Use Leibnitz ONLY if the topic is actually Leibnitz/successive derivative
                       if (subLower.includes('leibnitz') || subLower.includes('successive')) {
-                        fallbackId = 'EFLp2LrmYuY';
+                        fallbackId = '-6RerbAHWDw';
                       } else {
                         fallbackId = 'Ac1mr2WrO-g'; // Taylor/Maclaurin & General Higher Math
                       }
                     } else if (courseLower.includes('electr') || subLower.includes('rectifier') || subLower.includes('diode')) {
-                      fallbackId = 'rl9FdHTVOWY';
+                      fallbackId = '98_V9Uu777s';
                     } else if (courseLower.includes('mechanic') || subLower.includes('thermodynamic') || subLower.includes('cycle') || subLower.includes('sfee')) {
                       fallbackId = 'gRyMzKVAO4s';
                     } else if (courseLower.includes('physic') || subLower.includes('optics') || subLower.includes('laser')) {
                       fallbackId = 'm7Qe8w_4z2Y';
                     } else if (subLower.includes('hardness') || subLower.includes('water')) {
-                      fallbackId = 'KBo9VB30pbk';
+                      fallbackId = 'P16E6T8kO_Y';
                     } else if (subLower.includes('boiler') || subLower.includes('scale')) {
                       fallbackId = 'bo0XVpMw_DM';
+                    } else if (subLower.includes('calorimeter') || subLower.includes('fuel')) {
+                      fallbackId = 'vC_d9X5Q0Y4';
                     }
 
-                    embedUrl = `https://www.youtube-nocookie.com/embed/${fallbackId}?autoplay=1&rel=0&modestbranding=1`;
+                    embedUrl = `https://www.youtube.com/embed/${fallbackId}?autoplay=1&rel=0&modestbranding=1`;
                   }
 
                   return (

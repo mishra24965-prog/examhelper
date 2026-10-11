@@ -1219,12 +1219,12 @@ TEACHER / EVALUATOR CUSTOM PREFERENCES:
         const fallbackDefaultId = lowerCourse.includes('math')
           ? 'Ac1mr2WrO-g'
           : lowerCourse.includes('chem')
-          ? 'FCQ26RQBZLg'
+          ? 'P16E6T8kO_Y'
           : lowerCourse.includes('electr')
           ? 'rl9FdHTVOWY'
           : lowerCourse.includes('mech')
           ? 'gRyMzKVAO4s'
-          : 'FCQ26RQBZLg';
+          : 'vLnPwxZdW4Y';
 
         let effectiveVideoId = (v.youtubeVideoId && typeof v.youtubeVideoId === 'string' && v.youtubeVideoId.length === 11)
           ? v.youtubeVideoId

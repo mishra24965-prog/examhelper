@@ -609,9 +609,9 @@ export const INITIAL_COURSES: Course[] = [
         durationMinutes: 18,
         conceptFocus: 'Principle, chemical equations, wine-red to steel-blue indicator transition, and buffer pH 10.',
         youtubeSearchQuery: 'EDTA method hardness of water engineering chemistry',
-        youtubeUrl: 'https://www.youtube.com/watch?v=FCQ26RQBZLg',
-        thumbnailUrl: 'https://img.youtube.com/vi/FCQ26RQBZLg/mqdefault.jpg',
-        youtubeVideoId: 'FCQ26RQBZLg',
+        youtubeUrl: 'https://www.youtube.com/watch?v=P16E6T8kO_Y',
+        thumbnailUrl: 'https://img.youtube.com/vi/P16E6T8kO_Y/mqdefault.jpg',
+        youtubeVideoId: 'P16E6T8kO_Y',
         level: 'Exam-Cram',
         keyTimestamps: [
           { time: '02:00', topic: 'Principle of EDTA Titration' },

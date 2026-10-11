@@ -337,11 +337,11 @@ export function getDistinctVideoThumbnail(video: {
   // 1. If explicit YouTube Video ID is present
   if (video.youtubeVideoId && /^[a-zA-Z0-9_-]{11}$/.test(video.youtubeVideoId)) {
     // If it's the specific EFLp2LrmYuY (Leibnitz) but course is NOT math, do not display Leibnitz!
-    if (video.youtubeVideoId === 'EFLp2LrmYuY' && (!isMathCourse || !isMathTopic)) {
+    if ((video.youtubeVideoId === 'EFLp2LrmYuY' || video.youtubeVideoId === 'FCQ26RQBZLg') && (!isMathCourse || !isMathTopic)) {
       // Pick a topic-relevant verified educational video ID
       const cLower = (courseName || '').toLowerCase();
       const tLower = ((video.subtopicName || video.title || '')).toLowerCase();
-      let replacementId = 'FCQ26RQBZLg'; // chemistry default
+      let replacementId = 'P16E6T8kO_Y'; // chemistry EDTA verified
       if (cLower.includes('electr') || tLower.includes('diode') || tLower.includes('rectifier')) replacementId = 'rl9FdHTVOWY';
       else if (cLower.includes('mech') || tLower.includes('thermo') || tLower.includes('cycle')) replacementId = 'gRyMzKVAO4s';
       else if (cLower.includes('physic') || tLower.includes('optics') || tLower.includes('newton')) replacementId = 'm7Qe8w_4z2Y';
@@ -355,8 +355,8 @@ export function getDistinctVideoThumbnail(video: {
     const match = video.thumbnailUrl.match(/\/vi\/([a-zA-Z0-9_-]{11})\//);
     if (match && match[1]) {
       const vidId = match[1];
-      if (vidId === 'EFLp2LrmYuY' && (!isMathCourse || !isMathTopic)) {
-        return `https://img.youtube.com/vi/FCQ26RQBZLg/hqdefault.jpg`;
+      if ((vidId === 'EFLp2LrmYuY' || vidId === 'FCQ26RQBZLg') && (!isMathCourse || !isMathTopic)) {
+        return `https://img.youtube.com/vi/P16E6T8kO_Y/hqdefault.jpg`;
       }
       return `https://img.youtube.com/vi/${vidId}/hqdefault.jpg`;
     }
@@ -366,7 +366,7 @@ export function getDistinctVideoThumbnail(video: {
   // 3. Fallback to topic-specific educational YouTube video thumbnail
   const cLower = (courseName || '').toLowerCase();
   const tLower = ((video.subtopicName || video.title || '')).toLowerCase();
-  let defaultYtId = 'FCQ26RQBZLg'; // Chemistry EDTA
+  let defaultYtId = 'P16E6T8kO_Y'; // Chemistry EDTA
   if (cLower.includes('math')) defaultYtId = 'Ac1mr2WrO-g'; // Taylor/Maclaurin or B.S. Grewal
   else if (cLower.includes('electr') || tLower.includes('diode')) defaultYtId = 'rl9FdHTVOWY';
   else if (cLower.includes('mech') || tLower.includes('thermo')) defaultYtId = 'gRyMzKVAO4s';
