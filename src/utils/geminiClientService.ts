@@ -170,10 +170,19 @@ Return ONLY a JSON object matching this schema:
   "markingRubric": [
     { "step": "Step 1: ...", "marksAwarded": 2, "teacherExpectation": "..." }
   ],
+  "introduction": "Concise theoretical foundation and core definition of the concept/theorem.",
+  "conceptCategorization": [
+    { "category": "...", "description": "...", "items": ["..."] }
+  ],
   "fullAnswerMarkdown": "...",
   "flowchartSteps": [
     { "stepNumber": 1, "title": "...", "detail": "...", "arrowTo": "..." }
   ],
+  "applications": [
+    "Industrial or engineering application 1",
+    "Industrial or engineering application 2"
+  ],
+  "industrialSignificance": "...",
   "diagramDescription": "...",
   "tailoredTeacherNotes": "...",
   "teacherProTip": "...",
@@ -188,8 +197,12 @@ Return ONLY a JSON object matching this schema:
 
       const parsed = safeJsonParse(text, {
         markingRubric: [],
+        introduction: '',
+        conceptCategorization: [],
         fullAnswerMarkdown: text,
         flowchartSteps: [],
+        applications: [],
+        industrialSignificance: '',
         diagramDescription: '',
         tailoredTeacherNotes: '',
         teacherProTip: '',
@@ -221,46 +234,52 @@ function generateClientFallbackSolution(params: {
   let commonPitfallToAvoid = 'Writing only the final numerical answer without showing intermediate step substitutions loses up to 60% of marks.';
 
   if (qLower.includes('edta') || qLower.includes('hardness') || tLower.includes('water')) {
-    fullAnswerMarkdown = `Step 1: Principle & Indicator Reaction
-• Principle: Disodium salt of EDTA forms stable, colorless soluble chelate complexes with Ca²⁺ and Mg²⁺ ions at pH 9-10 (buffered with NH₄OH-NH₄Cl).
-• Reaction with Indicator:
-• [Ca²⁺ / Mg²⁺] + EBT (Wine Red at pH 10) → [Ca-EBT / Mg-EBT] (Unstable Wine Red Complex)
+    fullAnswerMarkdown = `Step 1: Introduction & Theoretical Foundation
+• Definition: Hardness of water is the soap-consuming capacity caused by dissolved multivalent metallic cations, primarily Ca²⁺ and Mg²⁺.
+• Principle: Disodium salt of EDTA forms stable, soluble 1:1 hexadentate chelate complexes with Ca²⁺ and Mg²⁺ ions at pH 9-10.
+• Buffer Requirement: NH₄OH - NH₄Cl buffer maintains pH = 10 to ensure complete chelation without precipitation of metal hydroxides.
 
-Step 2: EDTA Titration & Color Change Mechanism
+Step 2: Indicator Equilibrium & Mechanism
+• Indicator Action: Eriochrome Black-T (EBT) forms an unstable wine-red complex with Ca²⁺/Mg²⁺ ions:
+• [Ca²⁺ / Mg²⁺] + EBT (Blue at pH 10) → [M-EBT] (Unstable Wine Red Complex)
 • On adding standard EDTA solution from burette:
 • [M-EBT] (Wine Red) + EDTA → [M-EDTA] (Stable Colorless Chelate) + Free EBT (Steel Blue)
-• Sharp end-point: Wine Red to Steel Blue.
+• Equivalence Endpoint: Sharp transition from Wine Red to Steel Blue.
 
-Step 3: Quantitative Calculation Formula
-• Standard Hardness CaCO₃ Equivalent:
+Step 3: Quantitative Formulations & CaCO₃ Equivalent
+• Standard Hardness CaCO₃ Equivalent Formula:
 • Total Hardness (mg/L or ppm) = [Volume of EDTA (mL) × Molarity of EDTA × 1000] / Volume of water sample (mL)
 • Temporary Hardness = Total Hardness - Permanent Hardness.
 
-Step 4: Final Evaluated Answer
-• Final Answer: Hardness accurately evaluated using EDTA chelatometric titration in mg/L (ppm) as CaCO₃ equivalent.`;
+Step 4: Classification & Real-World Applications
+• Hardness Categories: Temporary (Carbonate: Ca(HCO₃)₂, Mg(HCO₃)₂) vs Permanent (Non-carbonate: CaCl₂, MgSO₄).
+• Industrial Significance: Prevents scale and sludge formation in high-pressure thermal boilers and optimizes detergent efficacy in municipal distribution.`;
+
     diagramDescription = 'Molecular structure of hexadentate EDTA binding octahedrally to Ca²⁺ ion and color transition from Wine Red to Steel Blue.';
-    teacherProTip = 'Always mention the buffer pH = 10 (NH₄Cl + NH₄OH). Without stating the pH condition, DAVV examiners deduct 2 marks.';
-    commonPitfallToAvoid = 'Confusing EBT indicator color: EBT alone is Blue; the Metal-EBT complex is Wine Red.';
+    teacherProTip = 'Always state the role of NH₄Cl + NH₄OH buffer maintaining pH = 10. Omitting buffer justification loses 2 marks in DAVV evaluation.';
+    commonPitfallToAvoid = 'Confusing EBT indicator color transition: Free EBT is Steel Blue; the Metal-EBT complex is Wine Red.';
   } else if (qLower.includes('bomb') || qLower.includes('calorific') || tLower.includes('fuel')) {
-    fullAnswerMarkdown = `Step 1: Declaration of Experimental Parameters
+    fullAnswerMarkdown = `Step 1: Introduction & Governing Principles
+• Definition: Calorific value is the total heat liberated when a unit mass of fuel is burnt completely in excess oxygen.
+• HCV (Gross): Includes the latent heat of condensation of steam formed by hydrogen combustion.
+• LCV (Net): Excludes latent heat, assuming steam escapes without condensation: LCV = HCV - (0.09 × %H × 587) cal/g.
+
+Step 2: Experimental Apparatus & Bomb Calorimeter Assembly
+• Construction: Strong cylindrical stainless steel bomb with acid-resistant lining, oxygen inlet valve (pressurized to 25-30 atm), platinum crucible, and fuse wire ignition circuit.
+• Thermal Enclosure: Copper calorimeter container immersed in a water jacket with air space to eliminate radiation and convection losses.
+• Temperature Measurement: Beckmann thermometer sensitive to 0.01 °C with continuous motor stirring.
+
+Step 3: Quantitative Calculation Formula & Substitutions
 • Mass of fuel sample: m = 0.85 g
-• Mass of water in calorimeter: W = 2200 g
-• Water equivalent of calorimeter: w = 380 g
-• Total effective water mass: (W + w) = 2200 + 380 = 2580 g
-• Temperature rise: ΔT = (T₂ - T₁) = 2.42 °C
+• Total effective water mass: (W + w) = 2200 g + 380 g = 2580 g
+• Corrected temperature rise: ΔT = (T₂ - T₁ + cooling correction) = 2.42 °C
+• HCV = [(W + w) × ΔT] / m = [2580 × 2.42] / 0.85 = 7345.4 cal/g (or kcal/kg)
+• LCV = HCV - [0.09 × 5 × 587] = 7345.4 - 264.15 = 7081.25 cal/g.
 
-Step 2: Higher Calorific Value (HCV) Formulation & Computation
-• Heat released by fuel = Heat absorbed by water and apparatus
-• HCV = [(W + w) × ΔT] / m
-• HCV = [2580 g × 2.42 cal/g] / 0.85 g = 6243.6 / 0.85 = 7345.4 cal/g (or kcal/kg)
+Step 4: Industrial Applications & Coal Classification
+• Fuel Grading: Determines commercial coal ranking (Anthracite > Bituminous > Lignite > Peat).
+• Thermal Power Generation: Essential for calculating boiler thermal efficiency and boiler heat balance sheets.`;
 
-Step 3: Lower Calorific Value (LCV) Calculation
-• Given Hydrogen percentage: H = 5%
-• LCV = HCV - [0.09 × H × Latent heat of steam]
-• LCV = 7345.4 - [0.09 × 5 × 587] = 7345.4 - 264.15 = 7081.25 cal/g
-
-Step 4: Final Evaluated Result
-• Final Answer: HCV = 7,345.4 cal/g (kcal/kg); LCV = 7,081.25 cal/g (kcal/kg).`;
     diagramDescription = 'Cross-sectional schematic of Bomb Calorimeter showing stainless steel bomb, oxygen inlet valve, ignition wires, copper calorimeter, and Beckmann thermometer.';
     teacherProTip = 'Remember the factor 0.09 comes from 1 part H₂ producing 9 parts H₂O by weight (2g H₂ -> 18g H₂O).';
     commonPitfallToAvoid = 'Using W alone instead of (W + w) completely neglects the calorimeter heat capacity.';
@@ -462,6 +481,94 @@ Step 3: Final Evaluated Result & Units
     );
   }
 
+  // Rich pedagogical sections for common topics
+  let introduction = '';
+  let conceptCategorization: { category: string; description: string; items: string[] }[] = [];
+  let applications: string[] = [];
+  let industrialSignificance = '';
+
+  if (qLower.includes('edta') || qLower.includes('hardness') || tLower.includes('water')) {
+    introduction = 'Hardness of water is the measure of multivalent metallic cations (primarily Ca²⁺ and Mg²⁺) capable of reacting with soap to form insoluble curds. EDTA (Ethylene Diamine Tetraacetic Acid) acts as a hexadentate chelating ligand that binds stoichiometrically 1:1 with divalent cations at pH = 10.';
+    conceptCategorization = [
+      {
+        category: 'Temporary (Carbonate) Hardness',
+        description: 'Caused by dissolved bicarbonates of calcium and magnesium [Ca(HCO₃)₂, Mg(HCO₃)₂].',
+        items: ['Decomposes upon heating: Ca(HCO₃)₂ → CaCO₃↓ + H₂O + CO₂↑', 'Removable easily by simple boiling or lime addition']
+      },
+      {
+        category: 'Permanent (Non-Carbonate) Hardness',
+        description: 'Caused by chlorides, sulfates, and nitrates [CaCl₂, MgCl₂, CaSO₄, MgSO₄].',
+        items: ['Cannot be removed by boiling', 'Requires ion-exchange, EDTA complexation, or zeolite demineralization']
+      }
+    ];
+    applications = [
+      'High-pressure thermal boiler feed water softening to eliminate hazardous boiler scaling and priming',
+      'Municipal water quality regulatory assessment and municipal filtration plant calibration',
+      'Pharmaceutical formulation testing and textile washing process water conditioning'
+    ];
+    industrialSignificance = 'Crucial for thermal power plants: Scale formation reduces boiler heat-transfer efficiency by up to 40% and can cause localized overheating tube explosions.';
+  } else if (qLower.includes('bomb') || qLower.includes('calorific') || tLower.includes('fuel')) {
+    introduction = 'Calorific value is the fundamental thermal energy released during complete combustion of a unit mass of fuel in pure oxygen. Higher Calorific Value (HCV) includes latent heat of condensation, while Lower Calorific Value (LCV) assumes steam escapes uncondensed.';
+    conceptCategorization = [
+      {
+        category: 'Higher Calorific Value (Gross HCV)',
+        description: 'Total liberated heat when combustion products are cooled back to 15°C baseline.',
+        items: ['Includes latent heat of vaporization of water (587 cal/g)', 'Determined directly using Bomb Calorimeter']
+      },
+      {
+        category: 'Lower Calorific Value (Net LCV)',
+        description: 'Available industrial heat where water vapor escapes into exhaust flue gas.',
+        items: ['LCV = HCV - (0.09 × %H × 587) cal/g', 'Accounts for 9 parts H₂O formed per 1 part combustible H₂']
+      }
+    ];
+    applications = [
+      'Thermal power station coal procurement grading and tariff determination',
+      'Internal combustion engine fuel suitability and air-fuel ratio stoichiometric calculations',
+      'Industrial blast furnace and cement rotary kiln energy balance audits'
+    ];
+    industrialSignificance = 'Directly determines coal purchase pricing and power station thermal efficiency (heat rate in kcal/kWh).';
+  } else if (qLower.includes('rectifier') || qLower.includes('ripple') || tLower.includes('diode')) {
+    introduction = 'Rectification converts alternating current (AC) into unidirectional pulsating direct current (DC). Center-tapped full-wave rectifiers utilize two complementary diodes and a center-tapped secondary winding to conduct on alternate half-cycles.';
+    conceptCategorization = [
+      {
+        category: 'Half-Wave Rectifier',
+        description: 'Single diode conducting during only positive half-cycles.',
+        items: ['Ripple Factor: r = 1.21 (High AC ripple)', 'Maximum efficiency: η = 40.6%']
+      },
+      {
+        category: 'Full-Wave Center-Tapped Rectifier',
+        description: 'Dual diodes conducting sequentially across full alternating cycle.',
+        items: ['Ripple Factor: r = 0.482 (60% lower AC ripple)', 'Maximum efficiency: η = 81.2%', 'Peak Inverse Voltage: PIV = 2 V_m']
+      }
+    ];
+    applications = [
+      'Regulated DC switch-mode power supplies (SMPS) for embedded systems and computing nodes',
+      'Battery charging circuits in automotive electronics and renewable inverter stages',
+      'RF signal demodulation and envelope detection in communication receivers'
+    ];
+    industrialSignificance = 'Foundation of all electronic power adapters; low ripple factor reduces capacitor filter sizing and thermal stress on semiconductors.';
+  } else if (qLower.includes('leibnitz') || qLower.includes('sin^-1') || tLower.includes('differentiation')) {
+    introduction = "Leibnitz's Theorem generalizes the product rule to n-th order successive differentiation of the product of two functions: dⁿ/dxⁿ(u · v) = ∑ ⁿC_k u^(n-k) v^(k). It provides an algebraic tool for higher-order derivatives without nested expansions.";
+    conceptCategorization = [
+      {
+        category: 'Base Differential Equation Formulation',
+        description: 'Transforming original function into algebraic form (1 - x²) y₂ - x y₁ = 2.',
+        items: ['Eliminates transcendental inverse trigonometric terms', 'Enables straightforward finite Leibnitz expansions']
+      },
+      {
+        category: 'Boundary Value & Recurrence Evaluation',
+        description: 'Evaluating recurrence relation y_{n+2}(0) = n² y_n(0) at origin.',
+        items: ['Odd derivatives vanish at x = 0: (y_n)₀ = 0 for odd n', 'Even derivatives form factorial power chains: 2 · 2² · 4² ··· (n-2)²']
+      }
+    ];
+    applications = [
+      'Analytical solutions to non-linear mechanics and orbital perturbation series',
+      'Power series expansions and Taylor series coefficients for numerical ODE solvers',
+      'Vibration modes analysis in structural engineering beams under variable loads'
+    ];
+    industrialSignificance = 'Underpins finite element analysis (FEA) and continuous boundary value solvers utilized across aerospace and civil engineering.';
+  }
+
   return {
     markingRubric: [
       { step: 'Step 1: Formula Declaration & Given Parameters', marksAwarded: 2, teacherExpectation: 'Explicitly state all variables, symbols, and standard governing formula.' },
@@ -472,7 +579,11 @@ Step 3: Final Evaluated Result & Units
     flowchartSteps: defaultFlowchart,
     diagramDescription,
     teacherProTip,
-    commonPitfallToAvoid
+    commonPitfallToAvoid,
+    introduction,
+    conceptCategorization,
+    applications,
+    industrialSignificance
   };
 }
 

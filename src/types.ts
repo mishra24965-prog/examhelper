@@ -203,6 +203,15 @@ export interface FlowchartNode {
   highlight?: boolean;
 }
 
+export interface ModelAnswerSection {
+  title: string;
+  category: 'introduction' | 'classification' | 'mechanism' | 'flowchart' | 'application' | 'numerical' | 'conclusion';
+  content: string;
+  bulletPoints?: string[];
+  formulaBox?: string;
+  badge?: string;
+}
+
 export interface ModelAnswer {
   questionId: string;
   questionText: string;
@@ -218,6 +227,12 @@ export interface ModelAnswer {
   tailoredTeacherNotes?: string;
   teacherProTip: string;
   commonPitfallToAvoid: string;
+  // Pedagogical answer structure
+  introduction?: string;
+  conceptCategorization?: { category: string; description: string; items: string[] }[];
+  applications?: string[];
+  industrialSignificance?: string;
+  structuredSections?: ModelAnswerSection[];
 }
 
 export interface ExamPaperRecord {

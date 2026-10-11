@@ -450,6 +450,34 @@ export const StudentProfileModal: React.FC<Props> = ({
                     className="w-full bg-[#0b0b0d] border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
                   />
                 </div>
+
+                {/* Profile Role Selector */}
+                <div>
+                  <label className="text-xs font-semibold text-white/70 block mb-1">Access Role & Scope</label>
+                  <select
+                    value={profile.role || 'student'}
+                    onChange={(e) => setProfile({ ...profile, role: e.target.value as 'student' | 'organizer' })}
+                    className="w-full bg-[#0b0b0d] border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 cursor-pointer"
+                  >
+                    <option value="student">Student Profile (Personal paper uploads & custom notes)</option>
+                    <option value="organizer">CR / Organizer Profile (Verified class master paper repository)</option>
+                  </select>
+                </div>
+
+                {/* Firebase Cloud Sync Status */}
+                <div>
+                  <label className="text-xs font-semibold text-white/70 block mb-1">Firebase Project Sync ID</label>
+                  <input
+                    type="text"
+                    value={profile.firebaseConfig?.projectId || ''}
+                    onChange={(e) => setProfile({
+                      ...profile,
+                      firebaseConfig: { ...profile.firebaseConfig, projectId: e.target.value.trim() }
+                    })}
+                    placeholder="examintel-cloud (Firestore REST sync)"
+                    className="w-full bg-[#0b0b0d] border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white font-mono focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
               </div>
 
               <div className="pt-4 flex items-center justify-end gap-3">

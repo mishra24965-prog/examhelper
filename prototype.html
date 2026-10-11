@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ExamIntel Live Working Prototype</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    .scrollbar-thin::-webkit-scrollbar { height: 6px; width: 6px; }
+    .scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen p-4 sm:p-6 antialiased">
+  <div class="max-w-6xl mx-auto space-y-6">
+
+    <!-- Top Navigation Header -->
+    <header class="bg-slate-900/90 border border-slate-800 rounded-3xl p-4 sm:p-5 flex flex-col md:flex-row items-center justify-between gap-4 shadow-xl">
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center font-black text-xl text-white shadow-lg shadow-indigo-600/30">
+          EI
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-xl font-bold tracking-tight text-white">ExamIntel</h1>
+            <span class="text-xs px-2.5 py-0.5 rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 font-medium">
+              IET-DAVV 2024 Scheme
+            </span>
+          </div>
+          <p class="text-xs text-slate-400">Past Paper Intelligence & Teacher Mindset Platform</p>
+        </div>
+      </div>
+
+      <!-- Live Role Switcher (Student vs Organizer) -->
+      <div class="flex items-center gap-3">
+        <span class="text-xs text-slate-400 font-medium">Active Mode:</span>
+        <div class="flex items-center bg-slate-950 p-1 rounded-2xl border border-slate-800 text-xs font-semibold">
+          <button id="btnRoleStudent" onclick="switchRole('student')" class="px-3 py-1.5 rounded-xl bg-indigo-600 text-white transition flex items-center gap-1.5 shadow-sm">
+            <span>🎓</span>
+            <span>Student View</span>
+          </button>
+          <button id="btnRoleOrganizer" onclick="switchRole('organizer')" class="px-3 py-1.5 rounded-xl text-slate-400 hover:text-white transition flex items-center gap-1.5">
+            <span>⭐</span>
+            <span>Organizer View</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Subject Selector Dock -->
+    <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-3 flex items-center gap-2 overflow-x-auto scrollbar-thin">
+      <span class="text-xs font-bold text-slate-400 uppercase tracking-wider px-2">Subjects:</span>
+      <button onclick="switchSubject('chem')" id="subjBtn-chem" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow transition flex items-center gap-1.5 whitespace-nowrap">
+        <span>🧪 Applied Chemistry</span>
+      </button>
+      <button onclick="switchSubject('elec')" id="subjBtn-elec" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-950 text-slate-400 hover:text-white border border-slate-800 transition flex items-center gap-1.5 whitespace-nowrap">
+        <span>⚡ Basic Electronics</span>
+      </button>
+      <button onclick="switchSubject('math')" id="subjBtn-math" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-950 text-slate-400 hover:text-white border border-slate-800 transition flex items-center gap-1.5 whitespace-nowrap">
+        <span>📐 Applied Maths-I</span>
+      </button>
+      <button onclick="switchSubject('cpp')" id="subjBtn-cpp" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-950 text-slate-400 hover:text-white border border-slate-800 transition flex items-center gap-1.5 whitespace-nowrap">
+        <span>💻 Object Oriented C++</span>
+      </button>
+    </div>
+
+    <!-- 4 Navigation Tabs -->
+    <div class="flex items-center gap-2 border-b border-slate-800 pb-2">
+      <button onclick="switchTab('pyq')" id="tabBtn-pyq" class="px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white transition flex items-center gap-1.5">
+        <span>📄 Past Papers & PYQs</span>
+        <span id="paperCountBadge" class="px-1.5 py-0.2 rounded-full bg-indigo-900 text-[10px]">3 Papers</span>
+      </button>
+      <button onclick="switchTab('teacher')" id="tabBtn-teacher" class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-900 text-slate-400 hover:text-white transition flex items-center gap-1.5">
+        <span>👨‍🏫 Teacher Mindset Studio</span>
+      </button>
+      <button onclick="switchTab('video')" id="tabBtn-video" class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-900 text-slate-400 hover:text-white transition flex items-center gap-1.5">
+        <span>🎥 In-App Top Lectures</span>
+      </button>
+    </div>
+
+    <!-- ================= TAB 1: PAST PAPERS & PYQ BANK ================= -->
+    <div id="tabContent-pyq" class="space-y-6">
+      <!-- Upload Banner -->
+      <div class="bg-gradient-to-r from-indigo-950/40 via-purple-950/30 to-slate-900 border border-indigo-500/30 rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div class="space-y-1">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+              Core Feature
+            </span>
+            <span id="roleNotice" class="text-xs text-indigo-300 font-medium">Logged in as: Student (Upload Section MST)</span>
+          </div>
+          <h2 class="text-lg font-bold text-white">Upload Your College MST Past Paper</h2>
+          <p class="text-xs text-slate-300 max-w-xl">
+            Upload PDF, image scan, or paste questions from your mid-sem exams. Gemini extracts every question, maps them to syllabus units, and cross-references them.
+          </p>
+        </div>
+        <button onclick="openUploadModal()" class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition shadow-lg shadow-indigo-600/30 shrink-0 flex items-center gap-2 cursor-pointer">
+          <span>📤 Upload Exam Paper</span>
+        </button>
+      </div>
+
+      <!-- Filter Bar: All Papers vs Organizer Official vs My Section Uploads -->
+      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-3 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div class="flex items-center gap-2">
+          <span class="text-slate-400 font-semibold">Filter by Source:</span>
+          <div class="flex items-center bg-slate-950 p-0.5 rounded-xl border border-slate-800">
+            <button onclick="filterPapers('all')" id="filterBtn-all" class="px-3 py-1 rounded-lg bg-indigo-600 text-white font-semibold">
+              All Papers
+            </button>
+            <button onclick="filterPapers('organizer')" id="filterBtn-organizer" class="px-3 py-1 rounded-lg text-slate-400 hover:text-white font-semibold">
+              ⭐ Official Master Papers
+            </button>
+            <button onclick="filterPapers('student')" id="filterBtn-student" class="px-3 py-1 rounded-lg text-slate-400 hover:text-white font-semibold">
+              🎓 My Uploaded Papers
+            </button>
+          </div>
+        </div>
+        <span id="questionCounter" class="text-slate-400 font-mono text-xs">Showing 3 Questions</span>
+      </div>
+
+      <!-- Question Cards List -->
+      <div id="questionsContainer" class="space-y-4">
+        <!-- Rendered dynamically via JS -->
+      </div>
+    </div>
+
+    <!-- ================= TAB 2: TEACHER MINDSET STUDIO ================= -->
+    <div id="tabContent-teacher" class="space-y-6 hidden">
+      <div class="bg-gradient-to-br from-indigo-950/40 via-purple-950/30 to-slate-900 border border-indigo-500/30 rounded-3xl p-6 space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
+          <div>
+            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+              <span>Personalized Teacher Mindset Studio</span>
+              <span class="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-mono">
+                Active
+              </span>
+            </h2>
+            <p class="text-xs text-slate-400">
+              Customize what your specific college teacher expects. Gemini adheres to these exact rules when solving PYQs.
+            </p>
+          </div>
+          <button onclick="saveTeacherMindset()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-emerald-900/30 self-start sm:self-auto cursor-pointer">
+            <span id="saveMindsetBtnText">💾 Save Teacher Mindset</span>
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="space-y-1.5">
+            <label class="text-xs font-semibold text-slate-300">Teacher / Professor Name</label>
+            <input type="text" id="teacherNameInput" value="Dr. M. Sharma (IET-DAVV Chemistry)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white">
+          </div>
+          <div class="space-y-1.5">
+            <label class="text-xs font-semibold text-slate-300">Explanation Language</label>
+            <select id="teacherLangSelect" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
+              <option value="English">English (University Exam Standard)</option>
+              <option value="Hinglish" selected>Hinglish (Easy to understand concepts)</option>
+              <option value="Hindi">Hindi (Technical)</option>
+            </select>
+          </div>
+          <div class="space-y-1.5">
+            <label class="text-xs font-semibold text-slate-300">Marking Severity</label>
+            <div class="p-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-amber-300 flex items-center gap-1.5">
+              <span>⚠️ Strict Step-Marking Deductions</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Format Toggles -->
+        <div class="space-y-2">
+          <label class="text-xs font-semibold text-slate-300">Teacher Preferred Formatting Elements:</label>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <label class="p-3 rounded-2xl bg-indigo-600/20 border border-indigo-500 text-white flex items-center justify-between cursor-pointer">
+              <span class="text-xs font-bold">🔀 Flowcharts</span>
+              <input type="checkbox" id="chkFlowchart" checked class="w-4 h-4 accent-indigo-500">
+            </label>
+            <label class="p-3 rounded-2xl bg-indigo-600/20 border border-indigo-500 text-white flex items-center justify-between cursor-pointer">
+              <span class="text-xs font-bold">📊 Schematics</span>
+              <input type="checkbox" id="chkDiagram" checked class="w-4 h-4 accent-indigo-500">
+            </label>
+            <label class="p-3 rounded-2xl bg-indigo-600/20 border border-indigo-500 text-white flex items-center justify-between cursor-pointer">
+              <span class="text-xs font-bold">🔢 Step-by-Step</span>
+              <input type="checkbox" id="chkSteps" checked class="w-4 h-4 accent-indigo-500">
+            </label>
+            <label class="p-3 rounded-2xl bg-indigo-600/20 border border-indigo-500 text-white flex items-center justify-between cursor-pointer">
+              <span class="text-xs font-bold">📦 Box Final Units</span>
+              <input type="checkbox" id="chkBox" checked class="w-4 h-4 accent-indigo-500">
+            </label>
+          </div>
+        </div>
+
+        <!-- Natural language notes -->
+        <div class="space-y-1.5">
+          <label class="text-xs font-semibold text-slate-300 flex items-center justify-between">
+            <span>Teacher Mindset in your own words (English or Hinglish):</span>
+            <span class="text-[11px] text-indigo-400">Gemini adapts automatically</span>
+          </label>
+          <textarea id="teacherNotes" rows="3" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 text-xs text-white placeholder-slate-500 leading-relaxed resize-none">Sharma sir strictly demands chemical reaction flowcharts for EDTA hardness and Bomb calorimeter. If units (ppm / cal/g) are omitted in final answers, he deducts 2 marks directly.</textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= TAB 3: IN-APP VIDEO LECTURES ================= -->
+    <div id="tabContent-video" class="space-y-6 hidden">
+      <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4">
+        <div>
+          <h2 class="text-lg font-bold text-white flex items-center gap-2">
+            <span>📺 In-App YouTube Masterclass Player</span>
+            <span class="px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 text-[10px] font-mono">
+              Plays In-App (No Redirects)
+            </span>
+          </h2>
+          <p class="text-xs text-slate-400">
+            Automatically curates top-rated, most-viewed university lectures mapped directly to each syllabus subtopic.
+          </p>
+        </div>
+
+        <!-- Video Cards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="videoCardsGrid">
+          <!-- Populated via JS -->
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ================= MODAL: SOLVE PYQ WITH PEDAGOGICAL STRUCTURE ================= -->
+  <div id="modalSolve" class="fixed inset-0 bg-slate-950/80 backdrop-blur-xl z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900/90 border border-slate-700/60 rounded-3xl max-w-3xl w-full max-h-[92vh] overflow-y-auto p-6 space-y-5 shadow-2xl shadow-indigo-950/40 text-slate-100">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div class="flex items-center gap-2">
+          <span class="px-2.5 py-1 rounded-xl bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 font-mono text-xs font-bold" id="modalQNum">Q1</span>
+          <span class="text-xs font-bold text-amber-300 bg-amber-500/15 px-2 py-0.5 rounded border border-amber-500/25" id="modalQMarks">7 Marks</span>
+          <span class="text-xs text-slate-400" id="modalQTopic">Unit 1: Water Technology</span>
+        </div>
+        <button onclick="closeModal('modalSolve')" class="text-slate-400 hover:text-white text-lg font-bold">✕</button>
+      </div>
+
+      <div class="p-3.5 rounded-2xl bg-slate-950/70 border border-slate-800 text-xs sm:text-sm font-semibold text-white leading-relaxed" id="modalQText">
+        Explain EDTA method for determination of hardness of water with complete chemical reactions and principle.
+      </div>
+
+      <!-- Teacher Mindset Applied Notice -->
+      <div class="p-3 rounded-2xl bg-indigo-950/40 border border-indigo-500/40 text-xs text-indigo-200 flex items-center justify-between">
+        <span class="flex items-center gap-1.5">
+          <span>👨‍🏫</span>
+          <strong id="modalAppliedTeacher">Tailored for: Dr. M. Sharma (Flowchart & Step Marks Active)</strong>
+        </span>
+        <span class="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-mono">Pedagogical Rubric</span>
+      </div>
+
+      <!-- Solution View Tabs (Structured Complete vs Visual Flowchart) -->
+      <div class="flex items-center gap-2 border-b border-slate-800 pb-2">
+        <button onclick="toggleSolutionView('structured')" id="btnSolStructured" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow">
+          📚 Complete 5-Part Model Answer
+        </button>
+        <button onclick="toggleSolutionView('flow')" id="btnSolFlow" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-950 text-slate-400 hover:text-white">
+          🔀 Mechanism Flowchart
+        </button>
+      </div>
+
+      <!-- 5-Part Pedagogical Structured Answer View -->
+      <div id="solutionStructuredView" class="space-y-4">
+        <!-- Part 1: Intro -->
+        <div class="p-4 rounded-2xl bg-slate-950/60 border border-indigo-500/30 space-y-1.5">
+          <div class="text-xs font-mono font-bold uppercase tracking-wider text-indigo-300 flex items-center gap-1.5">
+            <span>📘 Part 1: Introduction & Theoretical Foundation</span>
+          </div>
+          <p class="text-xs text-slate-300 leading-relaxed" id="pedagogicalIntroText">
+            Hardness in water is the measure of capacity to precipitate soap, predominantly caused by divalent calcium (Ca²⁺) and magnesium (Mg²⁺) cations. Disodium EDTA behaves as a hexadentate chelating ligand that forms highly stable 1:1 soluble complexes at pH 9-10.
+          </p>
+        </div>
+
+        <!-- Part 2: Classification -->
+        <div class="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 space-y-2.5">
+          <div class="text-xs font-mono font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+            <span>🏷️ Part 2: Concept Classification & Taxonomy</span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5" id="pedagogicalClassificationCards">
+            <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
+              <span class="text-xs font-bold text-amber-300">Temporary (Carbonate) Hardness</span>
+              <p class="text-[11px] text-slate-400">Caused by Ca(HCO₃)₂ and Mg(HCO₃)₂. Decomposes upon simple boiling into insoluble carbonates.</p>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 space-y-1">
+              <span class="text-xs font-bold text-amber-300">Permanent (Non-Carbonate) Hardness</span>
+              <p class="text-[11px] text-slate-400">Caused by chlorides and sulfates (CaCl₂, MgSO₄). Cannot be removed by boiling; requires EDTA chelation or ion exchange.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Part 3: Step-by-Step Derivation & Boxed Math -->
+        <div class="p-4 rounded-2xl bg-slate-950/60 border border-slate-800 space-y-3">
+          <div class="text-xs font-mono font-bold uppercase tracking-wider text-slate-200 flex items-center gap-1.5">
+            <span>🔢 Part 3: Step-by-Step Derivation & Reactions</span>
+          </div>
+          <div class="space-y-2 text-xs text-slate-300" id="pedagogicalDerivationBody">
+            <div class="p-2.5 rounded-xl bg-slate-900 border border-indigo-500/20 font-mono text-emerald-300">
+              Indicator reaction: [Ca²⁺ / Mg²⁺] + EBT (Steel Blue) → [M-EBT] (Wine Red Unstable Complex)
+            </div>
+            <div class="p-2.5 rounded-xl bg-slate-900 border border-indigo-500/20 font-mono text-emerald-300">
+              Titration reaction: [M-EBT] + EDTA → [M-EDTA] (Stable Colorless) + Free EBT (Steel Blue at Endpoint)
+            </div>
+          </div>
+          <div class="p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/40 text-emerald-300 flex items-center justify-between text-xs">
+            <span class="font-bold">Boxed University Formulation:</span>
+            <span class="font-mono font-bold text-white bg-emerald-500/25 px-2.5 py-1 rounded">Total Hardness = [V_EDTA × M × 1000] / V_sample ppm CaCO3</span>
+          </div>
+        </div>
+
+        <!-- Part 4: Industrial Applications -->
+        <div class="p-4 rounded-2xl bg-slate-950/60 border border-emerald-500/30 space-y-1.5">
+          <div class="text-xs font-mono font-bold uppercase tracking-wider text-emerald-300 flex items-center gap-1.5">
+            <span>🏭 Part 4: Real-World & Industrial Applications</span>
+          </div>
+          <ul class="text-xs text-slate-300 space-y-1 list-disc pl-4" id="pedagogicalApplicationsList">
+            <li>Thermal power boiler feed water softening to prevent hazardous scale deposition and tube blowout accidents.</li>
+            <li>Municipal water treatment facility hardness titration and potable standard certification.</li>
+            <li>Industrial laundry and textile dying water conditioning to reduce detergent wastage.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Flowchart View -->
+      <div id="solutionFlowchartView" class="space-y-3 hidden">
+        <!-- Rendered flowchart nodes -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: IN-APP YOUTUBE VIDEO PLAYER ================= -->
+  <div id="modalVideo" class="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-4xl w-full p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between">
+        <div>
+          <span class="text-[10px] font-mono text-rose-400 font-bold uppercase tracking-wider">Top-Rated Educational Video</span>
+          <h3 class="text-sm sm:text-base font-bold text-white truncate max-w-xl" id="playerTitle">EDTA Method Lecture</h3>
+        </div>
+        <button onclick="closeModal('modalVideo')" class="text-slate-400 hover:text-white text-lg font-bold">✕</button>
+      </div>
+
+      <!-- Direct Video Embed -->
+      <div class="aspect-video w-full rounded-2xl overflow-hidden bg-black border border-slate-800 shadow-inner">
+        <iframe id="videoIframe" class="w-full h-full" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      </div>
+
+      <div class="flex items-center justify-between text-xs text-slate-400 pt-2 border-t border-slate-800">
+        <span id="playerViews">🔥 1.2M+ views • ⭐ 4.9 Rating</span>
+        <span class="text-emerald-400 font-medium">✓ Verified University Standard</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: UPLOAD PAST PAPER ================= -->
+  <div id="modalUpload" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-white/10 pb-3">
+        <h3 class="text-base font-bold text-white">Upload Past Exam Paper</h3>
+        <button onclick="closeModal('modalUpload')" class="text-slate-400 hover:text-white text-lg font-bold">✕</button>
+      </div>
+
+      <div class="space-y-3">
+        <div class="space-y-1">
+          <label class="text-xs font-semibold text-slate-300">Upload Role Designation:</label>
+          <div class="p-2.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between text-xs">
+            <span id="uploadRoleLabel" class="text-indigo-300 font-bold">🎓 Student (Personal Section Paper)</span>
+            <span class="text-[10px] text-slate-500 font-mono">Tagged Automatically</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div class="space-y-1">
+            <label class="text-xs font-semibold text-slate-300">Exam Type</label>
+            <select id="upExamType" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 text-xs text-white">
+              <option value="MST-1">MST-1 (Mid Sem)</option>
+              <option value="MST-2">MST-2</option>
+              <option value="End-Sem">End-Sem</option>
+            </select>
+          </div>
+          <div class="space-y-1">
+            <label class="text-xs font-semibold text-slate-300">Exam Year</label>
+            <input type="number" id="upYear" value="2024" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 text-xs text-white">
+          </div>
+        </div>
+
+        <div class="space-y-1">
+          <label class="text-xs font-semibold text-slate-300">Paper Title / Name</label>
+          <input type="text" id="upTitle" value="2024 Chemistry MST-1 Section-A" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 text-xs text-white">
+        </div>
+
+        <div class="border-2 border-dashed border-slate-700 hover:border-indigo-500 rounded-2xl p-6 text-center space-y-2 bg-slate-950/50 cursor-pointer">
+          <div class="text-2xl">📄</div>
+          <div class="text-xs font-bold text-white">Select PDF or Image Scan of Exam Paper</div>
+          <p class="text-[11px] text-slate-400">Gemini OCR will parse questions and format them automatically</p>
+        </div>
+      </div>
+
+      <button onclick="handleSimulateUpload()" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition shadow-lg shadow-indigo-600/30 cursor-pointer">
+        Simulate Ingestion & Sync with Firebase
+      </button>
+    </div>
+  </div>
+
+  <!-- Script logic -->
+  <script>
+    let currentRole = 'student';
+    let currentSubject = 'chem';
+    let currentFilter = 'all';
+
+    const questionsData = [
+      {
+        id: 'q1',
+        subject: 'chem',
+        num: 'Q1',
+        marks: 7,
+        year: 2024,
+        exam: 'MST-1',
+        topic: 'Unit 1: Water Treatment',
+        text: 'Explain the EDTA method for determination of hardness of water. Give the principle, chemical reactions, and calculation formula.',
+        isOrganizer: true,
+        flowchart: [
+          { step: 1, title: 'Sample Preparation & pH Buffering', desc: 'Take 50 mL hard water sample. Add 2 mL NH4Cl-NH4OH buffer solution to maintain pH = 9-10.' },
+          { step: 2, title: 'Indicator Addition & Chelation', desc: 'Add 2-3 drops of Eriochrome Black-T (EBT). Ca2+/Mg2+ ions form an unstable wine-red complex with EBT.' },
+          { step: 3, title: 'EDTA Titration & Color Transition', desc: 'Titrate against 0.01M EDTA. EDTA displaces EBT due to higher stability, turning wine-red to steel blue at equivalence.' },
+          { step: 4, title: 'Hardness Calculation & SI Units', desc: 'Total Hardness = (V_EDTA * M_EDTA * 100 * 1000) / V_sample. Box final answer in ppm (mg/L CaCO3 equivalent).' }
+        ]
+      },
+      {
+        id: 'q2',
+        subject: 'chem',
+        num: 'Q2',
+        marks: 7,
+        year: 2024,
+        exam: 'MST-1',
+        topic: 'Unit 2: Fuels & Combustion',
+        text: 'Describe the construction and working of a Bomb Calorimeter for the determination of higher calorific value (HCV) of solid fuel.',
+        isOrganizer: false,
+        flowchart: [
+          { step: 1, title: 'Pellet Weighing & Oxygen Charging', desc: 'Take 0.5-1.0 g of fuel pellet in silica crucible. Connect fuse wire and pressurize stainless bomb to 25-30 atm O2.' },
+          { step: 2, title: 'Calorimeter Immersion & Thermal Stabilization', desc: 'Immerse bomb into copper calorimeter containing weighed water (W). Read initial temp T1 via Beckmann thermometer.' },
+          { step: 3, title: 'Electrical Ignition & Combustion', desc: 'Pass 6V current to ignite fuel. Fuel burns completely. Record maximum temperature T2 with constant stirring.' },
+          { step: 4, title: 'Dulongs Formula & Cooling Correction', desc: 'HCV = [(W + w)(T2 - T1 + t_cooling) - (Acid + Fuse corr.)] / m. Box final answer in cal/g or kcal/kg.' }
+        ]
+      },
+      {
+        id: 'q3',
+        subject: 'chem',
+        num: 'Q3',
+        marks: 7,
+        year: 2023,
+        exam: 'MST-2',
+        topic: 'Unit 3: Lubricants & Polymers',
+        text: 'Explain the mechanism of thin-film (boundary) and thick-film (hydrodynamic) lubrication with schematic diagrams.',
+        isOrganizer: true,
+        flowchart: [
+          { step: 1, title: 'Hydrodynamic Fluid Film Formation', desc: 'Thick lubricant layer (>1000 Å) separates moving surfaces. Friction depends only on oil viscosity.' },
+          { step: 2, title: 'Boundary Layer Adsorption', desc: 'Under heavy loads, oil squeezes out. Polar molecules (e.g. vegetable oils, stearic acid) adsorb to metallic surfaces.' },
+          { step: 3, title: 'Extreme Pressure Additives (EP)', desc: 'Under extreme heat and pressure, chlorinated or sulfurized additives react to form shearable inorganic metal chloride films.' }
+        ]
+      }
+    ];
+
+    const videoLectures = [
+      {
+        id: 'vid-1',
+        title: 'EDTA Hardness Determination - Complete Chemistry Derivation',
+        channel: 'Top University Engineering Masterclasses',
+        views: '1.2M+ views',
+        rating: '4.9 ⭐',
+        videoId: 'FCQ26RQBZLg',
+        searchQuery: 'EDTA method hardness of water engineering chemistry',
+        duration: '22:15'
+      },
+      {
+        id: 'vid-2',
+        title: 'Hardness of Water Numerical Problems & CaCO3 Equivalent',
+        channel: 'Engineering Chemistry Academy',
+        views: '890K+ views',
+        rating: '4.9 ⭐',
+        videoId: 'KBo9VB30pbk',
+        searchQuery: 'Hardness of water numerical problems CaCO3 equivalent',
+        duration: '18:40'
+      },
+      {
+        id: 'vid-3',
+        title: 'Boiler Troubles: Scales, Sludges and Caustic Embrittlement',
+        channel: 'Engineering Chemistry Lessons',
+        views: '650K+ views',
+        rating: '4.8 ⭐',
+        videoId: 'bo0XVpMw_DM',
+        searchQuery: 'Boiler troubles scale sludge caustic embrittlement',
+        duration: '25:10'
+      }
+    ];
+
+    function switchRole(role) {
+      currentRole = role;
+      document.getElementById('btnRoleStudent').className = role === 'student'
+        ? 'px-3 py-1.5 rounded-xl bg-indigo-600 text-white transition flex items-center gap-1.5 shadow-sm'
+        : 'px-3 py-1.5 rounded-xl text-slate-400 hover:text-white transition flex items-center gap-1.5';
+      
+      document.getElementById('btnRoleOrganizer').className = role === 'organizer'
+        ? 'px-3 py-1.5 rounded-xl bg-amber-500/25 text-amber-300 border border-amber-500/30 transition flex items-center gap-1.5 shadow-sm font-bold'
+        : 'px-3 py-1.5 rounded-xl text-slate-400 hover:text-white transition flex items-center gap-1.5';
+
+      document.getElementById('roleNotice').innerText = role === 'student'
+        ? 'Logged in as: Student (Upload Section MST)'
+        : 'Logged in as: Organizer (Upload Official Master Papers)';
+
+      document.getElementById('uploadRoleLabel').innerText = role === 'student'
+        ? '🎓 Student (Personal Section Paper)'
+        : '⭐ Organizer (Official Master Paper for all)';
+    }
+
+    function switchTab(tab) {
+      ['pyq', 'teacher', 'video'].forEach(t => {
+        document.getElementById(`tabContent-${t}`).classList.add('hidden');
+        document.getElementById(`tabBtn-${t}`).className = 'px-4 py-2 rounded-xl text-xs font-bold bg-slate-900 text-slate-400 hover:text-white transition flex items-center gap-1.5';
+      });
+      document.getElementById(`tabContent-${tab}`).classList.remove('hidden');
+      document.getElementById(`tabBtn-${tab}`).className = 'px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white transition flex items-center gap-1.5 shadow';
+    }
+
+    function switchSubject(s) {
+      currentSubject = s;
+      ['chem', 'elec', 'math', 'cpp'].forEach(sub => {
+        const btn = document.getElementById(`subjBtn-${sub}`);
+        btn.className = sub === s
+          ? 'px-3.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow transition flex items-center gap-1.5 whitespace-nowrap'
+          : 'px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-950 text-slate-400 hover:text-white border border-slate-800 transition flex items-center gap-1.5 whitespace-nowrap';
+      });
+      renderQuestions();
+    }
+
+    function filterPapers(f) {
+      currentFilter = f;
+      ['all', 'organizer', 'student'].forEach(type => {
+        const btn = document.getElementById(`filterBtn-${type}`);
+        btn.className = type === f
+          ? 'px-3 py-1 rounded-lg bg-indigo-600 text-white font-semibold'
+          : 'px-3 py-1 rounded-lg text-slate-400 hover:text-white font-semibold';
+      });
+      renderQuestions();
+    }
+
+    function renderQuestions() {
+      const container = document.getElementById('questionsContainer');
+      container.innerHTML = '';
+
+      const filtered = questionsData.filter(q => {
+        if (currentFilter === 'organizer' && !q.isOrganizer) return false;
+        if (currentFilter === 'student' && q.isOrganizer) return false;
+        return true;
+      });
+
+      document.getElementById('questionCounter').innerText = `Showing ${filtered.length} of ${questionsData.length} Questions`;
+
+      filtered.forEach(q => {
+        const card = document.createElement('div');
+        card.className = 'bg-slate-900/90 border border-slate-800 rounded-3xl p-5 hover:border-indigo-500/50 transition space-y-4 shadow-sm';
+        card.innerHTML = `
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/5 pb-3">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="font-mono text-xs font-bold px-2.5 py-1 rounded-xl bg-indigo-600/20 text-indigo-300 border border-indigo-500/30">${q.num}</span>
+              <span class="font-mono text-xs font-bold px-2 py-0.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/30">${q.marks} Marks</span>
+              <span class="font-mono text-xs text-slate-400">${q.exam} • ${q.year}</span>
+              ${q.isOrganizer 
+                ? '<span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">⭐ Organizer Master Paper</span>'
+                : '<span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/25">🎓 Student Section Upload</span>'}
+            </div>
+            <span class="text-xs text-indigo-400 font-semibold">${q.topic}</span>
+          </div>
+
+          <p class="text-xs sm:text-sm font-semibold text-slate-100 leading-relaxed">${q.text}</p>
+
+          <div class="flex items-center justify-between pt-2">
+            <div class="flex items-center gap-1.5 text-xs text-slate-400">
+              <span>🔀</span>
+              <span>Flowchart steps ready</span>
+            </div>
+            <button onclick="openSolveModal('${q.id}')" class="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-xs transition shadow flex items-center gap-1.5 cursor-pointer">
+              <span>⚡ Solve with Teacher Flowchart</span>
+            </button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function renderVideos() {
+      const grid = document.getElementById('videoCardsGrid');
+      grid.innerHTML = '';
+      videoLectures.forEach((vid) => {
+        const card = document.createElement('div');
+        card.className = 'bg-slate-950 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between space-y-3 hover:border-slate-700 transition';
+        card.innerHTML = `
+          <div class="space-y-2">
+            <div class="flex items-center justify-between text-[11px]">
+              <span class="text-rose-400 font-bold truncate">${vid.channel}</span>
+              <span class="text-amber-300 font-mono font-bold">${vid.rating}</span>
+            </div>
+            <h4 class="text-xs sm:text-sm font-bold text-white line-clamp-2">${vid.title}</h4>
+            <div class="flex items-center gap-2 text-[10px] text-slate-400">
+              <span>🔥 ${vid.views}</span>
+              <span>⏱ ${vid.duration}</span>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 pt-1">
+            <button onclick="playInAppVideo('${vid.videoId}', '${encodeURIComponent(vid.title)}', '${vid.views}', '${encodeURIComponent(vid.searchQuery)}')" class="flex-1 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow cursor-pointer">
+              <span>▶ Watch In-App</span>
+            </button>
+            <a href="https://www.youtube.com/watch?v=${vid.videoId}" target="_blank" rel="noopener noreferrer" class="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 text-xs font-semibold flex items-center gap-1 transition" title="Open directly on YouTube">
+              <span>↗</span>
+            </a>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function playInAppVideo(videoId, title, views, query) {
+      document.getElementById('playerTitle').innerText = decodeURIComponent(title);
+      document.getElementById('playerViews').innerText = `🔥 ${views} • Most Viewed YouTube University Lecture`;
+      document.getElementById('videoIframe').src = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`;
+      document.getElementById('modalVideo').classList.remove('hidden');
+    }
+
+    function openSolveModal(qId) {
+      const q = questionsData.find(item => item.id === qId);
+      if (!q) return;
+
+      document.getElementById('modalQNum').innerText = q.num;
+      document.getElementById('modalQMarks').innerText = `${q.marks} Marks`;
+      document.getElementById('modalQTopic').innerText = q.topic;
+      document.getElementById('modalQText').innerText = q.text;
+
+      const teacher = document.getElementById('teacherNameInput').value;
+      document.getElementById('modalAppliedTeacher').innerText = `Tailored for: ${teacher} (Flowchart & Step Marks Active)`;
+
+      // Render flowcharts
+      const flowContainer = document.getElementById('solutionFlowchartView');
+      flowContainer.innerHTML = '';
+      q.flowchart.forEach((node, idx) => {
+        const nodeEl = document.createElement('div');
+        nodeEl.className = 'p-3.5 rounded-2xl bg-slate-950 border border-indigo-500/30 flex items-start gap-3 relative';
+        nodeEl.innerHTML = `
+          <div class="w-7 h-7 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shrink-0 mt-0.5">
+            ${node.step}
+          </div>
+          <div class="space-y-1">
+            <h4 class="text-xs font-bold text-indigo-300">${node.title}</h4>
+            <p class="text-xs text-slate-300 leading-relaxed">${node.desc}</p>
+          </div>
+        `;
+        flowContainer.appendChild(nodeEl);
+      });
+
+      // Text / Pedagogical Setup
+      if (q.id === 'q1') {
+        document.getElementById('pedagogicalIntroText').innerText = 'Hardness in water is the measure of capacity to precipitate soap, predominantly caused by divalent calcium (Ca²⁺) and magnesium (Mg²⁺) cations. Disodium EDTA behaves as a hexadentate chelating ligand that forms highly stable 1:1 soluble complexes at pH 9-10.';
+      } else if (q.id === 'q2') {
+        document.getElementById('pedagogicalIntroText').innerText = 'Calorific value is the fundamental thermal energy liberated during complete combustion of a unit mass of fuel in pure oxygen. Higher Calorific Value (HCV) includes the latent heat of water condensation.';
+      } else {
+        document.getElementById('pedagogicalIntroText').innerText = 'Lubrication reduces friction and wear between contacting metal parts in relative motion. Thick-film and boundary mechanisms operate in distinct pressure and viscosity regimes.';
+      }
+
+      toggleSolutionView('structured');
+      document.getElementById('modalSolve').classList.remove('hidden');
+    }
+
+    function toggleSolutionView(view) {
+      if (view === 'flow') {
+        document.getElementById('solutionFlowchartView').classList.remove('hidden');
+        document.getElementById('solutionStructuredView').classList.add('hidden');
+        document.getElementById('btnSolFlow').className = 'px-3.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow';
+        document.getElementById('btnSolStructured').className = 'px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-950 text-slate-400 hover:text-white';
+      } else {
+        document.getElementById('solutionFlowchartView').classList.add('hidden');
+        document.getElementById('solutionStructuredView').classList.remove('hidden');
+        document.getElementById('btnSolStructured').className = 'px-3.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow';
+        document.getElementById('btnSolFlow').className = 'px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-950 text-slate-400 hover:text-white';
+      }
+    }
+
+    function openUploadModal() {
+      document.getElementById('modalUpload').classList.remove('hidden');
+    }
+
+    function handleSimulateUpload() {
+      const title = document.getElementById('upTitle').value;
+      const isOrg = currentRole === 'organizer';
+      questionsData.unshift({
+        id: `q-new-${Date.now()}`,
+        subject: currentSubject,
+        num: `Q${questionsData.length + 1}`,
+        marks: 7,
+        year: parseInt(document.getElementById('upYear').value) || 2024,
+        exam: document.getElementById('upExamType').value,
+        topic: 'Unit 1: Newly Ingested Paper',
+        text: `Extracted from "${title}": Discuss the role of Phase Rule in one-component water system and derive degrees of freedom at triple point.`,
+        isOrganizer: isOrg,
+        flowchart: [
+          { step: 1, title: 'Gibbs Phase Rule Statement', desc: 'F = C - P + 2. State definition of components and phases.' },
+          { step: 2, title: 'Single Phase Regions', desc: 'Liquid, Ice, Vapor regions: P=1 -> F=2 (Bivariant).' },
+          { step: 3, title: 'Triple Point Equilibrium', desc: 'At triple point P=3 -> F = 1 - 3 + 2 = 0 (Invariant). Box result at T=0.0098°C, P=4.58 mmHg.' }
+        ]
+      });
+      closeModal('modalUpload');
+      renderQuestions();
+      alert(`Success! "${title}" ingested and synced to database as ${isOrg ? '⭐ Organizer Official Paper' : '🎓 Student Personal Upload'}!`);
+    }
+
+    function saveTeacherMindset() {
+      const btn = document.getElementById('saveMindsetBtnText');
+      btn.innerText = '✅ Saved & Synced to Firebase!';
+      setTimeout(() => { btn.innerText = '💾 Save Teacher Mindset'; }, 2000);
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.add('hidden');
+      if (id === 'modalVideo') {
+        document.getElementById('videoIframe').src = '';
+      }
+    }
+
+    // Init
+    renderQuestions();
+    renderVideos();
+  </script>
+</body>
+</html>

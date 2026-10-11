@@ -722,10 +722,19 @@ TEACHER / EVALUATOR CUSTOM PREFERENCES:
     "markingRubric": [
       { "step": "Step 1: ...", "marksAwarded": 2, "teacherExpectation": "..." }
     ],
+    "introduction": "Concise theoretical foundation and core definition of the concept/theorem.",
+    "conceptCategorization": [
+      { "category": "...", "description": "...", "items": ["..."] }
+    ],
     "fullAnswerMarkdown": "...",
     "flowchartSteps": [
       { "stepNumber": 1, "title": "...", "detail": "...", "arrowTo": "..." }
     ],
+    "applications": [
+      "Industrial or engineering application 1",
+      "Industrial or engineering application 2"
+    ],
+    "industrialSignificance": "...",
     "diagramDescription": "...",
     "tailoredTeacherNotes": "...",
     "teacherProTip": "...",
@@ -974,6 +983,52 @@ TEACHER / EVALUATOR CUSTOM PREFERENCES:
         );
       }
 
+      // Rich pedagogical sections for common topics
+      let intro = '';
+      let conceptCategorization: any[] = [];
+      let applications: string[] = [];
+      let industrialSignificance = '';
+
+      if (qLower.includes('edta') || qLower.includes('hardness') || tLower.includes('water')) {
+        intro = 'Hardness of water is the measure of multivalent metallic cations (primarily Ca²⁺ and Mg²⁺) capable of reacting with soap to form insoluble precipitates. EDTA acts as a hexadentate chelating ligand forming 1:1 octahedral complexes at pH = 10.';
+        conceptCategorization = [
+          {
+            category: 'Temporary (Carbonate) Hardness',
+            description: 'Caused by dissolved bicarbonates of calcium and magnesium [Ca(HCO₃)₂, Mg(HCO₃)₂].',
+            items: ['Decomposes upon heating: Ca(HCO₃)₂ → CaCO₃↓ + H₂O + CO₂↑', 'Removable easily by boiling or Clark lime treatment']
+          },
+          {
+            category: 'Permanent (Non-Carbonate) Hardness',
+            description: 'Caused by chlorides and sulfates of calcium and magnesium [CaCl₂, MgCl₂, CaSO₄, MgSO₄].',
+            items: ['Cannot be removed by boiling', 'Requires EDTA complexometric titration, zeolite, or demineralization']
+          }
+        ];
+        applications = [
+          'High-pressure thermal boiler feed water softening to eliminate hazardous boiler scaling and priming',
+          'Municipal drinking water purification and chemical water conditioning plants'
+        ];
+        industrialSignificance = 'Prevents scale deposition in high-pressure boilers, saving fuel and preventing thermal tube explosion accidents.';
+      } else if (qLower.includes('leibnitz') || qLower.includes('sin^-1') || tLower.includes('differentiation')) {
+        intro = "Leibnitz's Theorem generalizes the product rule to n-th order successive differentiation of the product of two functions: dⁿ/dxⁿ(u · v) = ∑ ⁿC_k u^(n-k) v^(k).";
+        conceptCategorization = [
+          {
+            category: 'Base Differential Equation Formulation',
+            description: 'Transforming original function into algebraic form (1 - x²) y₂ - x y₁ = 2.',
+            items: ['Eliminates transcendental inverse trigonometric terms', 'Enables straightforward finite Leibnitz expansions']
+          },
+          {
+            category: 'Boundary Value & Recurrence Evaluation',
+            description: 'Evaluating recurrence relation y_{n+2}(0) = n² y_n(0) at origin.',
+            items: ['Odd derivatives vanish at x = 0: (y_n)₀ = 0 for odd n', 'Even derivatives form factorial power chains: 2 · 2² · 4² ··· (n-2)²']
+          }
+        ];
+        applications = [
+          'Analytical series solutions to non-linear mechanics and orbital perturbation models',
+          'Finite element modeling and higher-order boundary problem approximations'
+        ];
+        industrialSignificance = 'Underpins finite element analysis (FEA) and continuous boundary value solvers in engineering mechanics.';
+      }
+
       res.json({
         success: true,
         solution: {
@@ -987,7 +1042,11 @@ TEACHER / EVALUATOR CUSTOM PREFERENCES:
           diagramDescription: diagramDesc,
           tailoredTeacherNotes: teacherPreference?.customInstructions ? `Tailored to Professor Instructions: "${teacherPreference.customInstructions}"` : undefined,
           teacherProTip: proTip,
-          commonPitfallToAvoid: pitfall
+          commonPitfallToAvoid: pitfall,
+          introduction: intro,
+          conceptCategorization,
+          applications,
+          industrialSignificance
         },
         fallback: true
       });
