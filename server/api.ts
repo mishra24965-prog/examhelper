@@ -37,7 +37,28 @@ export function createApiApp() {
   }
 
   // Candidate models prioritizing fast, reliable flash tiers
-  const CANDIDATE_MODELS = ['gemini-3.1-flash-lite', 'gemini-flash-latest', 'gemini-3.8-flash'];
+  const CANDIDATE_MODELS = [
+    'gemini-2.5-flash',
+    'gemini-2.5-flash-lite',
+    'gemini-2.0-flash',
+    'gemini-1.5-flash',
+    'gemini-flash-latest'
+  ];
+
+  function extractResponseText(response: any): string {
+    if (!response) return '';
+    if (typeof response.text === 'function') {
+      try {
+        return response.text() || '';
+      } catch {
+        // fallback to property
+      }
+    }
+    if (typeof response.text === 'string') {
+      return response.text;
+    }
+    return response.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  }
 
   async function generateContentSafely(buildOptions: (model: string) => any): Promise<any> {
     const ai = getAiClient();
@@ -291,16 +312,15 @@ CRITICAL REQUIREMENTS:
 
           const response = await generateContentSafely((model) => ({
             model,
-            contents: {
-              parts: [
-                { inlineData: { mimeType: targetMime, data: cleanBase64 } },
-                { text: ocrPrompt }
-              ]
-            }
+            contents: [
+              { inlineData: { mimeType: targetMime, data: cleanBase64 } },
+              ocrPrompt
+            ]
           }));
 
-          if (response && response.text && response.text.trim().length > 0) {
-            rawExtractedText = response.text.trim();
+          const extractedStr = extractResponseText(response).trim();
+          if (extractedStr.length > 0) {
+            rawExtractedText = extractedStr;
             method = 'gemini-vision-ocr';
           }
         } catch (ocrErr: any) {
@@ -370,8 +390,9 @@ CRITICAL REQUIREMENTS:
             contents: cleanPrompt
           }));
 
-          if (response && response.text) {
-            cleanedText = response.text.trim();
+          const cleanedStr = extractResponseText(response).trim();
+          if (cleanedStr) {
+            cleanedText = cleanedStr;
           }
         } catch (aiErr: any) {
           console.log('AI clean pass unavailable; using heuristic cleaner.');
@@ -455,12 +476,10 @@ CRITICAL REQUIREMENTS:
             const cleanBase64 = imageBase64.replace(/^data:[^;]+;base64,/, '');
             return {
               model,
-              contents: {
-                parts: [
-                  { inlineData: { mimeType: imageMimeType, data: cleanBase64 } },
-                  { text: promptText }
-                ]
-              },
+              contents: [
+                { inlineData: { mimeType: imageMimeType, data: cleanBase64 } },
+                promptText
+              ],
               config: {
                 systemInstruction,
                 responseMimeType: 'application/json'
@@ -478,7 +497,7 @@ CRITICAL REQUIREMENTS:
           }
         });
 
-        const textOutput = response.text || '[]';
+        const textOutput = extractResponseText(response).trim() || '[]';
         let parsedQuestions = [];
         try {
           parsedQuestions = JSON.parse(textOutput);
@@ -615,7 +634,14 @@ CRITICAL REQUIREMENTS:
         };
       });
 
-      const result = JSON.parse(response.text || '{}');
+      const responseText = extractResponseText(response);
+      let result = {};
+      try {
+        result = JSON.parse(responseText || '{}');
+      } catch {
+        const match = responseText.match(/\{[\s\S]*\}/);
+        if (match) result = JSON.parse(match[0]);
+      }
       res.json({ success: true, insight: result });
     } catch {
       console.log('Using structured fallback insight for /api/analyze-teacher-demands');
@@ -697,7 +723,14 @@ CRITICAL REQUIREMENTS:
         };
       });
 
-      const solution = JSON.parse(response.text || '{}');
+      const solutionRaw = extractResponseText(response);
+      let solution = {};
+      try {
+        solution = JSON.parse(solutionRaw || '{}');
+      } catch {
+        const match = solutionRaw.match(/\{[\s\S]*\}/);
+        if (match) solution = JSON.parse(match[0]);
+      }
       res.json({ success: true, solution });
     } catch {
       console.log('Generating tailored standard math derivation for /api/solve-pyq');
@@ -975,7 +1008,7 @@ CRITICAL REQUIREMENTS:
     return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
   }
 
-  app.post('/api/suggest-videos', asyncHandler(async (req, res) => {
+  const suggestVideosHandler = async (req: express.Request, res: express.Response) => {
     const { topicName, courseName, subtopics, unitNumber, subtopicName, queryType } = req.body || {};
     const activeSubtopic = subtopicName || (subtopics && subtopics.length > 0 ? subtopics[0] : topicName);
     const isDerivationIntent =
@@ -1035,8 +1068,16 @@ CRITICAL REQUIREMENTS:
         };
       });
 
-      const videos = JSON.parse(response.text || '[]');
-      const formatted = videos.map((v: any, idx: number) => {
+      const videoText = extractResponseText(response);
+      let videos = [];
+      try {
+        videos = JSON.parse(videoText || '[]');
+      } catch {
+        const match = videoText.match(/\[[\s\S]*\]/);
+        if (match) videos = JSON.parse(match[0]);
+      }
+
+      const formatted = (Array.isArray(videos) ? videos : []).map((v: any, idx: number) => {
         const cleanSubtopic = v.subtopicName || activeSubtopic;
         const robustQuery =
           v.youtubeSearchQuery && v.youtubeSearchQuery.toLowerCase().includes(querySuffix)
@@ -1163,14 +1204,10 @@ CRITICAL REQUIREMENTS:
       ];
       res.json({ success: true, videos: fallbackList, fallback: true });
     }
-  }));
+  };
 
-  // Endpoint alias for explicit Gemini Video Suggest
-  app.post('/api/gemini-suggest-videos', asyncHandler(async (req, res) => {
-    // Delegate directly to the suggest-videos handler
-    req.url = '/api/suggest-videos';
-    app._router.handle(req, res, () => {});
-  }));
+  app.post('/api/suggest-videos', asyncHandler(suggestVideosHandler));
+  app.post('/api/gemini-suggest-videos', asyncHandler(suggestVideosHandler));
 
   // Dedicated Gemini AI Video Lecture Breakdown & Concept Intel
   app.post('/api/gemini-video-breakdown', asyncHandler(async (req, res) => {
@@ -1242,7 +1279,14 @@ CRITICAL REQUIREMENTS:
         };
       });
 
-      const breakdown = JSON.parse(response.text || '{}');
+      const breakdownRaw = extractResponseText(response);
+      let breakdown = {};
+      try {
+        breakdown = JSON.parse(breakdownRaw || '{}');
+      } catch {
+        const match = breakdownRaw.match(/\{[\s\S]*\}/);
+        if (match) breakdown = JSON.parse(match[0]);
+      }
       res.json({ success: true, breakdown, source: 'gemini-ai' });
     } catch (err: any) {
       console.warn('Gemini video breakdown fallback activated:', err?.message);
@@ -1339,7 +1383,8 @@ CRITICAL REQUIREMENTS:
         };
       });
 
-      res.json({ success: true, answer: response.text, source: 'gemini-ai' });
+      const answerText = extractResponseText(response).trim();
+      res.json({ success: true, answer: answerText, source: 'gemini-ai' });
     } catch (err: any) {
       console.warn('Gemini video ask fallback activated:', err?.message);
       res.json({
@@ -1399,7 +1444,14 @@ CRITICAL REQUIREMENTS:
         };
       });
 
-      const breakdown = JSON.parse(response.text || '{}');
+      const breakdownRaw = extractResponseText(response);
+      let breakdown = {};
+      try {
+        breakdown = JSON.parse(breakdownRaw || '{}');
+      } catch {
+        const match = breakdownRaw.match(/\{[\s\S]*\}/);
+        if (match) breakdown = JSON.parse(match[0]);
+      }
       res.json({ success: true, breakdown });
     } catch {
       console.log('Using high-yield conceptual breakdown for /api/explain-concept');

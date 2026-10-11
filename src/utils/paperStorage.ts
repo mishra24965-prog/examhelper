@@ -1,4 +1,16 @@
 import { Course, ExamPaperRecord, Question, ExamType } from '../types';
+import {
+  CHEMISTRY_MST_PAPERS,
+  CHEMISTRY_QUESTIONS,
+  ELECTRONICS_MST_PAPERS,
+  ELECTRONICS_QUESTIONS,
+  PHYSICS_MST_PAPERS,
+  PHYSICS_QUESTIONS,
+  ELECTRICAL_MST_PAPERS,
+  ELECTRICAL_QUESTIONS,
+  CPP_MST_PAPERS,
+  CPP_QUESTIONS
+} from './presetSubjectData';
 
 /**
  * Subject-Specific Exam Papers & Questions Repository
@@ -551,13 +563,23 @@ const MATH1_QUESTIONS: Question[] = [
 // Map of all course-specific preset papers
 export const PRESET_PAPERS_BY_COURSE: Record<string, ExamPaperRecord[]> = {
   'course-sem1-mechanical': GMU_MST_PAPERS,
-  'course-sem1-math1': MATH1_MST_PAPERS
+  'course-sem1-math1': MATH1_MST_PAPERS,
+  'course-sem1-chemistry': CHEMISTRY_MST_PAPERS,
+  'course-sem1-electronics': ELECTRONICS_MST_PAPERS,
+  'course-sem2-physics': PHYSICS_MST_PAPERS,
+  'course-sem2-electrical': ELECTRICAL_MST_PAPERS,
+  'course-sem2-cpp': CPP_MST_PAPERS
 };
 
 // Map of all course-specific preset questions
 export const PRESET_QUESTIONS_BY_COURSE: Record<string, Question[]> = {
   'course-sem1-mechanical': GMU_QUESTIONS,
-  'course-sem1-math1': MATH1_QUESTIONS
+  'course-sem1-math1': MATH1_QUESTIONS,
+  'course-sem1-chemistry': CHEMISTRY_QUESTIONS,
+  'course-sem1-electronics': ELECTRONICS_QUESTIONS,
+  'course-sem2-physics': PHYSICS_QUESTIONS,
+  'course-sem2-electrical': ELECTRICAL_QUESTIONS,
+  'course-sem2-cpp': CPP_QUESTIONS
 };
 
 // Legacy alias for backwards compatibility
