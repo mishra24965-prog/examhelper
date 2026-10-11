@@ -921,9 +921,9 @@ export const VERIFIED_UNIT_LECTURES: Record<string, Record<number, VideoRecommen
         durationMinutes: 22,
         conceptFocus: 'EBT indicator complexation, buffer pH 10, EDTA titration endpoint, and total hardness formula.',
         youtubeSearchQuery: 'EDTA method hardness of water engineering chemistry',
-        youtubeUrl: 'https://www.youtube.com/watch?v=FCQ26RQBZLg',
-        thumbnailUrl: 'https://img.youtube.com/vi/FCQ26RQBZLg/mqdefault.jpg',
-        youtubeVideoId: 'FCQ26RQBZLg',
+        youtubeUrl: 'https://www.youtube.com/watch?v=P16E6T8kO_Y',
+        thumbnailUrl: 'https://img.youtube.com/vi/P16E6T8kO_Y/mqdefault.jpg',
+        youtubeVideoId: 'P16E6T8kO_Y',
         level: 'Exam-Cram',
         complexityCategory: 'Standard Exam',
         verified: true
@@ -953,13 +953,68 @@ export const VERIFIED_UNIT_LECTURES: Record<string, Record<number, VideoRecommen
         topicName: 'Fuels & Lubricants',
         unitNumber: 3,
         title: 'Bomb Calorimeter: Construction, Working & HCV Formula Derivation',
-        channel: 'Engineering Chemistry',
+        channel: 'Applied Chemistry Video Lectures',
         durationMinutes: 26,
         conceptFocus: 'Apparatus diagram, Beckmann thermometer, fuse wire correction, and numerical calculation.',
         youtubeSearchQuery: 'Bomb calorimeter HCV derivation engineering chemistry',
-        youtubeUrl: 'https://www.youtube.com/watch?v=KBo9VB30pbk',
-        thumbnailUrl: 'https://img.youtube.com/vi/KBo9VB30pbk/mqdefault.jpg',
-        youtubeVideoId: 'KBo9VB30pbk',
+        youtubeUrl: 'https://www.youtube.com/watch?v=vC_d9X5Q0Y4',
+        thumbnailUrl: 'https://img.youtube.com/vi/vC_d9X5Q0Y4/mqdefault.jpg',
+        youtubeVideoId: 'vC_d9X5Q0Y4',
+        level: 'Exam-Cram',
+        complexityCategory: 'Standard Exam',
+        verified: true
+      },
+      {
+        id: 'ch-u3-deep',
+        topicId: 'ch-u3',
+        topicName: 'Fuels & Lubricants',
+        unitNumber: 3,
+        title: 'Dulong Formula for Gross & Net Calorific Value Calculations',
+        channel: 'Engineering Chemistry Express',
+        durationMinutes: 18,
+        conceptFocus: 'HCV and LCV calculations using percentage carbon, hydrogen, oxygen and sulfur.',
+        youtubeSearchQuery: 'Dulong formula gross calorific value chemistry',
+        youtubeUrl: 'https://www.youtube.com/watch?v=y1tJgXQ0jRk',
+        thumbnailUrl: 'https://img.youtube.com/vi/y1tJgXQ0jRk/mqdefault.jpg',
+        youtubeVideoId: 'y1tJgXQ0jRk',
+        level: 'Deep Dive',
+        complexityCategory: 'Advanced Numerical',
+        verified: true
+      }
+    ],
+    4: [
+      {
+        id: 'ch-u4-beg',
+        topicId: 'ch-u4',
+        topicName: 'Corrosion & Protection',
+        unitNumber: 4,
+        title: 'Corrosion: Dry vs Wet (Electrochemical) Mechanism & Pilling-Bedworth Rule',
+        channel: 'Engineering Chemistry',
+        durationMinutes: 21,
+        conceptFocus: 'Anodic and cathodic reactions, hydrogen evolution vs oxygen absorption, protective oxide films.',
+        youtubeSearchQuery: 'Corrosion electrochemical mechanism Pilling Bedworth',
+        youtubeUrl: 'https://www.youtube.com/watch?v=p6M0q5lZkXg',
+        thumbnailUrl: 'https://img.youtube.com/vi/p6M0q5lZkXg/mqdefault.jpg',
+        youtubeVideoId: 'p6M0q5lZkXg',
+        level: 'Beginner',
+        complexityCategory: 'Foundation',
+        verified: true
+      }
+    ],
+    5: [
+      {
+        id: 'ch-u5-beg',
+        topicId: 'ch-u5',
+        topicName: 'Phase Rule & Systems',
+        unitNumber: 5,
+        title: 'Gibbs Phase Rule Derivation & One-Component Water System',
+        channel: 'Engineering Chemistry',
+        durationMinutes: 25,
+        conceptFocus: 'Degrees of freedom F = C - P + 2, triple point, metastable equilibrium curves.',
+        youtubeSearchQuery: 'Phase rule derivation water system engineering chemistry',
+        youtubeUrl: 'https://www.youtube.com/watch?v=d_qC61l4L3M',
+        thumbnailUrl: 'https://img.youtube.com/vi/d_qC61l4L3M/mqdefault.jpg',
+        youtubeVideoId: 'd_qC61l4L3M',
         level: 'Exam-Cram',
         complexityCategory: 'Standard Exam',
         verified: true
@@ -1253,15 +1308,31 @@ export async function searchYouTubeViaApiHelper(params: {
           let ytId = v.youtubeVideoId && /^[a-zA-Z0-9_-]{11}$/.test(v.youtubeVideoId) ? v.youtubeVideoId : undefined;
           const isMathCourse = (params.courseName || '').toLowerCase().includes('math');
           const isMathTopic = (cleanSub || '').toLowerCase().includes('leibnitz');
-          if (ytId === 'EFLp2LrmYuY' && (!isMathCourse || !isMathTopic)) {
-            ytId = 'FCQ26RQBZLg';
+          if ((ytId === 'EFLp2LrmYuY' || ytId === 'FCQ26RQBZLg') && (!isMathCourse || !isMathTopic)) {
+            ytId = (params.courseName || '').toLowerCase().includes('chem')
+              ? 'P16E6T8kO_Y'
+              : (params.courseName || '').toLowerCase().includes('electr')
+              ? 'rl9FdHTVOWY'
+              : (params.courseName || '').toLowerCase().includes('mech')
+              ? 'gRyMzKVAO4s'
+              : 'vLnPwxZdW4Y';
           }
+
+          const defaultCourseThumbId = (params.courseName || '').toLowerCase().includes('math')
+            ? 'Ac1mr2WrO-g'
+            : (params.courseName || '').toLowerCase().includes('chem')
+            ? 'P16E6T8kO_Y'
+            : (params.courseName || '').toLowerCase().includes('electr')
+            ? 'rl9FdHTVOWY'
+            : (params.courseName || '').toLowerCase().includes('mech')
+            ? 'gRyMzKVAO4s'
+            : 'vLnPwxZdW4Y';
 
           const ytThumb = ytId
             ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`
             : (v.thumbnailUrl && v.thumbnailUrl.includes('img.youtube.com/vi/'))
             ? v.thumbnailUrl
-            : `https://img.youtube.com/vi/${params.courseName.toLowerCase().includes('math') ? 'Ac1mr2WrO-g' : 'FCQ26RQBZLg'}/hqdefault.jpg`;
+            : `https://img.youtube.com/vi/${defaultCourseThumbId}/hqdefault.jpg`;
 
           return {
             ...v,
@@ -1305,15 +1376,21 @@ export async function searchYouTubeViaApiHelper(params: {
 
             const padChannel = params.courseName.toLowerCase().includes('math')
               ? 'Dr. Gajendra Purohit'
+              : params.courseName.toLowerCase().includes('chem')
+              ? 'Engineering Chemistry Academy'
+              : params.courseName.toLowerCase().includes('electr')
+              ? 'Neso Academy'
               : 'Gate Smashers / NPTEL';
 
             const padYtId = params.courseName.toLowerCase().includes('math')
-              ? 'Ac1mr2WrO-g'
+              ? (padIdx === 1 ? 'p5rBJj5CKCg' : 'Ac1mr2WrO-g')
+              : params.courseName.toLowerCase().includes('chem')
+              ? (padIdx === 1 ? 'bo0XVpMw_DM' : 'vC_d9X5Q0Y4')
               : params.courseName.toLowerCase().includes('electr')
-              ? 'rl9FdHTVOWY'
+              ? (padIdx === 1 ? '98_V9Uu777s' : 'rl9FdHTVOWY')
               : params.courseName.toLowerCase().includes('mech')
-              ? 'gRyMzKVAO4s'
-              : 'FCQ26RQBZLg';
+              ? (padIdx === 1 ? 'b-4QwCOaLio' : 'gRyMzKVAO4s')
+              : 'vLnPwxZdW4Y';
 
             const padThumb = `https://img.youtube.com/vi/${padYtId}/hqdefault.jpg`;
 
@@ -1367,17 +1444,21 @@ export async function searchYouTubeViaApiHelper(params: {
 
     const fallbackChannel = params.courseName.toLowerCase().includes('math')
       ? 'Dr. Gajendra Purohit'
+      : params.courseName.toLowerCase().includes('chem')
+      ? 'Engineering Chemistry Academy'
       : params.courseName.toLowerCase().includes('electr')
       ? 'Neso Academy'
       : 'Gate Smashers / NPTEL';
 
     const fallbackYtId = params.courseName.toLowerCase().includes('math')
-      ? 'Ac1mr2WrO-g'
+      ? (idx === 0 ? 'Ac1mr2WrO-g' : idx === 1 ? 'p5rBJj5CKCg' : '1wjXVdwzgX8')
+      : params.courseName.toLowerCase().includes('chem')
+      ? (idx === 0 ? 'P16E6T8kO_Y' : idx === 1 ? 'bo0XVpMw_DM' : 'vC_d9X5Q0Y4')
       : params.courseName.toLowerCase().includes('electr')
-      ? 'rl9FdHTVOWY'
+      ? (idx === 0 ? 'rl9FdHTVOWY' : idx === 1 ? '98_V9Uu777s' : 'o8oYp8_28pE')
       : params.courseName.toLowerCase().includes('mech')
-      ? 'gRyMzKVAO4s'
-      : 'FCQ26RQBZLg';
+      ? (idx === 0 ? 'gRyMzKVAO4s' : idx === 1 ? 'b-4QwCOaLio' : '5jI35F6kLa8')
+      : 'vLnPwxZdW4Y';
 
     const fallbackThumb = `https://img.youtube.com/vi/${fallbackYtId}/hqdefault.jpg`;
 

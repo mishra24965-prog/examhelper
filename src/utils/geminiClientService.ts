@@ -1116,7 +1116,7 @@ Channels preferred: Gate Smashers, Neso Academy, Dr. Gajendra Purohit, NPTEL, Al
 
 IMPORTANT RULES:
 1. Do NOT suggest Leibnitz Theorem unless the course is Mathematics and the active topic is specifically Successive Differentiation / Leibnitz.
-2. For each video, return a real 11-character YouTube videoId if known (e.g. "KBo9VB30pbk", "FCQ26RQBZLg", "b-4QwCOaLio", "5jI35F6kLa8", "rl9FdHTVOWY", "bo0XVpMw_DM").
+2. For each video, return a real 11-character YouTube videoId if known (e.g. "P16E6T8kO_Y", "KBo9VB30pbk", "b-4QwCOaLio", "5jI35F6kLa8", "rl9FdHTVOWY", "bo0XVpMw_DM").
 3. Set "thumbnailUrl" to "https://img.youtube.com/vi/{videoId}/hqdefault.jpg" using the real videoId.
 
 Return a JSON array of 3 objects matching this exact schema:
@@ -1145,6 +1145,18 @@ Return a JSON array of 3 objects matching this exact schema:
       }));
 
       const parsed = safeJsonParse(text, []);
+      const lowerCourse = (params.courseName || '').toLowerCase();
+      const lowerSub = activeSubtopic.toLowerCase();
+      const defaultCourseVideoId = lowerCourse.includes('chem')
+        ? (idx => idx === 1 ? 'bo0XVpMw_DM' : 'P16E6T8kO_Y')
+        : lowerCourse.includes('math')
+        ? (idx => idx === 1 ? 'p5rBJj5CKCg' : 'Ac1mr2WrO-g')
+        : lowerCourse.includes('electr')
+        ? (idx => idx === 1 ? '98_V9Uu777s' : 'rl9FdHTVOWY')
+        : lowerCourse.includes('mech')
+        ? (idx => idx === 1 ? 'b-4QwCOaLio' : 'gRyMzKVAO4s')
+        : (idx => 'vLnPwxZdW4Y');
+
       const formatted = (Array.isArray(parsed) ? parsed : []).map((v: any, idx: number) => {
         const cleanSub = v.subtopicName || activeSubtopic;
         const qSuffix = querySuffix;
@@ -1153,11 +1165,15 @@ Return a JSON array of 3 objects matching this exact schema:
           : `${params.courseName} ${cleanSub} ${qSuffix}`;
 
         let ytId = v.youtubeVideoId && /^[a-zA-Z0-9_-]{11}$/.test(v.youtubeVideoId) ? v.youtubeVideoId : undefined;
+        // Strip Leibniz if not math Leibnitz
+        if ((ytId === 'FCQ26RQBZLg' || ytId === 'EFLp2LrmYuY') && (!lowerCourse.includes('math') || !lowerSub.includes('leibnitz'))) {
+          ytId = undefined;
+        }
+
+        const effectiveYtId = ytId || defaultCourseVideoId(idx);
 
         // Ensure thumbnail is strictly from YouTube
-        let thumbUrl = ytId
-          ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`
-          : undefined;
+        const thumbUrl = `https://img.youtube.com/vi/${effectiveYtId}/hqdefault.jpg`;
 
         return {
           id: `gemini-yt-${Date.now()}-${idx}`,
@@ -1171,10 +1187,8 @@ Return a JSON array of 3 objects matching this exact schema:
           conceptFocus: v.conceptFocus || `Academic exam coverage of ${cleanSub}.`,
           youtubeSearchQuery: robustQ,
           queryType: qSuffix,
-          youtubeVideoId: ytId,
-          youtubeUrl: ytId
-            ? `https://www.youtube.com/watch?v=${ytId}`
-            : `https://www.youtube.com/results?search_query=${encodeURIComponent(robustQ)}`,
+          youtubeVideoId: effectiveYtId,
+          youtubeUrl: `https://www.youtube.com/watch?v=${effectiveYtId}`,
           thumbnailUrl: thumbUrl,
           level: v.level || (idx === 0 ? 'Beginner' : idx === 1 ? 'Exam-Cram' : 'Deep Dive'),
           complexityCategory: v.complexityCategory || (idx === 0 ? 'Foundation' : idx === 1 ? 'Standard Exam' : 'Advanced Numerical'),

@@ -403,7 +403,7 @@ export const VideoLecturesView: React.FC<Props> = ({ course, onNavigateTab }) =>
   // Fetch verified educational videos via Gemini AI Integration
   const handleFetchViaGemini = async (targetSub?: string, targetUnitNum?: number) => {
     const subtopicToQuery =
-      targetSub || (selectedSubtopic !== 'all' ? selectedSubtopic : undefined) || currentTargetTopic;
+      targetSub || (customSearchQuery.trim() ? customSearchQuery.trim() : undefined) || (selectedSubtopic !== 'all' ? selectedSubtopic : undefined) || currentTargetTopic;
     const unitNum = targetUnitNum || (selectedUnit === 'all' ? 1 : selectedUnit);
     const targetUnit = course.syllabus.find((s) => s.unit === unitNum) || course.syllabus[0];
     if (!targetUnit) return;

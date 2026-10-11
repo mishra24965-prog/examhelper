@@ -1262,8 +1262,8 @@ TEACHER / EVALUATOR CUSTOM PREFERENCES:
       console.log('Using curated recommendations for /api/suggest-videos');
       const lowerCourse = (courseName || '').toLowerCase();
       const fbId1 = lowerCourse.includes('math') ? 'Ac1mr2WrO-g' : lowerCourse.includes('chem') ? '5yP4D4vQ51g' : lowerCourse.includes('mech') ? 'gRyMzKVAO4s' : 'rl9FdHTVOWY';
-      const fbId2 = lowerCourse.includes('math') ? 'p5rBJj5CKCg' : lowerCourse.includes('chem') ? 'w3d2L54x41c' : lowerCourse.includes('mech') ? 'bo0XVpMw_DM' : 'FCQ26RQBZLg';
-      const fbId3 = lowerCourse.includes('math') ? '1wjXVdwzgX8' : lowerCourse.includes('chem') ? 'bo0XVpMw_DM' : lowerCourse.includes('mech') ? 'rl9FdHTVOWY' : 'Ac1mr2WrO-g';
+      const fbId2 = lowerCourse.includes('math') ? 'p5rBJj5CKCg' : lowerCourse.includes('chem') ? 'w3d2L54x41c' : lowerCourse.includes('mech') ? 'bo0XVpMw_DM' : '98_V9Uu777s';
+      const fbId3 = lowerCourse.includes('math') ? '1wjXVdwzgX8' : lowerCourse.includes('chem') ? 'bo0XVpMw_DM' : lowerCourse.includes('mech') ? 'rl9FdHTVOWY' : 'vLnPwxZdW4Y';
 
       const fallbackList = [
         {
