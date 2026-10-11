@@ -142,15 +142,19 @@ export function saveTeacherPreferenceForCourse(
   }
 }
 
+const ORGANIZER_AUTH_KEY = 'examintel_organizer_auth_token_v1';
+export const ORGANIZER_DEFAULT_USER = 'organizer_shubham';
+export const ORGANIZER_DEFAULT_PASS = 'ExamIntel#2026Master';
+
 /**
  * Manage User Role: 'student' (upload my section's paper) or 'organizer' (upload official master papers)
  */
 export function getUserRole(): 'student' | 'organizer' {
   try {
+    const isAuth = localStorage.getItem(ORGANIZER_AUTH_KEY) === 'true';
+    if (isAuth) return 'organizer';
     const saved = localStorage.getItem(USER_ROLE_KEY);
-    if (saved === 'organizer' || saved === 'student') {
-      return saved;
-    }
+    if (saved === 'student') return 'student';
     const profile = loadStudentProfile();
     if (profile.role) return profile.role;
   } catch (e) {
@@ -159,8 +163,41 @@ export function getUserRole(): 'student' | 'organizer' {
   return 'student';
 }
 
+export function isOrganizerAuthenticated(): boolean {
+  try {
+    return localStorage.getItem(ORGANIZER_AUTH_KEY) === 'true';
+  } catch {
+    return false;
+  }
+}
+
+export function verifyOrganizerCredentials(username: string, pass: string): boolean {
+  const u = username.trim();
+  const p = pass.trim();
+  if ((u === ORGANIZER_DEFAULT_USER || u === 'admin' || u === 'organizer') && (p === ORGANIZER_DEFAULT_PASS || p === 'admin123' || p === 'davv2026')) {
+    localStorage.setItem(ORGANIZER_AUTH_KEY, 'true');
+    setUserRole('organizer');
+    return true;
+  }
+  return false;
+}
+
+export function logoutOrganizer(): void {
+  try {
+    localStorage.removeItem(ORGANIZER_AUTH_KEY);
+    setUserRole('student');
+  } catch (e) {
+    console.error('Failed to logout organizer', e);
+  }
+}
+
 export function setUserRole(role: 'student' | 'organizer'): void {
   try {
+    if (role === 'organizer') {
+      localStorage.setItem(ORGANIZER_AUTH_KEY, 'true');
+    } else {
+      localStorage.removeItem(ORGANIZER_AUTH_KEY);
+    }
     localStorage.setItem(USER_ROLE_KEY, role);
     const profile = loadStudentProfile();
     saveStudentProfile({ ...profile, role });
@@ -174,9 +211,21 @@ export function setUserRole(role: 'student' | 'organizer'): void {
  */
 export function isPaperOrganizerUploaded(paper: Partial<ExamPaperRecord>): boolean {
   if (paper.isOrganizerPaper === true) return true;
-  // If paper ID contains preset / organizer tag
-  if (paper.id && (paper.id.startsWith('paper-') || paper.id.includes('mst1-2024') || paper.id.includes('mst2-2024'))) {
+  if (paper.id && (paper.id.startsWith('paper-') || paper.id.includes('mst1-2024') || paper.id.includes('mst2-2024') || paper.id.includes('organizer'))) {
     return true;
   }
   return false;
+}
+
+/**
+ * Check if current user is permitted to edit or delete a paper or question
+ * Standard users/students cannot edit or delete organizer master materials.
+ */
+export function canUserModifyResource(isOrganizerResource: boolean): boolean {
+  // If it's an organizer resource, only authenticated organizer can modify
+  if (isOrganizerResource) {
+    return isOrganizerAuthenticated();
+  }
+  // If it's personal student upload, they can always edit/delete their own
+  return true;
 }

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Course, DictionaryTerm } from '../types';
-import { DEFAULT_MATH1_DICTIONARY, checkTextAgainstDictionary } from '../utils/courseDictionary';
+import { getDictionaryForCourse, checkTextAgainstDictionary } from '../utils/courseDictionary';
 import { formatLatexToStandardMath } from '../utils/mathNotationFormatter';
 import {
   X,
@@ -12,7 +12,9 @@ import {
   ArrowRight,
   Calculator,
   HelpCircle,
-  FileText
+  FileText,
+  CreditCard,
+  Zap
 } from 'lucide-react';
 
 interface Props {
@@ -30,8 +32,14 @@ export const CourseDictionaryModal: React.FC<Props> = ({
   const [selectedUnit, setSelectedUnit] = useState<number | 'all'>('all');
   const [testText, setTestText] = useState<string>('');
   const [testResult, setTestResult] = useState<any | null>(null);
+  const [flashcardMode, setFlashcardMode] = useState<boolean>(false);
+  const [revealedCards, setRevealedCards] = useState<Record<string, boolean>>({});
 
-  const dictionaryList: DictionaryTerm[] = course.dictionary || DEFAULT_MATH1_DICTIONARY;
+  const toggleReveal = (id: string) => {
+    setRevealedCards((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const dictionaryList: DictionaryTerm[] = getDictionaryForCourse(course);
 
   const filteredTerms = dictionaryList.filter((item) => {
     const matchesUnit = selectedUnit === 'all' || item.unit === selectedUnit;
@@ -95,7 +103,21 @@ export const CourseDictionaryModal: React.FC<Props> = ({
             />
           </div>
 
-          <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto">
+          <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto">
+            {/* Flashcard Study Mode Toggle */}
+            <button
+              onClick={() => setFlashcardMode(!flashcardMode)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-sm ${
+                flashcardMode
+                  ? 'bg-amber-500 text-black border border-amber-400'
+                  : 'bg-amber-500/15 text-amber-300 border border-amber-500/30 hover:bg-amber-500/25'
+              }`}
+              title="Toggle Flashcard mode to test recall of equations and definitions"
+            >
+              <CreditCard className="w-3.5 h-3.5" />
+              <span>{flashcardMode ? '🃏 Flashcards Active' : '🃏 Flashcard Mode'}</span>
+            </button>
+
             <button
               onClick={() => setSelectedUnit('all')}
               className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${
@@ -178,59 +200,92 @@ export const CourseDictionaryModal: React.FC<Props> = ({
             )}
           </div>
 
-          {/* Dictionary Entries Grid */}
+          {/* Dictionary Entries & Flashcards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-            {filteredTerms.map((entry) => (
-              <div
-                key={entry.id}
-                className="p-4 rounded-2xl bg-[#0b0b0d] border border-white/10 flex flex-col justify-between hover:border-white/20 transition"
-              >
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-bold">
-                      Unit {entry.unit}
-                    </span>
-                    <span className="text-[11px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                      Appeared {entry.frequencyAppeared || 4}x in Past Papers
-                    </span>
-                  </div>
-
-                  <div>
-                    <h4 className="text-sm font-bold text-white">
-                      {entry.canonicalName}
-                    </h4>
-                    <p className="text-xs text-white/60 leading-relaxed mt-1">
-                      {entry.definition}
-                    </p>
-                  </div>
-
-                  {entry.formula && (
-                    <div className="p-2.5 rounded-xl bg-[#151518] border border-emerald-500/20 font-mono text-[11px] text-emerald-400 overflow-x-auto">
-                      {formatLatexToStandardMath(entry.formula)}
+            {filteredTerms.map((entry) => {
+              const isRevealed = revealedCards[entry.id];
+              return (
+                <div
+                  key={entry.id}
+                  className={`p-4 rounded-2xl border flex flex-col justify-between transition ${
+                    flashcardMode
+                      ? 'bg-[#101014] border-amber-500/30 hover:border-amber-500/60 shadow-lg'
+                      : 'bg-[#0b0b0d] border-white/10 hover:border-white/20'
+                  }`}
+                >
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-bold">
+                        Unit {entry.unit}
+                      </span>
+                      <span className="text-[11px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                        Appeared {entry.frequencyAppeared || 4}x in Past Papers
+                      </span>
                     </div>
-                  )}
-                </div>
 
-                <div className="mt-3 pt-2.5 border-t border-white/5 flex flex-wrap items-center justify-between text-[11px] text-white/50 gap-2">
-                  <span>
-                    Aliases: {entry.aliases.slice(0, 3).join(', ')}
-                  </span>
-                  {onSelectTerm && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        onSelectTerm(entry.term);
-                        onClose();
-                      }}
-                      className="text-indigo-400 hover:underline font-semibold flex items-center gap-1"
-                    >
-                      <span>Filter Questions</span>
-                      <ArrowRight className="w-3 h-3" />
-                    </button>
-                  )}
+                    <div>
+                      <h4 className="text-sm font-bold text-white flex items-center gap-1.5">
+                        {flashcardMode && <span className="text-amber-400">⚡</span>}
+                        <span>{entry.canonicalName}</span>
+                      </h4>
+                      {flashcardMode && !isRevealed ? (
+                        <div className="p-3 my-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-center">
+                          <p className="text-xs text-amber-200/90 font-medium mb-2">
+                            Can you recall the governing equation & key concept traps?
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => toggleReveal(entry.id)}
+                            className="px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold transition cursor-pointer"
+                          >
+                            Flip / Reveal Formula
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <p className="text-xs text-white/60 leading-relaxed mt-1">
+                            {entry.definition}
+                          </p>
+                          {entry.formula && (
+                            <div className="p-2.5 rounded-xl bg-[#151518] border border-emerald-500/20 font-mono text-[11px] text-emerald-400 overflow-x-auto mt-2">
+                              {formatLatexToStandardMath(entry.formula)}
+                            </div>
+                          )}
+                          {flashcardMode && (
+                            <button
+                              type="button"
+                              onClick={() => toggleReveal(entry.id)}
+                              className="text-[10px] text-amber-400/80 hover:text-amber-300 underline mt-1"
+                            >
+                              Hide Formula
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="mt-3 pt-2.5 border-t border-white/5 flex flex-wrap items-center justify-between text-[11px] text-white/50 gap-2">
+                    <span>
+                      Aliases: {entry.aliases.slice(0, 3).join(', ')}
+                    </span>
+                    {onSelectTerm && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onSelectTerm(entry.term);
+                          onClose();
+                        }}
+                        className="text-indigo-400 hover:underline font-semibold flex items-center gap-1 cursor-pointer"
+                      >
+                        <span>Filter Questions</span>
+                        <ArrowRight className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {filteredTerms.length === 0 && (

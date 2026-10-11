@@ -33,16 +33,19 @@ export function createApiApp() {
       process.env.VITE_GEMINI_API_KEY ||
       process.env.API_KEY;
     if (!apiKey) return null;
-    return new GoogleGenAI({ apiKey });
+    return new GoogleGenAI({ 
+      apiKey,
+      apiClient: 'aistudio-build'
+    });
   }
 
-  // Candidate models prioritizing fast, reliable flash tiers
+  // Recommended Gemini 3 generation models with fallback tiers
   const CANDIDATE_MODELS = [
+    'gemini-3.8-flash',
+    'gemini-3.1-flash-lite',
+    'gemini-flash-latest',
     'gemini-2.5-flash',
-    'gemini-2.5-flash-lite',
-    'gemini-2.0-flash',
-    'gemini-1.5-flash',
-    'gemini-flash-latest'
+    'gemini-2.0-flash'
   ];
 
   function extractResponseText(response: any): string {

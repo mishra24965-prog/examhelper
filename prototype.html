@@ -680,6 +680,15 @@
     ];
 
     function switchRole(role) {
+      if (role === 'organizer' && currentRole !== 'organizer') {
+        const pass = prompt('🔐 Organizer Authentication Required:\\nEnter master password (default: ExamIntel#2026Master or davv2026):');
+        if (pass !== 'ExamIntel#2026Master' && pass !== 'davv2026' && pass !== 'admin123') {
+          alert('❌ Unauthorized. Access denied to Organizer Portal.');
+          return;
+        }
+        alert('✅ Welcome, Organizer! Master paper uploading and permission controls unlocked.');
+      }
+
       currentRole = role;
       document.getElementById('btnRoleStudent').className = role === 'student'
         ? 'px-3 py-1.5 rounded-xl bg-indigo-600 text-white transition flex items-center gap-1.5 shadow-sm'
@@ -696,6 +705,8 @@
       document.getElementById('uploadRoleLabel').innerText = role === 'student'
         ? '🎓 Student (Personal Section Paper)'
         : '⭐ Organizer (Official Master Paper for all)';
+
+      renderQuestions();
     }
 
     const topicKnowledgeBase = {

@@ -35,10 +35,21 @@ import {
   RotateCcw,
   Plus,
   FileText,
-  RefreshCw
+  RefreshCw,
+  Lock,
+  LogIn,
+  KeyRound
 } from 'lucide-react';
 import { loadStoredPapers, saveStoredPapers, isDemoPaper, isDemoQuestion } from '../utils/paperStorage';
-import { isPaperOrganizerUploaded } from '../utils/userTeacherSettingsService';
+import { 
+  isPaperOrganizerUploaded, 
+  canUserModifyResource, 
+  isOrganizerAuthenticated,
+  verifyOrganizerCredentials,
+  logoutOrganizer,
+  ORGANIZER_DEFAULT_USER,
+  ORGANIZER_DEFAULT_PASS
+} from '../utils/userTeacherSettingsService';
 
 interface Props {
   course: Course;
@@ -103,6 +114,38 @@ export const QuestionBankView: React.FC<Props> = ({
   // Question Deletion State
   const [questionToDelete, setQuestionToDelete] = useState<Question | null>(null);
   const [isReVerifying, setIsReVerifying] = useState<boolean>(false);
+
+  // Organizer Authentication State & Dialog
+  const [isOrganizer, setIsOrganizer] = useState<boolean>(() => isOrganizerAuthenticated());
+  const [showOrganizerLoginModal, setShowOrganizerLoginModal] = useState<boolean>(false);
+  const [orgUsername, setOrgUsername] = useState<string>('');
+  const [orgPassword, setOrgPassword] = useState<string>('');
+  const [orgAuthError, setOrgAuthError] = useState<string | null>(null);
+
+  const handleOrganizerLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    setOrgAuthError(null);
+    const success = verifyOrganizerCredentials(orgUsername, orgPassword);
+    if (success) {
+      setIsOrganizer(true);
+      setShowOrganizerLoginModal(false);
+      setOrgUsername('');
+      setOrgPassword('');
+      if (showToast) {
+        showToast('Successfully authenticated as Organizer! Master edit & upload permissions unlocked.');
+      }
+    } else {
+      setOrgAuthError(`Invalid credentials. Use username "${ORGANIZER_DEFAULT_USER}" and your designated master password.`);
+    }
+  };
+
+  const handleOrganizerLogout = () => {
+    logoutOrganizer();
+    setIsOrganizer(false);
+    if (showToast) {
+      showToast('Logged out of Organizer mode. Standard student view active.');
+    }
+  };
 
   const handleReVerifyEmbeddings = () => {
     setIsReVerifying(true);
@@ -450,6 +493,31 @@ export const QuestionBankView: React.FC<Props> = ({
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+          {isOrganizer ? (
+            <div className="flex items-center gap-2 bg-amber-500/15 border border-amber-500/30 px-3 py-2 rounded-xl text-xs">
+              <span className="font-bold text-amber-300 flex items-center gap-1.5 font-mono">
+                <span>⭐</span>
+                <span>Organizer Mode Active</span>
+              </span>
+              <button
+                onClick={handleOrganizerLogout}
+                className="text-[11px] text-white/50 hover:text-white underline cursor-pointer"
+                title="Switch back to student view"
+              >
+                Log Out
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowOrganizerLoginModal(true)}
+              className="px-3 py-2 text-xs font-semibold rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/80 flex items-center gap-1.5 transition cursor-pointer"
+              title="Sign in with Organizer Credentials to edit or upload master papers"
+            >
+              <KeyRound className="w-3.5 h-3.5 text-amber-400" />
+              <span>Organizer Sign-In</span>
+            </button>
+          )}
+
           {onOpenDictionary && (
             <button
               onClick={onOpenDictionary}
@@ -667,21 +735,33 @@ export const QuestionBankView: React.FC<Props> = ({
 
                       {/* Action buttons: Edit (Rename / Change Year) & Delete */}
                       <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                        <button
-                          onClick={() => handleStartEditPaper(paper)}
-                          title="Rename paper title & update exam year"
-                          className="p-1.5 rounded-lg bg-indigo-500/15 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/30 transition flex items-center gap-1 text-[11px] font-medium"
-                        >
-                          <Pencil className="w-3 h-3" />
-                          <span className="hidden group-hover:inline">Rename / Year</span>
-                        </button>
-                        <button
-                          onClick={() => setPaperToDelete(paper)}
-                          title="Remove paper and its questions"
-                          className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/25 text-rose-400 border border-rose-500/20 transition"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
+                        {canUserModifyResource(isPaperOrganizerUploaded(paper)) ? (
+                          <>
+                            <button
+                              onClick={() => handleStartEditPaper(paper)}
+                              title="Rename paper title & update exam year"
+                              className="p-1.5 rounded-lg bg-indigo-500/15 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/30 transition flex items-center gap-1 text-[11px] font-medium"
+                            >
+                              <Pencil className="w-3 h-3" />
+                              <span className="hidden group-hover:inline">Rename / Year</span>
+                            </button>
+                            <button
+                              onClick={() => setPaperToDelete(paper)}
+                              title="Remove paper and its questions"
+                              className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/25 text-rose-400 border border-rose-500/20 transition"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          </>
+                        ) : (
+                          <span 
+                            className="px-2 py-0.5 rounded-lg bg-amber-500/10 text-amber-300/80 border border-amber-500/20 text-[10px] font-mono flex items-center gap-1"
+                            title="Official Organizer Paper: Protected. Non-organizers cannot edit or delete."
+                          >
+                            <Lock className="w-2.5 h-2.5" />
+                            <span>Protected</span>
+                          </span>
+                        )}
                       </div>
                     </div>
 
@@ -1004,20 +1084,31 @@ export const QuestionBankView: React.FC<Props> = ({
                     </span>
 
                     {/* Edit question and Delete question buttons */}
-                    <button
-                      onClick={() => handleStartEditQuestion(q)}
-                      title="Edit question text, year, marks, or number"
-                      className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition"
-                    >
-                      <Pencil className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={() => setQuestionToDelete(q)}
-                      title="Delete question from bank"
-                      className="p-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 transition"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    {canUserModifyResource(!!q.isOrganizerQuestion) ? (
+                      <>
+                        <button
+                          onClick={() => handleStartEditQuestion(q)}
+                          title="Edit question text, year, marks, or number"
+                          className="p-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => setQuestionToDelete(q)}
+                          title="Delete question from bank"
+                          className="p-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 transition"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </>
+                    ) : (
+                      <span
+                        className="p-1.5 rounded-xl bg-amber-500/10 text-amber-300/80 border border-amber-500/20 text-[10px] font-mono flex items-center gap-1"
+                        title="Official Master Question: Protected from editing by students"
+                      >
+                        <Lock className="w-3 h-3" />
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -1482,6 +1573,95 @@ export const QuestionBankView: React.FC<Props> = ({
                 Delete
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal 5: Secured Organizer Sign-In Dialog */}
+      {showOrganizerLoginModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
+          <div className="bg-[#151518] border border-amber-500/40 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-5 text-[#e4e4e7]">
+            <div className="flex items-center justify-between border-b border-white/10 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center font-bold">
+                  <KeyRound className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white flex items-center gap-2">
+                    <span>Organizer Portal Login</span>
+                    <span className="text-[10px] font-mono bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full border border-amber-500/30">
+                      Master Key
+                    </span>
+                  </h3>
+                  <p className="text-xs text-white/50">
+                    Secured access to upload & publish official exam papers
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowOrganizerLoginModal(false)}
+                className="text-white/40 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleOrganizerLogin} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-white/80 block">
+                  Organizer Username:
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder={`e.g. ${ORGANIZER_DEFAULT_USER}`}
+                  value={orgUsername}
+                  onChange={(e) => setOrgUsername(e.target.value)}
+                  className="w-full bg-[#0b0b0d] border border-white/15 focus:border-amber-500 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-white/30 focus:outline-none transition"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-white/80 block">
+                  Master Password:
+                </label>
+                <input
+                  type="password"
+                  required
+                  placeholder="Enter organizer password..."
+                  value={orgPassword}
+                  onChange={(e) => setOrgPassword(e.target.value)}
+                  className="w-full bg-[#0b0b0d] border border-white/15 focus:border-amber-500 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-white/30 focus:outline-none transition"
+                />
+              </div>
+
+              {orgAuthError && (
+                <div className="p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs">
+                  {orgAuthError}
+                </div>
+              )}
+
+              <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-200/90 leading-relaxed">
+                <strong>🛡️ Security Policy:</strong> Official master papers uploaded by the organizer are published to all students across the platform. Non-organizer candidates cannot edit or delete organizer master papers.
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowOrganizerLoginModal(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-white/60 hover:text-white"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold transition shadow-lg shadow-amber-500/20 flex items-center gap-1.5 cursor-pointer"
+                >
+                  <LogIn className="w-3.5 h-3.5" />
+                  <span>Verify & Unlock Portal</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

@@ -21,17 +21,20 @@ export function getClientGeminiSDK(): GoogleGenAI | null {
   const apiKey = getGeminiApiKey();
   if (!apiKey) return null;
   if (!aiClient) {
-    aiClient = new GoogleGenAI({ apiKey });
+    aiClient = new GoogleGenAI({ 
+      apiKey,
+      apiClient: 'aistudio-build'
+    });
   }
   return aiClient;
 }
 
 const CANDIDATE_MODELS = [
+  'gemini-3.8-flash',
+  'gemini-3.1-flash-lite',
+  'gemini-flash-latest',
   'gemini-2.5-flash',
-  'gemini-2.5-flash-lite',
-  'gemini-2.0-flash',
-  'gemini-1.5-flash',
-  'gemini-flash-latest'
+  'gemini-2.0-flash'
 ];
 
 async function safeGenerateContent(buildConfig: (model: string) => any): Promise<any> {
