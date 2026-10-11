@@ -49,7 +49,7 @@ export const SolveQuestionModal: React.FC<Props> = ({
   const [solution, setSolution] = useState<ModelAnswer | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState<boolean>(false);
-  const [viewMode, setViewMode] = useState<'flowchart' | 'structured' | 'plain' | 'diagram'>('structured');
+  const [viewMode, setViewMode] = useState<'flowchart' | 'structured' | 'plain' | 'diagram' | 'cheatsheet'>('structured');
   const [downloadingPdf, setDownloadingPdf] = useState<boolean>(false);
   const [pdfDownloaded, setPdfDownloaded] = useState<boolean>(false);
 
@@ -334,6 +334,18 @@ export const SolveQuestionModal: React.FC<Props> = ({
                       <span>Visual Flowchart ({solution.flowchartSteps.length} Steps)</span>
                     </button>
                   )}
+
+                  <button
+                    onClick={() => setViewMode('cheatsheet')}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer ${
+                      viewMode === 'cheatsheet'
+                        ? 'bg-amber-500 text-black shadow-md shadow-amber-500/30 font-bold'
+                        : 'bg-amber-500/10 text-amber-300 hover:text-white border border-amber-500/20'
+                    }`}
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>⚡ Cheat Sheet & Tips</span>
+                  </button>
 
                   <button
                     onClick={() => setViewMode('plain')}
@@ -692,6 +704,86 @@ export const SolveQuestionModal: React.FC<Props> = ({
                       </div>
                     </div>
                   )}
+                </div>
+              ) : viewMode === 'cheatsheet' ? (
+                /* View: Dedicated Exam Cheat Sheet & Evaluator Tips */
+                <div className="space-y-4">
+                  {/* Top Header Card */}
+                  <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/15 via-indigo-500/15 to-slate-900 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                          Rapid 2-Minute Revision
+                        </span>
+                        <span className="text-xs text-white/50 font-mono">Exam Eve Cheat Sheet</span>
+                      </div>
+                      <h4 className="text-sm sm:text-base font-bold text-white">
+                        Governing Equations, Marking Traps & Pro-Tips
+                      </h4>
+                    </div>
+                    <button
+                      onClick={handleDownloadPdf}
+                      disabled={downloadingPdf}
+                      className="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-amber-500/20 cursor-pointer self-start sm:self-auto shrink-0"
+                    >
+                      <FileDown className="w-3.5 h-3.5" />
+                      <span>{downloadingPdf ? 'Exporting...' : 'Print Cheat Sheet PDF'}</span>
+                    </button>
+                  </div>
+
+                  {/* 3 Core Cheat-Sheet Pillars */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                    {/* Pillar 1: High-Yield Formula Box */}
+                    <div className="p-4 rounded-2xl bg-slate-950 border border-emerald-500/30 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-mono font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+                          <Calculator className="w-3.5 h-3.5" />
+                          <span>Governing Mathematical Formulas</span>
+                        </span>
+                        <span className="text-[10px] bg-emerald-500/10 text-emerald-300 px-2 py-0.5 rounded font-mono">Must Box</span>
+                      </div>
+                      <div className="p-3 rounded-xl bg-[#0b0b0d] border border-emerald-500/20 font-mono text-xs text-emerald-300 space-y-1">
+                        <p>{formatLatexToStandardMath(solution.teacherProTip?.split('.')[0] || 'State base equations clearly before numerical substitution.')}</p>
+                      </div>
+                      <p className="text-[11px] text-slate-400 leading-relaxed">
+                        Evaluators allocate 2 marks purely for quoting the fundamental formula and declaring symbols with their engineering units.
+                      </p>
+                    </div>
+
+                    {/* Pillar 2: #1 Evaluator Deduction Trap */}
+                    <div className="p-4 rounded-2xl bg-slate-950 border border-rose-500/30 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-mono font-bold uppercase tracking-wider text-rose-400 flex items-center gap-1.5">
+                          <AlertTriangle className="w-3.5 h-3.5" />
+                          <span>#1 Deduction Trap to Avoid</span>
+                        </span>
+                        <span className="text-[10px] bg-rose-500/10 text-rose-300 px-2 py-0.5 rounded font-mono">Common Mistake</span>
+                      </div>
+                      <div className="p-3 rounded-xl bg-rose-950/20 border border-rose-500/25 text-xs text-rose-200/90 leading-relaxed">
+                        {formatLatexToStandardMath(solution.commonPitfallToAvoid || 'Skipping intermediate substitution steps and omitting final units.')}
+                      </div>
+                      <p className="text-[11px] text-slate-400 leading-relaxed">
+                        Do not skip intermediate arithmetic steps; university examiners cut up to 40% of marks for direct unverified jumps.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Pillar 3: Examiner Pro-Tip & High-Scoring Rubric Rules */}
+                  <div className="p-4 rounded-2xl bg-slate-950 border border-indigo-500/30 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-mono font-bold uppercase tracking-wider text-indigo-300 flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+                        <span>Teacher Pro-Tips & Distinction Guidelines</span>
+                      </span>
+                      <span className="text-[10px] bg-indigo-500/10 text-indigo-300 px-2 py-0.5 rounded font-mono">Full Marks</span>
+                    </div>
+                    <div className="p-3.5 rounded-xl bg-indigo-950/20 border border-indigo-500/20 text-xs text-indigo-100/90 leading-relaxed">
+                      {formatLatexToStandardMath(solution.teacherProTip || 'Draw labeled technical diagrams neatly; box final numerical answers with SI units to claim complete step marks.')}
+                    </div>
+                    <div className="flex items-center gap-2 pt-1 text-[11px] text-slate-400">
+                      <span>📌 <strong>Examiner Checklist:</strong> Write step numbers matching question paper • Box final scalar outputs • Draw labeled arrows on diagrams.</span>
+                    </div>
+                  </div>
                 </div>
               ) : (
                 /* View 3: Simplified Text Format */

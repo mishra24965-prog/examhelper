@@ -167,8 +167,38 @@
             Explain EDTA method for determination of hardness of water with complete chemical reactions and principle.
           </div>
 
-          <!-- Bento Grid Model Answer -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <!-- Sub-Tab Switcher: Model Answer vs Exam Cheat Sheet -->
+          <div class="flex items-center gap-2 border-b border-slate-800 pb-2.5">
+            <button onclick="setBentoSubView('answer')" id="btnBentoAnswer" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow">
+              📚 Complete Model Answer
+            </button>
+            <button onclick="setBentoSubView('cheatsheet')" id="btnBentoCheat" class="px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-950 text-amber-300 hover:text-white border border-amber-500/30">
+              ⚡ Exam Cheat Sheet & Tips
+            </button>
+          </div>
+
+          <!-- Section A: Cheat Sheet View (Formula, Trap, Rubric) -->
+          <div id="bentoCheatSheetSection" class="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-3 hidden">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-mono font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1.5">
+                <span>⚡</span>
+                <span>Exam Eve Rapid Revision Cheat Sheet</span>
+              </span>
+              <span class="text-[10px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full font-mono">2-Min Recall</span>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-950 border border-amber-500/20 space-y-1 font-mono text-xs text-amber-200" id="bentoCheatSheetFormula">
+              Total Hardness = (V_EDTA × M × 100 × 1000) / V_sample [ppm CaCO₃]
+            </div>
+            <div class="p-3 rounded-xl bg-rose-950/30 border border-rose-500/30 text-xs text-rose-200 leading-relaxed" id="bentoCheatSheetTrap">
+              ⚠️ <strong>Examiner Deduction Trap:</strong> Do not omit intermediate substitution lines or state variables; teachers penalize direct jumps!
+            </div>
+            <div class="p-3 rounded-xl bg-slate-950/80 border border-slate-800 text-xs text-slate-300 leading-relaxed">
+              💡 <strong>Distinction Rule:</strong> Box the final evaluated result with engineering units and draw neat labeled arrows on all diagrams.
+            </div>
+          </div>
+
+          <!-- Section B: Full Answer Bento Grid -->
+          <div id="bentoFullAnswerSection" class="space-y-4">
             <!-- Bento Box 1: Core Governing Formulation -->
             <div class="p-4 rounded-2xl bg-slate-950 border border-emerald-500/30 space-y-1.5">
               <span class="text-[10px] font-mono uppercase tracking-wider text-emerald-400 font-bold block">1. One-Line Formula</span>
@@ -211,6 +241,7 @@
         </div>
       </div>
     </div>
+  </div>
 
     <!-- ================= TAB 2: TEACHER MINDSET STUDIO ================= -->
     <div id="tabContent-teacher" class="space-y-6 hidden">
@@ -996,6 +1027,25 @@
       renderQuestions();
     }
 
+    function setBentoSubView(view) {
+      const answerSection = document.getElementById('bentoFullAnswerSection');
+      const cheatSection = document.getElementById('bentoCheatSheetSection');
+      const btnAnswer = document.getElementById('btnBentoAnswer');
+      const btnCheat = document.getElementById('btnBentoCheat');
+
+      if (view === 'cheatsheet') {
+        answerSection.classList.add('hidden');
+        cheatSection.classList.remove('hidden');
+        btnCheat.className = 'px-3.5 py-1.5 rounded-xl text-xs font-bold bg-amber-500 text-black shadow font-bold';
+        btnAnswer.className = 'px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-950 text-slate-400 hover:text-white border border-slate-800';
+      } else {
+        cheatSection.classList.add('hidden');
+        answerSection.classList.remove('hidden');
+        btnAnswer.className = 'px-3.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow font-bold';
+        btnCheat.className = 'px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-950 text-amber-300 hover:text-white border border-amber-500/30';
+      }
+    }
+
     function handleUnifiedSearch(term) {
       unifiedSearchTerm = (term || '').toLowerCase().trim();
       renderQuestions();
@@ -1038,6 +1088,12 @@
         diagEl.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 320" width="100%" height="100%"><rect width="640" height="320" rx="12" fill="#090d16"/><rect x="20" y="16" width="600" height="32" rx="6" fill="#1e293b"/><text x="32" y="38" fill="#38bdf8" font-family="system-ui" font-size="12" font-weight="bold">LUBRICATION MECHANISMS: THICK FILM VS BOUNDARY ADSORPTION</text><rect x="60" y="80" width="220" height="30" fill="#475569"/><rect x="60" y="110" width="220" height="20" fill="#f59e0b" fill-opacity="0.8"/><rect x="60" y="130" width="220" height="30" fill="#475569"/><text x="75" y="125" fill="#000" font-family="system-ui" font-size="10" font-weight="bold">HYDRODYNAMIC FILM (>1000 Å)</text><rect x="340" y="80" width="220" height="35" fill="#475569"/><rect x="340" y="115" width="220" height="6" fill="#ef4444"/><rect x="340" y="121" width="220" height="35" fill="#475569"/><text x="355" y="180" fill="#ef4444" font-family="system-ui" font-size="10" font-weight="bold">BOUNDARY MONOLAYER (High Load)</text></svg>`)}`;
         specEl.innerText = 'Draw hydrodynamic thick-film lubrication layer showing complete separation of metal asperities and boundary monolayer adsorption under heavy load.';
       }
+
+      // Sync with dedicated Cheat Sheet Section
+      const csFormula = document.getElementById('bentoCheatSheetFormula');
+      const csTrap = document.getElementById('bentoCheatSheetTrap');
+      if (csFormula) csFormula.innerText = formulaEl.innerText;
+      if (csTrap) csTrap.innerHTML = `⚠️ <strong>Examiner Deduction Trap:</strong> ${trapEl.innerText}`;
 
       // Render Flowchart Steps
       flowEl.innerHTML = '';
