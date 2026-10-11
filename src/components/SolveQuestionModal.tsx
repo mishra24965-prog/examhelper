@@ -24,7 +24,8 @@ import {
 } from '../utils/mathNotationFormatter';
 import { solvePyqApi } from '../utils/geminiClientService';
 import { getTeacherPreferenceForCourse } from '../utils/userTeacherSettingsService';
-import { Workflow, GraduationCap as TeacherCap } from 'lucide-react';
+import { exportSolutionDossierPdf } from '../utils/pdfExport';
+import { Workflow, GraduationCap as TeacherCap, FileDown, Image as ImageIcon, Eye } from 'lucide-react';
 
 interface Props {
   question: Question;
@@ -48,7 +49,9 @@ export const SolveQuestionModal: React.FC<Props> = ({
   const [solution, setSolution] = useState<ModelAnswer | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState<boolean>(false);
-  const [viewMode, setViewMode] = useState<'flowchart' | 'structured' | 'plain'>('structured');
+  const [viewMode, setViewMode] = useState<'flowchart' | 'structured' | 'plain' | 'diagram'>('structured');
+  const [downloadingPdf, setDownloadingPdf] = useState<boolean>(false);
+  const [pdfDownloaded, setPdfDownloaded] = useState<boolean>(false);
 
   const teacherPref = courseId ? getTeacherPreferenceForCourse(courseId) : undefined;
 
@@ -70,7 +73,9 @@ export const SolveQuestionModal: React.FC<Props> = ({
 
         if (isMounted && data && data.solution) {
           const hasFlowchart = Array.isArray(data.solution.flowchartSteps) && data.solution.flowchartSteps.length > 0;
-          if (hasFlowchart && (courseName.toLowerCase().includes('chem') || teacherPref?.preferredFormatting?.flowchart)) {
+          if (data.solution.diagramRequired && (courseName.toLowerCase().includes('chem') || question.text.toLowerCase().includes('curve') || question.text.toLowerCase().includes('diagram'))) {
+            setViewMode('diagram');
+          } else if (hasFlowchart && (courseName.toLowerCase().includes('chem') || teacherPref?.preferredFormatting?.flowchart)) {
             setViewMode('flowchart');
           }
 
@@ -87,6 +92,10 @@ export const SolveQuestionModal: React.FC<Props> = ({
             flowchartSteps: data.solution.flowchartSteps || [],
             tailoredTeacherNotes: data.solution.tailoredTeacherNotes || (teacherPref?.customInstructions ? `Tailored to Professor: ${teacherPref.customInstructions}` : undefined),
             diagramDescription: data.solution.diagramDescription,
+            diagramRequired: data.solution.diagramRequired,
+            diagramType: data.solution.diagramType,
+            diagramImageUrl: data.solution.diagramImageUrl,
+            pdfAvailable: data.solution.pdfAvailable !== false,
             teacherProTip: data.solution.teacherProTip || 'Always box your final numerical result with units.',
             commonPitfallToAvoid: data.solution.commonPitfallToAvoid || 'Skipping intermediate substitution steps.',
             introduction: data.solution.introduction,
@@ -130,6 +139,29 @@ export const SolveQuestionModal: React.FC<Props> = ({
     navigator.clipboard.writeText(fullText);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleDownloadPdf = () => {
+    if (!solution) return;
+    setDownloadingPdf(true);
+    try {
+      setTimeout(() => {
+        exportSolutionDossierPdf({
+          solution,
+          questionText: question.text,
+          courseName,
+          topicName: question.topicName,
+          marks: question.marks,
+          diagramImageUrl: solution.diagramImageUrl
+        });
+        setDownloadingPdf(false);
+        setPdfDownloaded(true);
+        setTimeout(() => setPdfDownloaded(false), 3000);
+      }, 300);
+    } catch (err) {
+      console.error('Failed to export solution PDF:', err);
+      setDownloadingPdf(false);
+    }
   };
 
   // Detect if we have rich pedagogical sections
@@ -231,8 +263,37 @@ export const SolveQuestionModal: React.FC<Props> = ({
                 </div>
               </div>
 
+              {/* Gemini Diagram Decision & PDF Banner */}
+              {solution.diagramRequired && (
+                <div className="p-3.5 bg-gradient-to-r from-purple-500/15 via-indigo-500/10 to-transparent border border-purple-500/30 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-purple-200">
+                  <div className="flex items-center gap-2.5">
+                    <ImageIcon className="w-4 h-4 text-purple-400 shrink-0" />
+                    <span>
+                      <strong>Gemini Academic Diagnostic:</strong> Examination diagram & apparatus schematic required for full marks in this question.
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 self-start sm:self-auto">
+                    <button
+                      onClick={() => setViewMode('diagram')}
+                      className="px-3 py-1 rounded-xl bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 border border-purple-500/40 text-[11px] font-bold transition flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>View Diagram</span>
+                    </button>
+                    <button
+                      onClick={handleDownloadPdf}
+                      disabled={downloadingPdf}
+                      className="px-3 py-1 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-bold transition flex items-center gap-1.5 shadow cursor-pointer disabled:opacity-50"
+                    >
+                      <FileDown className="w-3.5 h-3.5" />
+                      <span>{downloadingPdf ? 'Exporting...' : pdfDownloaded ? 'Saved!' : 'Download PDF'}</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Solution View Controls */}
-              <div className="flex items-center justify-between pt-1">
+              <div className="flex items-center justify-between pt-1 flex-wrap gap-2">
                 <div className="flex items-center gap-2 flex-wrap">
                   <button
                     onClick={() => setViewMode('structured')}
@@ -245,6 +306,21 @@ export const SolveQuestionModal: React.FC<Props> = ({
                     <Layers className="w-3.5 h-3.5" />
                     <span>Structured Answer</span>
                   </button>
+
+                  {(solution.diagramRequired || solution.diagramImageUrl || solution.diagramDescription) && (
+                    <button
+                      onClick={() => setViewMode('diagram')}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer ${
+                        viewMode === 'diagram'
+                          ? 'bg-purple-600 text-white shadow-md shadow-purple-600/30'
+                          : 'bg-slate-800/60 text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      <ImageIcon className="w-3.5 h-3.5 text-purple-300" />
+                      <span>Exam Diagram</span>
+                    </button>
+                  )}
+
                   {solution.flowchartSteps && solution.flowchartSteps.length > 0 && (
                     <button
                       onClick={() => setViewMode('flowchart')}
@@ -258,6 +334,7 @@ export const SolveQuestionModal: React.FC<Props> = ({
                       <span>Visual Flowchart ({solution.flowchartSteps.length} Steps)</span>
                     </button>
                   )}
+
                   <button
                     onClick={() => setViewMode('plain')}
                     className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer ${
@@ -271,13 +348,25 @@ export const SolveQuestionModal: React.FC<Props> = ({
                   </button>
                 </div>
 
-                <button
-                  onClick={handleCopy}
-                  className="flex items-center gap-1.5 text-xs text-slate-300 hover:text-white px-3 py-1.5 rounded-xl bg-slate-800/60 border border-slate-700/60 hover:bg-slate-700/60 transition cursor-pointer"
-                >
-                  {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                  <span>{copied ? 'Copied' : 'Copy Solution'}</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleDownloadPdf}
+                    disabled={downloadingPdf}
+                    className="flex items-center gap-1.5 text-xs text-indigo-200 hover:text-white px-3 py-1.5 rounded-xl bg-indigo-600/25 border border-indigo-500/40 hover:bg-indigo-600/40 transition cursor-pointer"
+                    title="Download complete model solution & labeled diagram as print-ready PDF"
+                  >
+                    <FileDown className="w-3.5 h-3.5 text-indigo-400" />
+                    <span>{downloadingPdf ? 'Exporting PDF...' : pdfDownloaded ? 'PDF Downloaded!' : 'Download Solution PDF'}</span>
+                  </button>
+
+                  <button
+                    onClick={handleCopy}
+                    className="flex items-center gap-1.5 text-xs text-slate-300 hover:text-white px-3 py-1.5 rounded-xl bg-slate-800/60 border border-slate-700/60 hover:bg-slate-700/60 transition cursor-pointer"
+                  >
+                    {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{copied ? 'Copied' : 'Copy'}</span>
+                  </button>
+                </div>
               </div>
 
               {/* View 1: Interactive Visual Flowchart */}
@@ -542,6 +631,65 @@ export const SolveQuestionModal: React.FC<Props> = ({
                           ))}
                         </ul>
                       )}
+                    </div>
+                  )}
+                </div>
+              ) : viewMode === 'diagram' ? (
+                /* View: Examination Diagram & Apparatus Schematic */
+                <div className="space-y-4">
+                  <div className="p-4 bg-purple-950/30 border border-purple-500/30 rounded-2xl flex items-center justify-between">
+                    <div>
+                      <h4 className="text-xs font-bold text-purple-300 flex items-center gap-1.5 font-mono">
+                        <ImageIcon className="w-4 h-4 text-purple-400" />
+                        <span>Examination Technical Diagram & Schematic View</span>
+                      </h4>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        Gemini AI verified: In-depth technical schematic and labeled node drawing required for exam scoring.
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleDownloadPdf}
+                      disabled={downloadingPdf}
+                      className="px-3.5 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow cursor-pointer disabled:opacity-50"
+                    >
+                      <FileDown className="w-3.5 h-3.5" />
+                      <span>{downloadingPdf ? 'Exporting...' : 'Export Diagram PDF'}</span>
+                    </button>
+                  </div>
+
+                  {solution.diagramImageUrl && (
+                    <div className="bg-slate-950 border border-purple-500/30 rounded-2xl p-3 overflow-hidden shadow-xl">
+                      <img
+                        src={solution.diagramImageUrl}
+                        alt="Examination Diagram Schematic"
+                        className="w-full h-auto max-h-[460px] object-contain rounded-xl mx-auto"
+                      />
+                    </div>
+                  )}
+
+                  {solution.diagramDescription && (
+                    <div className="bg-slate-950/80 border border-slate-800 p-4 rounded-2xl space-y-2">
+                      <div className="flex items-center justify-between">
+                        <h5 className="text-xs font-mono font-bold uppercase tracking-wider text-purple-300 flex items-center gap-1.5">
+                          <BookOpen className="w-3.5 h-3.5" />
+                          <span>Student Drawing Specifications & Marking Checklist</span>
+                        </h5>
+                        <span className="text-[10px] font-mono bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full">
+                          Answer Sheet Criteria
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-300 leading-relaxed">
+                        {formatLatexToStandardMath(solution.diagramDescription)}
+                      </p>
+                      <div className="p-2.5 rounded-xl bg-purple-950/20 border border-purple-500/20 text-[11px] text-purple-200 flex items-center justify-between">
+                        <span>💡 <strong>Evaluator rule:</strong> Always draw with a sharp pencil; write bold labeled node callouts and state input/exit parameters.</span>
+                        <button
+                          onClick={handleDownloadPdf}
+                          className="text-xs text-purple-300 hover:text-white underline font-semibold cursor-pointer shrink-0 ml-2"
+                        >
+                          Download Print PDF ↗
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>

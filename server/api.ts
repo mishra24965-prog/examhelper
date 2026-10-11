@@ -735,7 +735,10 @@ TEACHER / EVALUATOR CUSTOM PREFERENCES:
       "Industrial or engineering application 2"
     ],
     "industrialSignificance": "...",
-    "diagramDescription": "...",
+    "diagramRequired": true,
+    "diagramType": "chemical-apparatus" | "curve-tracing" | "circuit-schematic" | "thermodynamic-cycle" | "mechanism-flowchart" | "none",
+    "diagramDescription": "Accurate specification of the diagram, labeled nodes, axes, asymptotes, and equipment required by the examiner.",
+    "pdfAvailable": true,
     "tailoredTeacherNotes": "...",
     "teacherProTip": "...",
     "commonPitfallToAvoid": "..."
@@ -752,13 +755,22 @@ TEACHER / EVALUATOR CUSTOM PREFERENCES:
       });
 
       const solutionRaw = extractResponseText(response);
-      let solution = {};
+      let solution: any = {};
       try {
         solution = JSON.parse(solutionRaw || '{}');
       } catch {
         const match = solutionRaw.match(/\{[\s\S]*\}/);
         if (match) solution = JSON.parse(match[0]);
       }
+
+      const qComb = `${courseName || ''} ${topicName || ''} ${questionText || ''}`.toLowerCase();
+      solution.diagramRequired = solution.diagramRequired === true ||
+        qComb.includes('diagram') || qComb.includes('curve') || qComb.includes('trace') ||
+        qComb.includes('edta') || qComb.includes('calorimeter') || qComb.includes('boiler') ||
+        qComb.includes('circuit') || qComb.includes('rectifier') || qComb.includes('sfee') ||
+        qComb.includes('thermo') || qComb.includes('hardness');
+      solution.pdfAvailable = true;
+
       res.json({ success: true, solution });
     } catch {
       console.log('Generating tailored standard math derivation for /api/solve-pyq');

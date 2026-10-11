@@ -1,4 +1,5 @@
 import { GoogleGenAI } from '@google/genai';
+import { generateAcademicDiagramSvg } from './diagramGenerator';
 
 // Retrieve API key from environment variables (baked in at build time by Vite or defined in window/process)
 export function getGeminiApiKey(): string {
@@ -183,7 +184,10 @@ Return ONLY a JSON object matching this schema:
     "Industrial or engineering application 2"
   ],
   "industrialSignificance": "...",
-  "diagramDescription": "...",
+  "diagramRequired": true,
+  "diagramType": "chemical-apparatus" | "curve-tracing" | "circuit-schematic" | "thermodynamic-cycle" | "mechanism-flowchart" | "none",
+  "diagramDescription": "Accurate specification of the diagram, labeled nodes, axes, asymptotes, and equipment required by the examiner.",
+  "pdfAvailable": true,
   "tailoredTeacherNotes": "...",
   "teacherProTip": "...",
   "commonPitfallToAvoid": "..."
@@ -203,11 +207,43 @@ Return ONLY a JSON object matching this schema:
         flowchartSteps: [],
         applications: [],
         industrialSignificance: '',
+        diagramRequired: false,
+        diagramType: 'none',
         diagramDescription: '',
+        pdfAvailable: true,
         tailoredTeacherNotes: '',
         teacherProTip: '',
         commonPitfallToAvoid: ''
       });
+
+      // Automatically determine if diagram is required by syllabus (Chemistry, Mechanical, Curve Tracing in Math)
+      const combined = `${params.courseName} ${params.topicName} ${params.questionText}`.toLowerCase();
+      const needsDiagram =
+        parsed.diagramRequired === true ||
+        combined.includes('diagram') ||
+        combined.includes('curve') ||
+        combined.includes('trace') ||
+        combined.includes('edta') ||
+        combined.includes('calorimeter') ||
+        combined.includes('boiler') ||
+        combined.includes('circuit') ||
+        combined.includes('rectifier') ||
+        combined.includes('sfee') ||
+        combined.includes('thermo') ||
+        combined.includes('hardness');
+
+      parsed.diagramRequired = needsDiagram;
+      parsed.pdfAvailable = true;
+
+      if (needsDiagram) {
+        parsed.diagramImageUrl = generateAcademicDiagramSvg({
+          topicName: params.topicName,
+          questionText: params.questionText,
+          courseName: params.courseName,
+          diagramType: parsed.diagramType
+        });
+      }
+
       return { success: true, solution: parsed };
     },
     () => ({
@@ -569,6 +605,28 @@ Step 3: Final Evaluated Result & Units
     industrialSignificance = 'Underpins finite element analysis (FEA) and continuous boundary value solvers utilized across aerospace and civil engineering.';
   }
 
+  const combined = `${params.courseName || ''} ${params.topicName || ''} ${params.questionText || ''}`.toLowerCase();
+  const diagramRequired =
+    combined.includes('diagram') ||
+    combined.includes('curve') ||
+    combined.includes('trace') ||
+    combined.includes('edta') ||
+    combined.includes('calorimeter') ||
+    combined.includes('boiler') ||
+    combined.includes('circuit') ||
+    combined.includes('rectifier') ||
+    combined.includes('sfee') ||
+    combined.includes('thermo') ||
+    combined.includes('hardness');
+
+  const diagramImageUrl = diagramRequired
+    ? generateAcademicDiagramSvg({
+        topicName: params.topicName,
+        questionText: params.questionText,
+        courseName: params.courseName || 'Engineering'
+      })
+    : undefined;
+
   return {
     markingRubric: [
       { step: 'Step 1: Formula Declaration & Given Parameters', marksAwarded: 2, teacherExpectation: 'Explicitly state all variables, symbols, and standard governing formula.' },
@@ -578,6 +636,10 @@ Step 3: Final Evaluated Result & Units
     fullAnswerMarkdown,
     flowchartSteps: defaultFlowchart,
     diagramDescription,
+    diagramRequired,
+    diagramType: combined.includes('curve') ? 'curve-tracing' : combined.includes('circuit') ? 'circuit-schematic' : combined.includes('thermo') ? 'thermodynamic-cycle' : 'chemical-apparatus',
+    diagramImageUrl,
+    pdfAvailable: true,
     teacherProTip,
     commonPitfallToAvoid,
     introduction,

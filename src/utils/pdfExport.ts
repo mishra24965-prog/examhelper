@@ -1,5 +1,5 @@
 import { jsPDF } from 'jspdf';
-import { Course, StudyPlan } from '../types';
+import { Course, StudyPlan, ModelAnswer } from '../types';
 import { calculateTopicWeightages, generateLocalStudyPlan } from './analyticsEngine';
 
 export interface ExportPdfOptions {
@@ -479,6 +479,264 @@ export function exportStudyPlanAndAnalyticsPdf(
 
   // Trigger Save / Download
   const filename = `${course.name.replace(/[^a-zA-Z0-9_-]/g, '_')}_ExamIntel_Study_Dossier.pdf`;
+  doc.save(filename);
+
+  return filename;
+}
+
+/**
+ * Dedicated PDF generator for Model Solutions with Mandatory Examination Diagrams,
+ * Flowcharts, Marking Rubric, and Evaluator Tips.
+ */
+export function exportSolutionDossierPdf(params: {
+  solution: ModelAnswer;
+  questionText: string;
+  courseName: string;
+  topicName?: string;
+  marks?: number;
+  diagramImageUrl?: string;
+}): string {
+  const { solution, questionText, courseName, topicName, marks = 7, diagramImageUrl } = params;
+
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4'
+  });
+
+  const pageWidth = 210;
+  const pageHeight = 297;
+  const margin = 14;
+  const contentWidth = pageWidth - margin * 2;
+  let currentY = margin;
+  let pageNumber = 1;
+
+  const accentIndigo = [99, 102, 241];
+  const emeraldGreen = [16, 185, 129];
+  const textDark = [26, 26, 30];
+  const textMuted = [100, 100, 110];
+  const borderGrey = [220, 222, 228];
+
+  function drawFooter(p: number) {
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(140, 140, 150);
+    doc.line(margin, pageHeight - 12, pageWidth - margin, pageHeight - 12);
+    doc.text(
+      `ExamIntel Model Answer Dossier • ${courseName} • University Examination Standard`,
+      margin,
+      pageHeight - 7
+    );
+    doc.text(`Page ${p}`, pageWidth - margin, pageHeight - 7, { align: 'right' });
+  }
+
+  function checkBreak(needed: number) {
+    if (currentY + needed > pageHeight - 18) {
+      drawFooter(pageNumber);
+      doc.addPage();
+      pageNumber++;
+      currentY = margin;
+      // mini header on page continuation
+      doc.setFillColor(accentIndigo[0], accentIndigo[1], accentIndigo[2]);
+      doc.rect(margin, currentY, 3, 6, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      doc.setTextColor(textDark[0], textDark[1], textDark[2]);
+      doc.text(`Model Solution (Continued) — ${courseName}`, margin + 6, currentY + 4.5);
+      currentY += 10;
+    }
+  }
+
+  // Header Banner
+  doc.setFillColor(15, 23, 42); // slate-900
+  doc.roundedRect(margin, currentY, contentWidth, 22, 2, 2, 'F');
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(13);
+  doc.setTextColor(255, 255, 255);
+  doc.text('UNIVERSITY MODEL ANSWER & DIAGRAM DOSSIER', margin + 6, currentY + 8);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8.5);
+  doc.setTextColor(203, 213, 225); // slate-300
+  doc.text(
+    `Course: ${courseName}   |   ${topicName ? `Unit: ${topicName}   |   ` : ''}${marks} Marks Rubric`,
+    margin + 6,
+    currentY + 15
+  );
+
+  currentY += 28;
+
+  // Question Card
+  doc.setFillColor(248, 250, 252);
+  doc.setDrawColor(borderGrey[0], borderGrey[1], borderGrey[2]);
+  const splitQ = doc.splitTextToSize(questionText, contentWidth - 8);
+  const qHeight = Math.max(16, splitQ.length * 4.5 + 8);
+  doc.roundedRect(margin, currentY, contentWidth, qHeight, 1.5, 1.5, 'FD');
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8.5);
+  doc.setTextColor(accentIndigo[0], accentIndigo[1], accentIndigo[2]);
+  doc.text('EXAM QUESTION:', margin + 4, currentY + 5.5);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(textDark[0], textDark[1], textDark[2]);
+  doc.text(splitQ, margin + 4, currentY + 10.5);
+
+  currentY += qHeight + 6;
+
+  // Marking Rubric Summary
+  if (solution.markingRubric && solution.markingRubric.length > 0) {
+    checkBreak(22);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9.5);
+    doc.setTextColor(textDark[0], textDark[1], textDark[2]);
+    doc.text('1. EVALUATOR MARKING RUBRIC BREAKDOWN', margin, currentY);
+    currentY += 5;
+
+    solution.markingRubric.forEach((r) => {
+      checkBreak(10);
+      doc.setFillColor(241, 245, 249);
+      doc.roundedRect(margin, currentY, contentWidth, 8, 1, 1, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(7.5);
+      doc.setTextColor(textDark[0], textDark[1], textDark[2]);
+      doc.text(`${r.step}  (+${r.marksAwarded}M)`, margin + 3, currentY + 5);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7);
+      doc.setTextColor(textMuted[0], textMuted[1], textMuted[2]);
+      const exp = doc.splitTextToSize(r.teacherExpectation || '', contentWidth - 65);
+      doc.text(exp[0] || '', margin + 60, currentY + 5);
+      currentY += 9.5;
+    });
+    currentY += 3;
+  }
+
+  // Diagram Section (Visual Image embed if present or Detailed Diagram Specification)
+  if (solution.diagramRequired || solution.diagramDescription || diagramImageUrl) {
+    checkBreak(45);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9.5);
+    doc.setTextColor(textDark[0], textDark[1], textDark[2]);
+    doc.text('2. MANDATORY EXAMINATION DIAGRAM & SCHEMATIC', margin, currentY);
+    currentY += 5;
+
+    // Try embedding image if base64/url provided
+    if (diagramImageUrl && (diagramImageUrl.startsWith('data:image/') || diagramImageUrl.startsWith('http'))) {
+      try {
+        const imgHeight = 48;
+        const imgWidth = Math.min(contentWidth, 120);
+        doc.addImage(diagramImageUrl, 'PNG', margin + (contentWidth - imgWidth) / 2, currentY, imgWidth, imgHeight);
+        currentY += imgHeight + 4;
+      } catch {
+        // Fallback to text box if image cannot be embedded
+      }
+    }
+
+    if (solution.diagramDescription) {
+      checkBreak(24);
+      doc.setFillColor(245, 243, 255); // purple-50
+      doc.setDrawColor(196, 181, 253);
+      const diagLines = doc.splitTextToSize(solution.diagramDescription, contentWidth - 8);
+      const diagHeight = Math.max(16, diagLines.length * 4.2 + 8);
+      doc.roundedRect(margin, currentY, contentWidth, diagHeight, 1.5, 1.5, 'FD');
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(7.5);
+      doc.setTextColor(109, 40, 217); // purple-700
+      doc.text('LABELED SCHEMATIC SPECIFICATION FOR STUDENT ANSWER SHEET:', margin + 4, currentY + 5.5);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7);
+      doc.setTextColor(51, 65, 85);
+      doc.text(diagLines, margin + 4, currentY + 10);
+
+      currentY += diagHeight + 6;
+    }
+  }
+
+  // Visual Mechanism Flowchart Steps
+  if (solution.flowchartSteps && solution.flowchartSteps.length > 0) {
+    checkBreak(25);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9.5);
+    doc.setTextColor(textDark[0], textDark[1], textDark[2]);
+    doc.text('3. SEQUENTIAL MECHANISM & PROCESS FLOWCHART', margin, currentY);
+    currentY += 5;
+
+    solution.flowchartSteps.forEach((step, idx) => {
+      checkBreak(14);
+      doc.setFillColor(254, 252, 232); // amber-50
+      doc.setDrawColor(253, 230, 138); // amber-200
+      doc.roundedRect(margin, currentY, contentWidth, 11, 1, 1, 'FD');
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(7.5);
+      doc.setTextColor(180, 83, 9); // amber-700
+      doc.text(`Step ${step.stepNumber || idx + 1}: ${step.title}`, margin + 3, currentY + 4.5);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7);
+      doc.setTextColor(textDark[0], textDark[1], textDark[2]);
+      const detailSplit = doc.splitTextToSize(step.detail || '', contentWidth - 6);
+      doc.text(detailSplit[0] || '', margin + 3, currentY + 8.5);
+
+      currentY += 13;
+    });
+    currentY += 3;
+  }
+
+  // Structured Core Solution
+  if (solution.introduction) {
+    checkBreak(20);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9.5);
+    doc.setTextColor(textDark[0], textDark[1], textDark[2]);
+    doc.text('4. THEORETICAL FOUNDATION & DEFINITION', margin, currentY);
+    currentY += 4.5;
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    doc.setTextColor(textDark[0], textDark[1], textDark[2]);
+    const introLines = doc.splitTextToSize(solution.introduction, contentWidth);
+    doc.text(introLines, margin, currentY);
+    currentY += introLines.length * 4.2 + 5;
+  }
+
+  // Teacher Pro-Tip & Deduction Trap
+  if (solution.teacherProTip || solution.commonPitfallToAvoid) {
+    checkBreak(22);
+    doc.setFillColor(240, 253, 244); // emerald-50
+    doc.setDrawColor(167, 243, 208);
+    doc.roundedRect(margin, currentY, contentWidth, 18, 1.5, 1.5, 'FD');
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7.5);
+    doc.setTextColor(emeraldGreen[0], emeraldGreen[1], emeraldGreen[2]);
+    doc.text("EXAMINER'S HIGH-SCORING PRO-TIP:", margin + 4, currentY + 5);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.setTextColor(30, 41, 59);
+    const tipSplit = doc.splitTextToSize(solution.teacherProTip || 'State base formulas clearly before numerical substitutions.', contentWidth - 8);
+    doc.text(tipSplit[0] || '', margin + 4, currentY + 9);
+
+    if (solution.commonPitfallToAvoid) {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(7);
+      doc.setTextColor(225, 29, 72); // rose-600
+      const pitfallSplit = doc.splitTextToSize(`Avoid Deduction: ${solution.commonPitfallToAvoid}`, contentWidth - 8);
+      doc.text(pitfallSplit[0] || '', margin + 4, currentY + 14.5);
+    }
+
+    currentY += 22;
+  }
+
+  drawFooter(pageNumber);
+
+  const cleanQ = (questionText || 'solution').slice(0, 20).replace(/[^a-zA-Z0-9]/g, '_');
+  const filename = `ExamIntel_ModelSolution_${cleanQ}.pdf`;
   doc.save(filename);
 
   return filename;

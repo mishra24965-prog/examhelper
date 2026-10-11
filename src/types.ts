@@ -223,6 +223,10 @@ export interface ModelAnswer {
   }[];
   fullAnswerMarkdown: string;
   diagramDescription?: string;
+  diagramRequired?: boolean;
+  diagramType?: 'chemical-apparatus' | 'mechanism-flowchart' | 'curve-tracing' | 'circuit-schematic' | 'thermodynamic-cycle' | 'block-diagram' | 'none';
+  diagramImageUrl?: string;
+  pdfAvailable?: boolean;
   flowchartSteps?: FlowchartNode[];
   tailoredTeacherNotes?: string;
   teacherProTip: string;
