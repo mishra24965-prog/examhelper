@@ -102,28 +102,113 @@
         </button>
       </div>
 
-      <!-- Filter Bar: All Papers vs Organizer Official vs My Section Uploads -->
-      <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-3 flex flex-wrap items-center justify-between gap-3 text-xs">
-        <div class="flex items-center gap-2">
-          <span class="text-slate-400 font-semibold">Filter by Source:</span>
-          <div class="flex items-center bg-slate-950 p-0.5 rounded-xl border border-slate-800">
-            <button onclick="filterPapers('all')" id="filterBtn-all" class="px-3 py-1 rounded-lg bg-indigo-600 text-white font-semibold">
-              All Papers
+      <!-- Unified Intent & Quick Preset Bar (UI/UX Evolution Part 1) -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-3xl p-4 space-y-3 shadow-lg">
+        <div class="flex flex-col sm:flex-row gap-3 items-center justify-between">
+          <div class="relative w-full sm:flex-1">
+            <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs">🔍</span>
+            <input 
+              type="text" 
+              id="unifiedSearchInput" 
+              oninput="handleUnifiedSearch(this.value)" 
+              placeholder="Search by topic, formula, or type (e.g. EDTA, Bomb, Rectifier, Leibnitz)..." 
+              class="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-2xl pl-9 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none transition"
+            />
+          </div>
+
+          <!-- Quick Exam Intent Filter Presets -->
+          <div class="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-thin">
+            <button onclick="setQuickIntent('all')" id="intentBtn-all" class="px-3 py-1.5 rounded-xl bg-indigo-600 text-white font-bold text-xs whitespace-nowrap shadow-sm">
+              All Questions
             </button>
-            <button onclick="filterPapers('organizer')" id="filterBtn-organizer" class="px-3 py-1 rounded-lg text-slate-400 hover:text-white font-semibold">
-              ⭐ Official Master Papers
+            <button onclick="setQuickIntent('pass-shield')" id="intentBtn-pass-shield" class="px-3 py-1.5 rounded-xl bg-slate-950 text-emerald-400 hover:text-white border border-emerald-500/30 font-bold text-xs whitespace-nowrap">
+              🛡️ Pass Shield (High Yield)
             </button>
-            <button onclick="filterPapers('student')" id="filterBtn-student" class="px-3 py-1 rounded-lg text-slate-400 hover:text-white font-semibold">
-              🎓 My Uploaded Papers
+            <button onclick="setQuickIntent('derivations')" id="intentBtn-derivations" class="px-3 py-1.5 rounded-xl bg-slate-950 text-indigo-300 hover:text-white border border-indigo-500/30 font-bold text-xs whitespace-nowrap">
+              📐 Derivations Only
+            </button>
+            <button onclick="setQuickIntent('organizer')" id="intentBtn-organizer" class="px-3 py-1.5 rounded-xl bg-slate-950 text-amber-300 hover:text-white border border-amber-500/30 font-bold text-xs whitespace-nowrap">
+              ⭐ Master Papers
             </button>
           </div>
         </div>
-        <span id="questionCounter" class="text-slate-400 font-mono text-xs">Showing 3 Questions</span>
+
+        <div class="flex items-center justify-between text-[11px] text-slate-400 border-t border-slate-800/80 pt-2.5">
+          <span id="questionCounter" class="font-mono">Showing 3 Questions</span>
+          <span class="text-indigo-300 flex items-center gap-1">
+            <span>✨ Split-Pane Reader Mode: Click any question to solve side-by-side</span>
+          </span>
+        </div>
       </div>
 
-      <!-- Question Cards List -->
-      <div id="questionsContainer" class="space-y-4">
-        <!-- Rendered dynamically via JS -->
+      <!-- 2-Pane Split Reader Layout (Left: Questions Stream, Right: Bento-Box Solution Inspector) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+        <!-- Left Pane: Question Cards List (5 Cols) -->
+        <div id="questionsContainer" class="lg:col-span-5 space-y-3 max-h-[85vh] overflow-y-auto pr-1 scrollbar-thin">
+          <!-- Rendered dynamically via JS -->
+        </div>
+
+        <!-- Right Pane: Bento-Box Solution Reader (7 Cols) -->
+        <div id="bentoReaderPane" class="lg:col-span-7 bg-slate-900/90 border border-slate-800 rounded-3xl p-5 sm:p-6 space-y-5 sticky top-4 shadow-xl">
+          <div class="flex items-center justify-between border-b border-white/10 pb-3">
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-0.5 rounded-lg bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 font-mono text-xs font-bold" id="bentoQNum">Q1</span>
+              <span class="text-xs font-bold text-amber-300 bg-amber-500/15 px-2 py-0.5 rounded border border-amber-500/25" id="bentoQMarks">7 Marks</span>
+              <span class="text-xs text-slate-400" id="bentoQTopic">Unit 1: Water Technology</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="downloadSolutionPdfPrototype()" class="px-2.5 py-1 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 text-xs font-bold transition flex items-center gap-1 cursor-pointer">
+                <span>📥 1-Click PDF Dossier</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="p-3.5 rounded-2xl bg-slate-950/80 border border-slate-800 text-xs sm:text-sm font-semibold text-white leading-relaxed" id="bentoQText">
+            Explain EDTA method for determination of hardness of water with complete chemical reactions and principle.
+          </div>
+
+          <!-- Bento Grid Model Answer -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <!-- Bento Box 1: Core Governing Formulation -->
+            <div class="p-4 rounded-2xl bg-slate-950 border border-emerald-500/30 space-y-1.5">
+              <span class="text-[10px] font-mono uppercase tracking-wider text-emerald-400 font-bold block">1. One-Line Formula</span>
+              <div class="font-mono text-xs text-emerald-300 bg-emerald-500/10 p-2 rounded-xl border border-emerald-500/20" id="bentoCoreFormula">
+                Total Hardness = (V_EDTA × M × 100 × 1000) / V_sample
+              </div>
+              <p class="text-[11px] text-slate-400 mt-1" id="bentoFormulaTip">Express result in ppm or mg/L CaCO₃ equivalent.</p>
+            </div>
+
+            <!-- Bento Box 2: Teacher Traps & Deduction Rules -->
+            <div class="p-4 rounded-2xl bg-slate-950 border border-rose-500/30 space-y-1.5">
+              <span class="text-[10px] font-mono uppercase tracking-wider text-rose-400 font-bold block">2. Evaluator Deduction Trap</span>
+              <p class="text-xs text-rose-200/90 leading-relaxed font-medium" id="bentoTeacherTrap">
+                Dr. Sharma deducts 2 marks if pH 10 buffer proof or endpoint color shift (Wine Red → Steel Blue) is missing!
+              </p>
+            </div>
+          </div>
+
+          <!-- Bento Box 3: Technical Apparatus Schematic / Exam Diagram -->
+          <div class="p-4 rounded-2xl bg-slate-950 border border-purple-500/30 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] font-mono uppercase tracking-wider text-purple-400 font-bold">3. Technical Diagram Schematic (Mandatory)</span>
+              <span class="text-[10px] text-purple-300 font-mono">100% Deterministic SVG</span>
+            </div>
+            <div class="w-full bg-slate-900 rounded-xl overflow-hidden p-2 flex justify-center">
+              <img id="bentoDiagramImage" src="" alt="Apparatus Diagram" class="max-h-56 object-contain rounded-lg w-full" />
+            </div>
+            <p class="text-[11px] text-slate-300 leading-relaxed" id="bentoDiagramSpecs">
+              Burette labeled with standard 0.01M EDTA. Conical flask labeled with 50mL sample, NH₄Cl-NH₄OH buffer (pH 10), and EBT indicator.
+            </p>
+          </div>
+
+          <!-- Bento Box 4: Step-by-Step Flowchart Steps -->
+          <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-2.5">
+            <span class="text-[10px] font-mono uppercase tracking-wider text-indigo-400 font-bold block">4. Scoring Mechanism Steps</span>
+            <div class="space-y-2 text-xs" id="bentoFlowchartSteps">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -893,40 +978,137 @@
       const container = document.getElementById('questionsContainer');
       container.innerHTML = '';
 
+    let selectedQuestionId = 'q1';
+    let currentIntent = 'all';
+    let unifiedSearchTerm = '';
+
+    function setQuickIntent(intent) {
+      currentIntent = intent;
+      ['all', 'pass-shield', 'derivations', 'organizer'].forEach(i => {
+        const btn = document.getElementById(`intentBtn-${i}`);
+        if (!btn) return;
+        if (i === intent) {
+          btn.className = 'px-3 py-1.5 rounded-xl bg-indigo-600 text-white font-bold text-xs whitespace-nowrap shadow-sm';
+        } else {
+          btn.className = 'px-3 py-1.5 rounded-xl bg-slate-950 text-slate-400 hover:text-white border border-slate-800 font-bold text-xs whitespace-nowrap';
+        }
+      });
+      renderQuestions();
+    }
+
+    function handleUnifiedSearch(term) {
+      unifiedSearchTerm = (term || '').toLowerCase().trim();
+      renderQuestions();
+    }
+
+    function selectQuestionForBento(qId) {
+      selectedQuestionId = qId;
+      const q = questionsData.find(item => item.id === qId) || questionsData[0];
+      if (!q) return;
+
+      document.getElementById('bentoQNum').innerText = q.num;
+      document.getElementById('bentoQMarks').innerText = `${q.marks} Marks`;
+      document.getElementById('bentoQTopic').innerText = q.topic;
+      document.getElementById('bentoQText').innerText = q.text;
+
+      // Update Bento Box details based on topic
+      const formulaEl = document.getElementById('bentoCoreFormula');
+      const tipEl = document.getElementById('bentoFormulaTip');
+      const trapEl = document.getElementById('bentoTeacherTrap');
+      const diagEl = document.getElementById('bentoDiagramImage');
+      const specEl = document.getElementById('bentoDiagramSpecs');
+      const flowEl = document.getElementById('bentoFlowchartSteps');
+
+      if (q.id === 'q1' || q.text.toLowerCase().includes('edta')) {
+        formulaEl.innerText = 'Total Hardness = (V_EDTA × M × 100 × 1000) / V_sample [ppm CaCO₃]';
+        tipEl.innerText = 'Buffer NH₄Cl-NH₄OH maintains stable pH 10. EBT forms wine-red complex.';
+        trapEl.innerText = 'Dr. Sharma strictly deducts 2 marks if pH 10 buffer proof or endpoint color shift (Wine Red → Steel Blue) is omitted!';
+        diagEl.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 320" width="100%" height="100%"><rect width="640" height="320" rx="12" fill="#090d16"/><rect x="20" y="16" width="600" height="32" rx="6" fill="#1e293b"/><text x="32" y="38" fill="#38bdf8" font-family="system-ui" font-size="12" font-weight="bold">EDTA TITRATION APPARATUS SCHEMATIC (pH 10 BUFFER)</text><rect x="180" y="60" width="18" height="150" fill="#38bdf8" fill-opacity="0.3" stroke="#38bdf8" stroke-width="1.5"/><rect x="182" y="80" width="14" height="130" fill="#60a5fa" fill-opacity="0.8"/><polygon points="180,210 198,210 190,225" fill="#38bdf8"/><path d="M 183 240 L 195 240 L 225 285 A 4 4 0 0 1 222 290 L 158 290 A 4 4 0 0 1 155 285 Z" fill="#38bdf8" fill-opacity="0.2" stroke="#38bdf8" stroke-width="1.5"/><path d="M 170 270 L 210 270 L 221 287 L 159 287 Z" fill="#f43f5e" fill-opacity="0.9"/><text x="240" y="110" fill="#38bdf8" font-family="monospace" font-size="11" font-weight="bold">BURETTE: 0.01M EDTA Titrant</text><text x="240" y="270" fill="#f43f5e" font-family="monospace" font-size="11" font-weight="bold">FLASK: 50mL Water + EBT (Wine Red)</text><text x="240" y="295" fill="#10b981" font-family="monospace" font-size="11" font-weight="bold">ENDPOINT: Steel Blue [Free EBT]</text></svg>`)}`;
+        specEl.innerText = 'Draw burette labeled with standard 0.01M EDTA. Conical flask labeled with 50mL sample, NH₄Cl-NH₄OH buffer (pH 10), and EBT indicator.';
+      } else if (q.id === 'q2' || q.text.toLowerCase().includes('calorimeter')) {
+        formulaEl.innerText = 'HCV = [(W + w)(T₂ - T₁ + t_cooling) - (Acid + Fuse corr)] / m [cal/g]';
+        tipEl.innerText = 'Beckmann thermometer records with 0.01°C accuracy. Oxygen charged to 25-30 atm.';
+        trapEl.innerText = 'Evaluator Trap: Ensure water equivalent (w) and acid/cotton corrections are subtracted, or step marks will be halved!';
+        diagEl.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 320" width="100%" height="100%"><rect width="640" height="320" rx="12" fill="#090d16"/><rect x="20" y="16" width="600" height="32" rx="6" fill="#1e293b"/><text x="32" y="38" fill="#fb923c" font-family="system-ui" font-size="12" font-weight="bold">BOMB CALORIMETER CROSS-SECTION & DULONG FORMULA</text><rect x="120" y="60" width="160" height="220" rx="8" fill="#1e293b" stroke="#64748b" stroke-width="2"/><rect x="150" y="110" width="100" height="140" rx="6" fill="#0f172a" stroke="#94a3b8" stroke-width="2"/><text x="320" y="110" fill="#38bdf8" font-family="monospace" font-size="11" font-weight="bold">1. Pure Oxygen Vessel at 25-30 atm</text><text x="320" y="150" fill="#fde047" font-family="monospace" font-size="11" font-weight="bold">2. Beckmann Thermometer (0.01°C precision)</text><text x="320" y="190" fill="#34d399" font-family="monospace" font-size="11" font-weight="bold">3. Water & Air Jackets (Zero Heat Loss)</text><text x="320" y="240" fill="#fca5a5" font-family="monospace" font-size="11" font-weight="bold">HCV = [(W+w)(T2-T1+corr) - acid] / m</text></svg>`)}`;
+        specEl.innerText = 'Stainless steel bomb vessel with oxygen valve (25-30 atm), crucible containing weighed pellet, Beckmann thermometer, and water jacket.';
+      } else {
+        formulaEl.innerText = 'Hydrodynamic: Z N / P (Hersey Number) ; Boundary: Adsorbed Soap Monolayer';
+        tipEl.innerText = 'Thick film separated by >1000 Å. Boundary relies on vegetable oil or fatty acid polar heads.';
+        trapEl.innerText = 'Mention extreme pressure (EP) chlorinated additives for high-temperature heavy machinery applications.';
+        diagEl.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 320" width="100%" height="100%"><rect width="640" height="320" rx="12" fill="#090d16"/><rect x="20" y="16" width="600" height="32" rx="6" fill="#1e293b"/><text x="32" y="38" fill="#38bdf8" font-family="system-ui" font-size="12" font-weight="bold">LUBRICATION MECHANISMS: THICK FILM VS BOUNDARY ADSORPTION</text><rect x="60" y="80" width="220" height="30" fill="#475569"/><rect x="60" y="110" width="220" height="20" fill="#f59e0b" fill-opacity="0.8"/><rect x="60" y="130" width="220" height="30" fill="#475569"/><text x="75" y="125" fill="#000" font-family="system-ui" font-size="10" font-weight="bold">HYDRODYNAMIC FILM (>1000 Å)</text><rect x="340" y="80" width="220" height="35" fill="#475569"/><rect x="340" y="115" width="220" height="6" fill="#ef4444"/><rect x="340" y="121" width="220" height="35" fill="#475569"/><text x="355" y="180" fill="#ef4444" font-family="system-ui" font-size="10" font-weight="bold">BOUNDARY MONOLAYER (High Load)</text></svg>`)}`;
+        specEl.innerText = 'Draw hydrodynamic thick-film lubrication layer showing complete separation of metal asperities and boundary monolayer adsorption under heavy load.';
+      }
+
+      // Render Flowchart Steps
+      flowEl.innerHTML = '';
+      (q.flowchart || []).forEach(step => {
+        const item = document.createElement('div');
+        item.className = 'p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex items-start gap-2.5';
+        item.innerHTML = `
+          <span class="w-5 h-5 rounded-full bg-indigo-600 text-white font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">${step.step}</span>
+          <div>
+            <strong class="text-indigo-300 block text-[11px]">${step.title}</strong>
+            <p class="text-slate-400 text-[11px] leading-relaxed">${step.desc}</p>
+          </div>
+        `;
+        flowEl.appendChild(item);
+      });
+
+      renderQuestions();
+    }
+
+    function renderQuestions() {
+      const container = document.getElementById('questionsContainer');
+      container.innerHTML = '';
+
       const filtered = questionsData.filter(q => {
-        if (currentFilter === 'organizer' && !q.isOrganizer) return false;
-        if (currentFilter === 'student' && q.isOrganizer) return false;
+        if (currentIntent === 'organizer' && !q.isOrganizer) return false;
+        if (currentIntent === 'pass-shield' && q.marks < 7) return false;
+        if (currentIntent === 'derivations' && !q.text.toLowerCase().includes('derive') && !q.text.toLowerCase().includes('method') && !q.text.toLowerCase().includes('rule')) return false;
+
+        if (unifiedSearchTerm) {
+          const matchText = q.text.toLowerCase().includes(unifiedSearchTerm);
+          const matchTopic = q.topic.toLowerCase().includes(unifiedSearchTerm);
+          if (!matchText && !matchTopic) return false;
+        }
         return true;
       });
 
       document.getElementById('questionCounter').innerText = `Showing ${filtered.length} of ${questionsData.length} Questions`;
 
       filtered.forEach(q => {
+        const isSelected = q.id === selectedQuestionId;
         const card = document.createElement('div');
-        card.className = 'bg-slate-900/90 border border-slate-800 rounded-3xl p-5 hover:border-indigo-500/50 transition space-y-4 shadow-sm';
+        card.className = `p-4 rounded-2xl border transition space-y-2.5 cursor-pointer ${
+          isSelected
+            ? 'bg-indigo-950/40 border-indigo-500 shadow-md shadow-indigo-950/50'
+            : 'bg-slate-900/90 border-slate-800 hover:border-slate-700'
+        }`;
+        card.onclick = () => selectQuestionForBento(q.id);
+
         card.innerHTML = `
-          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/5 pb-3">
-            <div class="flex items-center gap-2 flex-wrap">
-              <span class="font-mono text-xs font-bold px-2.5 py-1 rounded-xl bg-indigo-600/20 text-indigo-300 border border-indigo-500/30">${q.num}</span>
-              <span class="font-mono text-xs font-bold px-2 py-0.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/30">${q.marks} Marks</span>
-              <span class="font-mono text-xs text-slate-400">${q.exam} • ${q.year}</span>
+          <div class="flex items-center justify-between gap-2 border-b border-white/5 pb-2">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="font-mono text-[11px] font-bold px-2 py-0.5 rounded-lg bg-indigo-600/20 text-indigo-300 border border-indigo-500/30">${q.num}</span>
+              <span class="font-mono text-[11px] font-bold px-2 py-0.5 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/30">${q.marks}M</span>
+              <span class="font-mono text-[10px] text-slate-400">${q.exam}</span>
               ${q.isOrganizer 
-                ? '<span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">⭐ Organizer Master Paper</span>'
-                : '<span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/25">🎓 Student Section Upload</span>'}
+                ? '<span class="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">⭐ Master</span>'
+                : '<span class="text-[9px] font-mono px-1.5 py-0.2 rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/25">🎓 Student</span>'}
             </div>
-            <span class="text-xs text-indigo-400 font-semibold">${q.topic}</span>
+            <span class="text-[11px] text-indigo-400 font-semibold truncate max-w-[140px]">${q.topic}</span>
           </div>
 
-          <p class="text-xs sm:text-sm font-semibold text-slate-100 leading-relaxed">${q.text}</p>
+          <p class="text-xs font-semibold text-slate-200 line-clamp-2 leading-relaxed">${q.text}</p>
 
-          <div class="flex items-center justify-between pt-2">
-            <div class="flex items-center gap-1.5 text-xs text-slate-400">
-              <span>🔀</span>
-              <span>Flowchart steps ready</span>
-            </div>
-            <button onclick="openSolveModal('${q.id}')" class="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold text-xs transition shadow flex items-center gap-1.5 cursor-pointer">
-              <span>⚡ Solve with Teacher Flowchart</span>
-            </button>
+          <div class="flex items-center justify-between pt-1 text-[11px] text-slate-400">
+            <span class="flex items-center gap-1">
+              <span>⚡</span>
+              <span>${q.flowchart ? q.flowchart.length : 3} Scoring Steps</span>
+            </span>
+            <span class="text-xs font-bold ${isSelected ? 'text-indigo-400 font-mono' : 'text-slate-500'}">
+              ${isSelected ? 'Reading Active ➜' : 'View Bento ➜'}
+            </span>
           </div>
         `;
         container.appendChild(card);
@@ -1171,6 +1353,7 @@
 
     // Init
     renderQuestions();
+    selectQuestionForBento('q1');
     renderVideos();
   </script>
 </body>
