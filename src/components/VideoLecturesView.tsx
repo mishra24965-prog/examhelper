@@ -1649,6 +1649,23 @@ const VideoLectureCard: React.FC<{
       ? 'bg-purple-500/20 text-purple-300 border-purple-500/30'
       : 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30';
 
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyLink = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const linkToCopy =
+      video.youtubeUrl ||
+      (video.videoId
+        ? `https://www.youtube.com/watch?v=${video.videoId}`
+        : `https://www.youtube.com/results?search_query=${encodeURIComponent(
+            video.youtubeSearchQuery || `${video.title} ${courseName}`
+          )}`);
+    navigator.clipboard.writeText(linkToCopy).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
   return (
     <div className="bg-[#121215] border border-white/10 rounded-3xl overflow-hidden hover:border-white/25 transition-all shadow-md flex flex-col justify-between group backdrop-blur-xl">
       <div>
@@ -1776,6 +1793,23 @@ const VideoLectureCard: React.FC<{
           >
             <Play className="w-3.5 h-3.5 fill-white" />
             <span>Watch Lecture</span>
+          </button>
+          <button
+            onClick={handleCopyLink}
+            title={copied ? 'Copied to clipboard!' : 'Copy YouTube Link'}
+            className="p-2 px-2.5 rounded-xl bg-[#0b0b0d] hover:bg-white/10 text-white/70 hover:text-white transition shrink-0 cursor-pointer border border-white/10 flex items-center gap-1 text-xs"
+          >
+            {copied ? (
+              <>
+                <CheckCheck className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="text-[10px] text-emerald-400 font-bold">Copied</span>
+              </>
+            ) : (
+              <>
+                <Copy className="w-3.5 h-3.5" />
+                <span className="text-[10px] hidden sm:inline">Copy Link</span>
+              </>
+            )}
           </button>
           <a
             href={

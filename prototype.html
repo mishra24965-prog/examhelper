@@ -354,6 +354,74 @@
             </div>
           </div>
 
+          <!-- Unit Selector Tabs (Unit 1 to 5 + Exam Tips) -->
+          <div class="space-y-1.5 pt-1">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] text-slate-400 font-mono uppercase tracking-wider block">Select Syllabus Unit:</span>
+              <span class="text-[10px] text-indigo-400 font-mono" id="unitStatsBadge">Displaying: All Units (13 Topics Mapped)</span>
+            </div>
+            <div class="flex flex-wrap items-center gap-1.5">
+              <button id="unitBtn-all" onclick="selectUnitTab('all')" class="px-3 py-1.5 rounded-xl bg-indigo-600 text-white font-bold text-xs transition cursor-pointer flex items-center gap-1 shadow-sm">
+                <span>📚 All Units</span>
+              </button>
+              <button id="unitBtn-unit1" onclick="selectUnitTab('unit1')" class="px-3 py-1.5 rounded-xl bg-slate-900 text-slate-400 hover:text-white border border-slate-800 text-xs font-semibold transition cursor-pointer flex items-center gap-1">
+                <span>🧪 Unit 1: Water & Titrations</span>
+              </button>
+              <button id="unitBtn-unit2" onclick="selectUnitTab('unit2')" class="px-3 py-1.5 rounded-xl bg-slate-900 text-slate-400 hover:text-white border border-slate-800 text-xs font-semibold transition cursor-pointer flex items-center gap-1">
+                <span>🔥 Unit 2: Fuels & Combustion</span>
+              </button>
+              <button id="unitBtn-unit3" onclick="selectUnitTab('unit3')" class="px-3 py-1.5 rounded-xl bg-slate-900 text-slate-400 hover:text-white border border-slate-800 text-xs font-semibold transition cursor-pointer flex items-center gap-1">
+                <span>🧬 Unit 3: Polymers & Materials</span>
+              </button>
+              <button id="unitBtn-unit4" onclick="selectUnitTab('unit4')" class="px-3 py-1.5 rounded-xl bg-slate-900 text-slate-400 hover:text-white border border-slate-800 text-xs font-semibold transition cursor-pointer flex items-center gap-1">
+                <span>⚡ Unit 4: Electronics & SFEE</span>
+              </button>
+              <button id="unitBtn-unit5" onclick="selectUnitTab('unit5')" class="px-3 py-1.5 rounded-xl bg-slate-900 text-slate-400 hover:text-white border border-slate-800 text-xs font-semibold transition cursor-pointer flex items-center gap-1">
+                <span>📐 Unit 5: Calculus & Series</span>
+              </button>
+              <button id="unitBtn-strategy" onclick="selectUnitTab('strategy')" class="px-3 py-1.5 rounded-xl bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 border border-amber-500/40 text-xs font-bold transition cursor-pointer flex items-center gap-1">
+                <span>🎯 Exam Strategy & CGPA</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Quick Paste YouTube Link directly to Selected Unit -->
+          <div class="p-3.5 rounded-2xl bg-slate-950/90 border border-slate-800 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-bold text-slate-300 font-mono flex items-center gap-1.5">
+                <span>🔗 Paste YouTube Link to Unit</span>
+                <span class="text-[9px] bg-rose-500/20 text-rose-300 border border-rose-500/30 px-1.5 py-0.5 rounded font-mono">Real-Time Ingestion</span>
+              </span>
+              <span class="text-[10px] text-slate-400">Paste any URL (e.g. watch?v=... or youtu.be/...)</span>
+            </div>
+            <div class="flex flex-col sm:flex-row items-center gap-2">
+              <div class="relative flex-1 w-full">
+                <input
+                  type="text"
+                  id="pasteYoutubeInput"
+                  placeholder="https://www.youtube.com/watch?v=... or youtu.be/..."
+                  class="w-full bg-slate-900 border border-slate-700 focus:border-rose-500 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none transition font-sans"
+                />
+              </div>
+              <div class="flex items-center gap-2 w-full sm:w-auto">
+                <select id="pasteUnitSelect" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none cursor-pointer">
+                  <option value="unit1">Unit 1</option>
+                  <option value="unit2">Unit 2</option>
+                  <option value="unit3">Unit 3</option>
+                  <option value="unit4">Unit 4</option>
+                  <option value="unit5">Unit 5</option>
+                  <option value="strategy">Exam Tips</option>
+                </select>
+                <button
+                  onclick="handlePasteYouTubeToUnit()"
+                  class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-rose-600 to-indigo-600 hover:from-rose-500 hover:to-indigo-500 text-white font-bold text-xs transition cursor-pointer flex items-center gap-1.5 shadow active:scale-95 shrink-0"
+                >
+                  <span>➕ Add to Unit</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
           <!-- Live Keyword Input -->
           <div class="flex items-center gap-2">
             <div class="relative flex-1">
@@ -392,71 +460,11 @@
             </div>
           </div>
 
-          <!-- Quick Syllabus Keyword Pills -->
+          <!-- Quick Syllabus Keyword Pills (Unit-Wise Dynamic Container) -->
           <div class="space-y-1.5 pt-1">
-            <span class="text-[10px] text-slate-400 font-mono uppercase tracking-wider block">Click High-Yield Syllabus Topic:</span>
+            <span class="text-[10px] text-slate-400 font-mono uppercase tracking-wider block">Unit-Filtered High-Yield Syllabus Topics:</span>
             <div class="flex flex-wrap gap-2" id="keywordPillsContainer">
-              <!-- Exam Strategy & High Scoring -->
-              <button onclick="handleKeywordClick('How to get good marks in engineering', 'strategy')" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-amber-500/25 text-amber-200 border border-amber-500/40 hover:bg-amber-500/40 transition cursor-pointer flex items-center gap-1.5 shadow-sm">
-                <span>🎯 How to Get Good Marks (Exam Tips)</span>
-                <span class="text-[10px] bg-amber-500/30 px-1.5 rounded font-bold">Strategy 🔥</span>
-              </button>
-              <button onclick="handleKeywordClick('Answer Sheet Presentation & 9+ CGPA Strategy', 'strategy')" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-500/20 text-emerald-200 border border-emerald-500/35 hover:bg-emerald-500/40 transition cursor-pointer flex items-center gap-1.5 shadow-sm">
-                <span>📝 Answer Presentation Guide</span>
-                <span class="text-[10px] bg-emerald-500/30 px-1.5 rounded font-bold">Top Marks ⚡</span>
-              </button>
-              <!-- Chemistry -->
-              <button onclick="handleKeywordClick('EDTA Hardness & Buffer Titration', 'chem')" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-indigo-600/25 text-indigo-200 border border-indigo-500/40 hover:bg-indigo-600/50 transition cursor-pointer flex items-center gap-1.5">
-                <span>🧪 EDTA Titration Method</span>
-                <span class="text-[10px] bg-indigo-500/30 px-1.5 rounded">Chem</span>
-              </button>
-              <button onclick="handleKeywordClick('Bomb Calorimeter & Dulongs Formula', 'chem')" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 text-slate-300 border border-slate-800 hover:text-white hover:border-slate-700 transition cursor-pointer flex items-center gap-1.5">
-                <span>🔥 Bomb Calorimeter HCV</span>
-                <span class="text-[10px] bg-white/10 px-1.5 rounded">Chem</span>
-              </button>
-              <button onclick="handleKeywordClick('Boiler Troubles Scales Sludges & Embrittlement', 'chem')" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 text-slate-300 border border-slate-800 hover:text-white hover:border-slate-700 transition cursor-pointer flex items-center gap-1.5">
-                <span>⚠️ Boiler Scales & Sludges</span>
-                <span class="text-[10px] bg-white/10 px-1.5 rounded">Chem</span>
-              </button>
-              <button onclick="handleKeywordClick('Polymers & Rubber Vulcanization', 'chem')" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 text-slate-300 border border-slate-800 hover:text-white hover:border-slate-700 transition cursor-pointer flex items-center gap-1.5">
-                <span>🧬 Polymers & Vulcanization</span>
-                <span class="text-[10px] bg-white/10 px-1.5 rounded">Chem</span>
-              </button>
-              <button onclick="handleKeywordClick('Portland Cement & Bogue Compounds', 'chem')" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 text-slate-300 border border-slate-800 hover:text-white hover:border-slate-700 transition cursor-pointer flex items-center gap-1.5">
-                <span>🏛️ Portland Cement Setting</span>
-                <span class="text-[10px] bg-white/10 px-1.5 rounded">Chem</span>
-              </button>
-              <!-- Electronics -->
-              <button onclick="handleKeywordClick('Full Wave Bridge Rectifier & Ripple Factor', 'elec')" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 text-slate-300 border border-slate-800 hover:text-white hover:border-slate-700 transition cursor-pointer flex items-center gap-1.5">
-                <span>⚡ Bridge Rectifier & Filter</span>
-                <span class="text-[10px] bg-white/10 px-1.5 rounded">Elec</span>
-              </button>
-              <button onclick="handleKeywordClick('Zener Diode Voltage Regulator', 'elec')" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 text-slate-300 border border-slate-800 hover:text-white hover:border-slate-700 transition cursor-pointer flex items-center gap-1.5">
-                <span>🔋 Zener Regulator Operation</span>
-                <span class="text-[10px] bg-white/10 px-1.5 rounded">Elec</span>
-              </button>
-              <button onclick="handleKeywordClick('BJT Common Emitter Characteristics', 'elec')" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 text-slate-300 border border-slate-800 hover:text-white hover:border-slate-700 transition cursor-pointer flex items-center gap-1.5">
-                <span>📻 BJT CE Configuration</span>
-                <span class="text-[10px] bg-white/10 px-1.5 rounded">Elec</span>
-              </button>
-              <!-- Mathematics -->
-              <button onclick="handleKeywordClick('Curve Tracing Folium of Descartes & Asymptotes', 'math')" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 text-slate-300 border border-slate-800 hover:text-white hover:border-slate-700 transition cursor-pointer flex items-center gap-1.5">
-                <span>📐 Curve Tracing Folium</span>
-                <span class="text-[10px] bg-white/10 px-1.5 rounded">Math</span>
-              </button>
-              <button onclick="handleKeywordClick('Taylor & Maclaurin Series Expansion', 'math')" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 text-slate-300 border border-slate-800 hover:text-white hover:border-slate-700 transition cursor-pointer flex items-center gap-1.5">
-                <span>📈 Taylor Series Expansion</span>
-                <span class="text-[10px] bg-white/10 px-1.5 rounded">Math</span>
-              </button>
-              <button onclick="handleKeywordClick('Leibnitz Theorem nth Derivative', 'math')" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 text-slate-300 border border-slate-800 hover:text-white hover:border-slate-700 transition cursor-pointer flex items-center gap-1.5">
-                <span>∑ Leibnitz Theorem nth Proof</span>
-                <span class="text-[10px] bg-white/10 px-1.5 rounded">Math</span>
-              </button>
-              <!-- Mechanical -->
-              <button onclick="handleKeywordClick('Steady Flow Energy Equation (SFEE)', 'mech')" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 text-slate-300 border border-slate-800 hover:text-white hover:border-slate-700 transition cursor-pointer flex items-center gap-1.5">
-                <span>⚙️ SFEE 1st Law Cycle</span>
-                <span class="text-[10px] bg-white/10 px-1.5 rounded">Mech</span>
-              </button>
+              <!-- Dynamically populated unit-wise pills -->
             </div>
           </div>
         </div>
@@ -1007,9 +1015,22 @@
       handleKeywordClick(query, null);
     }
 
+    const unitDefinitions = {
+      'all': { label: 'All Units (13 Topics Mapped)' },
+      'unit1': { label: 'Unit 1: Water Technology & Titrations' },
+      'unit2': { label: 'Unit 2: Fuels, Combustion & Calorimetry' },
+      'unit3': { label: 'Unit 3: Polymers, Lubricants & Cement' },
+      'unit4': { label: 'Unit 4: Semiconductor Devices & Energy Systems' },
+      'unit5': { label: 'Unit 5: Differential Calculus & Curve Tracing' },
+      'strategy': { label: '🎯 Exam Strategy & CGPA Scoring Blueprints' }
+    };
+
+    let currentSelectedUnit = 'all';
+
     const topicKnowledgeBase = {
       // EXAM STRATEGY & HIGH SCORING TIPS
       'How to get good marks in engineering': {
+        unit: 'strategy',
         subject: 'strategy',
         title: 'Top Strategy: How to Get Good Marks & Score 9+ CGPA in Engineering Semester Exams',
         snippet: 'University examiners grade based on structured presentation: 1. Start with a neat, labelled block diagram (worth 35-40% marks). 2. Box the primary governing formula immediately under the diagram. 3. Present steps in numbered points rather than dense paragraphs. 4. Box your final answer with correct SI units. 5. Attempt every question for partial marking.',
@@ -1050,6 +1071,7 @@
         ]
       },
       'Answer Sheet Presentation & 9+ CGPA Strategy': {
+        unit: 'strategy',
         subject: 'strategy',
         title: 'University Answer Sheet Presentation & Marks Maximization Strategy',
         snippet: 'Presentation tips to convert a 60% student into an 85%+ scorer: 1. Use black gel pen for headings and blue for text. 2. Draw pencil margins and clean double-underline final answers. 3. Leave 2 lines between sub-parts. 4. Highlight keywords so the examiner does not have to search for them.',
@@ -1079,8 +1101,9 @@
           }
         ]
       },
-      // CHEMISTRY
+      // UNIT 1: WATER TECHNOLOGY & TITRATIONS
       'EDTA Hardness & Buffer Titration': {
+        unit: 'unit1',
         subject: 'chem',
         title: 'EDTA Complexometric Titration & pH 10 Buffer Mechanism',
         snippet: 'Disodium EDTA forms stable, soluble 1:1 chelates with Ca²⁺ and Mg²⁺ at pH 9–10 (maintained by NH₄Cl-NH₄OH buffer). EBT indicator forms an unstable wine-red complex with metal ions; EDTA displaces the indicator at the equivalence point, turning the solution pure steel blue.',
@@ -1110,37 +1133,8 @@
           }
         ]
       },
-      'Bomb Calorimeter & Dulongs Formula': {
-        subject: 'chem',
-        title: 'Bomb Calorimeter Higher Calorific Value (HCV) & Dulong Formula',
-        snippet: 'A known mass of fuel is combusted in high-pressure pure oxygen (25–30 atm) inside a stainless steel bomb. Water equivalent (W+w) captures all sensible heat plus condensation of steam. Formula: HCV = [(W+w)(T₂ - T₁ + t_corr) - (Acid + Fuse corr.)] / m.',
-        formula: 'HCV = [(W + w)(ΔT + t_cooling) - (Acid + Fuse corr)] / m cal/g',
-        trap: 'Students often forget the fuse wire and acid cooling corrections resulting in 2-3 mark deduction.',
-        diagram: 'Cross-section of bomb, copper calorimeter, Beckmann thermometer, oxygen valve & stirrer.',
-        videos: [
-          {
-            id: 'chem-bomb-1',
-            title: 'Bomb Calorimeter Working Principle, Construction & Calculations',
-            channel: 'Applied Chemistry Video Lectures',
-            views: '740K+ views',
-            rating: '4.8 ⭐',
-            videoId: 'vC_d9X5Q0Y4',
-            searchQuery: 'Bomb calorimeter working HCV LCV chemistry',
-            duration: '19:30'
-          },
-          {
-            id: 'chem-bomb-2',
-            title: 'Dulong Formula for Gross & Net Calorific Value Numericals',
-            channel: 'Engineering Chemistry Express',
-            views: '420K+ views',
-            rating: '4.8 ⭐',
-            videoId: 'y1tJgXQ0jRk',
-            searchQuery: 'Dulong formula numerical chemistry',
-            duration: '14:50'
-          }
-        ]
-      },
       'Boiler Troubles Scales Sludges & Embrittlement': {
+        unit: 'unit1',
         subject: 'chem',
         title: 'Boiler Troubles: Scale, Sludge, Priming, Foaming & Caustic Embrittlement',
         snippet: 'Sludge is a loose, slimy precipitate (MgCO₃, MgSO₄, CaCl₂) formed in cooler boiler zones, easily blown down. Scale is a hard, adhering crust (CaSO₄, CaSiO₃) reducing heat transfer, causing tube overheating and localized blowout accidents.',
@@ -1170,7 +1164,41 @@
           }
         ]
       },
+      // UNIT 2: FUELS & COMBUSTION
+      'Bomb Calorimeter & Dulongs Formula': {
+        unit: 'unit2',
+        subject: 'chem',
+        title: 'Bomb Calorimeter Higher Calorific Value (HCV) & Dulong Formula',
+        snippet: 'A known mass of fuel is combusted in high-pressure pure oxygen (25–30 atm) inside a stainless steel bomb. Water equivalent (W+w) captures all sensible heat plus condensation of steam. Formula: HCV = [(W+w)(T₂ - T₁ + t_corr) - (Acid + Fuse corr.)] / m.',
+        formula: 'HCV = [(W + w)(ΔT + t_cooling) - (Acid + Fuse corr)] / m cal/g',
+        trap: 'Students often forget the fuse wire and acid cooling corrections resulting in 2-3 mark deduction.',
+        diagram: 'Cross-section of bomb, copper calorimeter, Beckmann thermometer, oxygen valve & stirrer.',
+        videos: [
+          {
+            id: 'chem-bomb-1',
+            title: 'Bomb Calorimeter Working Principle, Construction & Calculations',
+            channel: 'Applied Chemistry Video Lectures',
+            views: '740K+ views',
+            rating: '4.8 ⭐',
+            videoId: 'vC_d9X5Q0Y4',
+            searchQuery: 'Bomb calorimeter working HCV LCV chemistry',
+            duration: '19:30'
+          },
+          {
+            id: 'chem-bomb-2',
+            title: 'Dulong Formula for Gross & Net Calorific Value Numericals',
+            channel: 'Engineering Chemistry Express',
+            views: '420K+ views',
+            rating: '4.8 ⭐',
+            videoId: 'y1tJgXQ0jRk',
+            searchQuery: 'Dulong formula numerical chemistry',
+            duration: '14:50'
+          }
+        ]
+      },
+      // UNIT 3: POLYMERS & MATERIALS
       'Polymers & Rubber Vulcanization': {
+        unit: 'unit3',
         subject: 'chem',
         title: 'Polymer Classification, Addition vs Condensation & Rubber Vulcanization',
         snippet: 'Addition polymerization occurs without elimination of small molecules (polyethylene), while condensation produces small byproducts like H₂O, HCl (Nylon-6,6). Natural rubber (cis-1,4-polyisoprene) is soft and tacky; vulcanization with 3-5% sulfur forms disulfide crosslinks between polymer chains, drastically increasing tensile strength, elasticity and thermal stability.',
@@ -1191,6 +1219,7 @@
         ]
       },
       'Portland Cement & Bogue Compounds': {
+        unit: 'unit3',
         subject: 'chem',
         title: 'Portland Cement Manufacturing, Bogue Compounds & Setting Chemistry',
         snippet: 'Portland cement is made by calcining limestone (calcareous) and clay (argillaceous) at 1450°C. Bogue compounds include: C3S (early strength, 7 days), C2S (ultimate long-term strength, >1 year), C3A (flash set, reacts instantly with water), and C4AF (least hydraulic, gives gray color). Gypsum (2-3%) is added during grinding to retard C3A hydration and prevent flash setting.',
@@ -1210,8 +1239,9 @@
           }
         ]
       },
-      // ELECTRONICS
+      // UNIT 4: ELECTRONICS & ENERGY SYSTEMS
       'Full Wave Bridge Rectifier & Ripple Factor': {
+        unit: 'unit4',
         subject: 'elec',
         title: 'Full-Wave Bridge Rectifier: Diode Operation, PIV & Ripple Factor',
         snippet: 'Utilizes four diodes in a bridge topology. Alternating pairs (D1-D2 and D3-D4) conduct on alternate half-cycles, achieving full-wave rectification without center-tapped transformer. DC output voltage V_dc = 2V_m/π, Ripple factor γ = 0.482, Efficiency η = 81.2%, Peak Inverse Voltage PIV = V_m.',
@@ -1242,6 +1272,7 @@
         ]
       },
       'Zener Diode Voltage Regulator': {
+        unit: 'unit4',
         subject: 'elec',
         title: 'Zener Diode: Reverse Breakdown Mechanism & Shunt Voltage Regulation',
         snippet: 'A heavily doped PN junction operating in the reverse breakdown region. When reverse voltage exceeds V_Z, tunneling of electrons occurs (Zener breakdown) or impact ionization (Avalanche breakdown). The voltage across the Zener diode remains constant at V_Z over a wide range of reverse currents, making it ideal as a shunt regulator against fluctuating input DC.',
@@ -1262,6 +1293,7 @@
         ]
       },
       'BJT Common Emitter Characteristics': {
+        unit: 'unit4',
         subject: 'elec',
         title: 'Bipolar Junction Transistor (CE Configuration) Input & Output Characteristics',
         snippet: 'In Common Emitter (CE) configuration, emitter is common to both input (base-emitter) and output (collector-emitter). Input characteristic relates I_B vs V_BE at constant V_CE (looks like forward diode). Output characteristic relates I_C vs V_CE at constant I_B, showing three distinct regions: Cutoff (both junctions reverse-biased), Saturation (both forward-biased), and Active (BE forward, CB reverse-biased). Current gain β = ΔI_C / ΔI_B.',
@@ -1281,8 +1313,40 @@
           }
         ]
       },
-      // MATHEMATICS
+      'Steady Flow Energy Equation (SFEE)': {
+        unit: 'unit4',
+        subject: 'mech',
+        title: 'First Law of Thermodynamics Applied to Open Systems: SFEE Derivation',
+        snippet: 'For steady state flow through a control volume: Rate of mass in = Rate of mass out, and total energy rate entering = total energy rate leaving. SFEE per unit mass: h₁ + (V₁²/2) + gz₁ + q = h₂ + (V₂²/2) + gz₂ + w. Applications: Nozzle (w=0, q=0 ⇒ V₂ = √(2(h₁ - h₂))), Turbine (q=0 ⇒ w = h₁ - h₂), Throttling valve (w=0, q=0 ⇒ h₁ = h₂ isenthalpic).',
+        formula: 'SFEE: h1 + (V1²/2) + gz1 + q = h2 + (V2²/2) + gz2 + w',
+        trap: 'Remember units! Enthalpy is usually in kJ/kg, whereas kinetic energy V²/2 is in J/kg (must divide V²/2 by 1000!).',
+        diagram: 'Control volume boundary showing fluid entry and exit ports, heat transfer q, and shaft work w.',
+        videos: [
+          {
+            id: 'mech-sfee-1',
+            title: 'First Law of Thermodynamics & Steady Flow Energy Equation (SFEE)',
+            channel: 'Gate Smashers',
+            views: '980K+ views',
+            rating: '4.9 ⭐',
+            videoId: 'gRyMzKVAO4s',
+            searchQuery: 'Gate Smashers steady flow energy equation SFEE derivation',
+            duration: '20:15'
+          },
+          {
+            id: 'mech-sfee-2',
+            title: 'SFEE Applications: Nozzle, Diffuser, Turbine & Compressor Solved Numericals',
+            channel: 'Gate Smashers',
+            views: '610K+ views',
+            rating: '4.8 ⭐',
+            videoId: '5jI35F6kLa8',
+            searchQuery: 'SFEE applications nozzle turbine compressor Gate Smashers',
+            duration: '18:30'
+          }
+        ]
+      },
+      // UNIT 5: CALCULUS & CURVE TRACING
       'Curve Tracing Folium of Descartes & Asymptotes': {
+        unit: 'unit5',
         subject: 'math',
         title: 'Cartesian Curve Tracing & Oblique Asymptotes (Folium of Descartes)',
         snippet: 'For x³ + y³ = 3axy: 1. Symmetry: Symmetric about the line y = x. 2. Origin: Passes through (0,0); lowest degree terms 3axy = 0 give tangents x=0 and y=0 (origin is a node). 3. Asymptote: Put x = 1, y = m into highest degree terms: 1 + m³ = 0 ⇒ m = -1. Oblique asymptote derived as x + y + a = 0. 4. Loop exists exclusively in the first quadrant with maximum point at (3a/2, 3a/2).',
@@ -1313,6 +1377,7 @@
         ]
       },
       'Taylor & Maclaurin Series Expansion': {
+        unit: 'unit5',
         subject: 'math',
         title: 'Taylor and Maclaurin Series Expansions for Functions of Two Variables',
         snippet: 'Expands a multivariable function f(x, y) near a point (a, b) in powers of (x-a) and (y-b). Expansion formula: f(a+h, b+k) = f(a,b) + [h(∂f/∂x) + k(∂f/∂y)] + (1/2!)[h²(∂²f/∂x²) + 2hk(∂²f/∂x∂y) + k²(∂²f/∂y²)] + ... When expanded about origin (0,0), it becomes Maclaurin series.',
@@ -1333,6 +1398,7 @@
         ]
       },
       'Leibnitz Theorem nth Derivative': {
+        unit: 'unit5',
         subject: 'math',
         title: 'Leibnitz Theorem for nth Derivative of Product of Two Functions',
         snippet: 'If u and v are two functions of x possessing nth order derivatives, then the nth derivative of their product (uv) is given by: (uv)_n = nC0 u_n v + nC1 u_(n-1) v_1 + nC2 u_(n-2) v_2 + ... + nCr u_(n-r) v_r + ... + nCn u v_n. Standard university exam problems involve proving relations like (1 - x²)y_(n+2) - (2n+1)x y_(n+1) - (n² + m²)y_n = 0.',
@@ -1361,39 +1427,165 @@
             duration: '21:30'
           }
         ]
-      },
-      // MECHANICAL
-      'Steady Flow Energy Equation (SFEE)': {
-        subject: 'mech',
-        title: 'First Law of Thermodynamics Applied to Open Systems: SFEE Derivation',
-        snippet: 'For steady state flow through a control volume: Rate of mass in = Rate of mass out, and total energy rate entering = total energy rate leaving. SFEE per unit mass: h₁ + (V₁²/2) + gz₁ + q = h₂ + (V₂²/2) + gz₂ + w. Applications: Nozzle (w=0, q=0 ⇒ V₂ = √(2(h₁ - h₂))), Turbine (q=0 ⇒ w = h₁ - h₂), Throttling valve (w=0, q=0 ⇒ h₁ = h₂ isenthalpic).',
-        formula: 'SFEE: h1 + (V1²/2) + gz1 + q = h2 + (V2²/2) + gz2 + w',
-        trap: 'Remember units! Enthalpy is usually in kJ/kg, whereas kinetic energy V²/2 is in J/kg (must divide V²/2 by 1000!).',
-        diagram: 'Control volume boundary showing fluid entry and exit ports, heat transfer q, and shaft work w.',
-        videos: [
-          {
-            id: 'mech-sfee-1',
-            title: 'First Law of Thermodynamics & Steady Flow Energy Equation (SFEE)',
-            channel: 'Gate Smashers',
-            views: '980K+ views',
-            rating: '4.9 ⭐',
-            videoId: 'gRyMzKVAO4s',
-            searchQuery: 'Gate Smashers steady flow energy equation SFEE derivation',
-            duration: '20:15'
-          },
-          {
-            id: 'mech-sfee-2',
-            title: 'SFEE Applications: Nozzle, Diffuser, Turbine & Compressor Solved Numericals',
-            channel: 'Gate Smashers',
-            views: '610K+ views',
-            rating: '4.8 ⭐',
-            videoId: '5jI35F6kLa8',
-            searchQuery: 'SFEE applications nozzle turbine compressor Gate Smashers',
-            duration: '18:30'
-          }
-        ]
       }
     };
+
+    function selectUnitTab(unitKey) {
+      currentSelectedUnit = unitKey;
+      ['all', 'unit1', 'unit2', 'unit3', 'unit4', 'unit5', 'strategy'].forEach(k => {
+        const btn = document.getElementById(`unitBtn-${k}`);
+        if (!btn) return;
+        if (k === unitKey) {
+          btn.className = k === 'strategy' 
+            ? 'px-3 py-1.5 rounded-xl bg-amber-500 text-black font-bold text-xs transition cursor-pointer flex items-center gap-1 shadow-sm'
+            : 'px-3 py-1.5 rounded-xl bg-indigo-600 text-white font-bold text-xs transition cursor-pointer flex items-center gap-1 shadow-sm';
+        } else {
+          btn.className = k === 'strategy'
+            ? 'px-3 py-1.5 rounded-xl bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 border border-amber-500/30 text-xs font-semibold transition cursor-pointer flex items-center gap-1'
+            : 'px-3 py-1.5 rounded-xl bg-slate-900 text-slate-400 hover:text-white border border-slate-800 text-xs font-semibold transition cursor-pointer flex items-center gap-1';
+        }
+      });
+
+      const statsBadge = document.getElementById('unitStatsBadge');
+      if (statsBadge && unitDefinitions[unitKey]) {
+        statsBadge.innerText = `Displaying: ${unitDefinitions[unitKey].label}`;
+      }
+
+      renderUnitKeywordPills();
+
+      // Trigger first topic in unit
+      const matchingTopics = Object.keys(topicKnowledgeBase).filter(k => unitKey === 'all' || topicKnowledgeBase[k].unit === unitKey);
+      if (matchingTopics.length > 0) {
+        handleKeywordClick(matchingTopics[0], topicKnowledgeBase[matchingTopics[0]].subject);
+      }
+    }
+
+    function renderUnitKeywordPills() {
+      const container = document.getElementById('keywordPillsContainer');
+      if (!container) return;
+      container.innerHTML = '';
+
+      const topics = Object.keys(topicKnowledgeBase).filter(k => {
+        if (currentSelectedUnit === 'all') return true;
+        return topicKnowledgeBase[k].unit === currentSelectedUnit;
+      });
+
+      topics.forEach(tName => {
+        const item = topicKnowledgeBase[tName];
+        const btn = document.createElement('button');
+        const isStrategy = item.subject === 'strategy';
+        btn.onclick = () => handleKeywordClick(tName, item.subject);
+        btn.className = isStrategy
+          ? 'px-3 py-1.5 rounded-xl text-xs font-semibold bg-amber-500/25 text-amber-200 border border-amber-500/40 hover:bg-amber-500/40 transition cursor-pointer flex items-center gap-1.5 shadow-sm'
+          : 'px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 text-slate-300 border border-slate-800 hover:border-indigo-500/50 hover:text-white transition cursor-pointer flex items-center gap-1.5';
+        
+        const badgeColor = item.subject === 'chem' ? 'bg-indigo-500/30 text-indigo-300' 
+          : item.subject === 'elec' ? 'bg-sky-500/30 text-sky-300'
+          : item.subject === 'math' ? 'bg-purple-500/30 text-purple-300'
+          : item.subject === 'mech' ? 'bg-amber-500/30 text-amber-300'
+          : 'bg-amber-500/30 text-amber-200 font-bold';
+
+        const unitTag = item.unit ? item.unit.toUpperCase().replace('UNIT', 'U') : 'U';
+
+        btn.innerHTML = `
+          <span>${isStrategy ? '🎯 ' : ''}${tName}</span>
+          <span class="text-[10px] ${badgeColor} px-1.5 rounded">${unitTag}</span>
+        `;
+        container.appendChild(btn);
+      });
+    }
+
+    function extractYouTubeId(url) {
+      if (!url) return null;
+      const cleanUrl = url.trim();
+      const regExp = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+      const match = cleanUrl.match(regExp);
+      if (match && match[1]) {
+        return match[1];
+      }
+      if (/^[a-zA-Z0-9_-]{11}$/.test(cleanUrl)) {
+        return cleanUrl;
+      }
+      return null;
+    }
+
+    function copyVideoLink(videoId, btnEl) {
+      const fullUrl = `https://www.youtube.com/watch?v=${videoId}`;
+      navigator.clipboard.writeText(fullUrl).then(() => {
+        if (btnEl) {
+          const originalHTML = btnEl.innerHTML;
+          btnEl.innerHTML = '<span>✓ Copied!</span>';
+          btnEl.classList.add('bg-emerald-600', 'text-white');
+          setTimeout(() => {
+            btnEl.innerHTML = originalHTML;
+            btnEl.classList.remove('bg-emerald-600', 'text-white');
+          }, 2000);
+        }
+      }).catch(err => {
+        prompt('Copy YouTube Link:', fullUrl);
+      });
+    }
+
+    function handlePasteYouTubeToUnit() {
+      const input = document.getElementById('pasteYoutubeInput');
+      const unitSelect = document.getElementById('pasteUnitSelect');
+      const rawUrl = (input ? input.value : '').trim();
+      const targetUnit = unitSelect ? unitSelect.value : currentSelectedUnit;
+
+      if (!rawUrl) {
+        alert('Please paste a YouTube URL (e.g. https://www.youtube.com/watch?v=... or youtu.be/...)');
+        return;
+      }
+
+      const videoId = extractYouTubeId(rawUrl);
+      if (!videoId) {
+        alert('Could not find a valid YouTube Video ID. Please ensure the link is in format youtube.com/watch?v=... or youtu.be/...');
+        return;
+      }
+
+      const unitName = unitDefinitions[targetUnit] ? unitDefinitions[targetUnit].label : targetUnit;
+      const newTopicName = `Custom Unit Video (${videoId})`;
+
+      // Add to knowledge base for that unit
+      topicKnowledgeBase[newTopicName] = {
+        unit: targetUnit,
+        subject: targetUnit === 'strategy' ? 'strategy' : 'chem',
+        title: `Curated Video Lecture for ${unitName}`,
+        snippet: `Directly ingested YouTube lecture mapped to ${unitName}. Instant high-definition playback with YouTube thumbnail caching.`,
+        formula: 'Unit Core Reference Material & Derivation Guide',
+        trap: 'Verify step derivations and exam conventions corresponding to your university scheme.',
+        diagram: 'Unit schematic diagram and circuit layout.',
+        videos: [
+          {
+            id: `pasted-${videoId}-${Date.now()}`,
+            title: `Curated Lecture (${videoId}) - ${unitName}`,
+            channel: 'Curated YouTube Educational Resource',
+            views: 'Verified Stream',
+            rating: '5.0 ⭐',
+            videoId: videoId,
+            searchQuery: `${unitName} engineering lecture`,
+            duration: 'Live Stream'
+          }
+        ]
+      };
+
+      // Add to current active video lectures
+      videoLectures.unshift({
+        id: `pasted-${videoId}-${Date.now()}`,
+        title: `Curated Lecture (${videoId}) - ${unitName}`,
+        channel: 'Curated YouTube Educational Resource',
+        views: 'Verified Stream',
+        rating: '5.0 ⭐',
+        videoId: videoId,
+        searchQuery: `${unitName} engineering lecture`,
+        duration: 'Live Stream'
+      });
+
+      input.value = '';
+      selectUnitTab(targetUnit);
+      handleKeywordClick(newTopicName, 'chem');
+      alert(`✅ YouTube video [${videoId}] successfully mapped to ${unitName}!`);
+    }
 
     function handleKeywordClick(keyword, subject) {
       const statusPill = document.getElementById('keywordStatusPill');
@@ -1760,16 +1952,25 @@
               </div>
             </div>
           </div>
-          <div class="p-4 pt-0 flex items-center gap-2">
-            <button onclick="playInAppVideo('${vid.videoId}', '${encodeURIComponent(vid.title)}', '${vid.views}', '${encodeURIComponent(vid.searchQuery)}')" class="flex-1 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow cursor-pointer">
-              <span>▶ Watch In-App</span>
-            </button>
-            <a href="https://www.youtube.com/watch?v=${vid.videoId}" target="_blank" rel="noopener noreferrer" class="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 text-xs font-semibold flex items-center gap-1 transition" title="Watch directly on YouTube">
-              <span>↗</span>
-            </a>
-            <a href="https://www.youtube.com/results?search_query=${encodeURIComponent(vid.searchQuery || vid.title)}" target="_blank" rel="noopener noreferrer" class="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-rose-400 hover:text-white border border-slate-800 text-xs font-semibold flex items-center gap-1 transition" title="Search all related lectures on YouTube">
-              <span>🔍</span>
-            </a>
+          <div class="p-4 pt-0 space-y-2">
+            <div class="flex items-center gap-2">
+              <button onclick="playInAppVideo('${vid.videoId}', '${encodeURIComponent(vid.title)}', '${vid.views}', '${encodeURIComponent(vid.searchQuery)}')" class="flex-1 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow cursor-pointer">
+                <span>▶ Watch In-App</span>
+              </button>
+              <button onclick="copyVideoLink('${vid.videoId}', this)" class="px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 text-xs font-semibold flex items-center gap-1 transition cursor-pointer" title="Copy YouTube Link">
+                <span>📋 Copy Link</span>
+              </button>
+              <a href="https://www.youtube.com/watch?v=${vid.videoId}" target="_blank" rel="noopener noreferrer" class="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 text-xs font-semibold flex items-center gap-1 transition" title="Watch directly on YouTube">
+                <span>↗</span>
+              </a>
+              <a href="https://www.youtube.com/results?search_query=${encodeURIComponent(vid.searchQuery || vid.title)}" target="_blank" rel="noopener noreferrer" class="p-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-rose-400 hover:text-white border border-slate-800 text-xs font-semibold flex items-center gap-1 transition" title="Search all related lectures on YouTube">
+                <span>🔍</span>
+              </a>
+            </div>
+            <div class="flex items-center justify-between text-[10px] text-slate-400 font-mono px-1">
+              <span class="truncate max-w-[200px]">ID: ${vid.videoId}</span>
+              <span class="text-indigo-400">Direct Link Retained ✓</span>
+            </div>
           </div>
         `;
         grid.appendChild(card);
@@ -2005,6 +2206,7 @@
     // Init
     renderQuestions();
     selectQuestionForBento('q1');
+    selectUnitTab('all');
     renderVideos();
   </script>
 </body>
