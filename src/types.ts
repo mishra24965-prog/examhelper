@@ -127,6 +127,12 @@ export interface SubjectTrackingData {
   targetEfficiency: number; // e.g. 85%
   targetExam: ExamType;
   completedTaskIds: string[];
+  // Target, Alarm & Reminder Focus
+  targetStudyHoursDaily?: number;
+  dailyAlarmTime?: string; // e.g. "06:30"
+  alarmEnabled?: boolean;
+  reminderFrequency?: 'daily' | 'twice-daily' | 'exam-eve' | 'none';
+  reminderNote?: string;
 }
 
 export interface TeacherDemandInsight {

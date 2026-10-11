@@ -23,7 +23,9 @@ import {
   Award,
   BarChart2,
   CheckSquare,
-  Square
+  Square,
+  Bell,
+  Target
 } from 'lucide-react';
 
 interface Props {
@@ -215,17 +217,17 @@ export const StudentProfileModal: React.FC<Props> = ({
                 </div>
               </div>
 
-              {/* Subject Parameters: Target Efficiency & Deadline */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Target Efficiency Card */}
-                <div className="p-4 rounded-2xl bg-[#0b0b0d] border border-white/10 space-y-2.5">
+              {/* 4 Focused Pillars: Target, Alarm, Remainder, and Task */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                {/* 1. TARGET */}
+                <div className="p-4 rounded-2xl bg-[#0b0b0d] border border-emerald-500/30 space-y-2.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-white/70 flex items-center gap-1.5">
-                      <Sliders className="w-3.5 h-3.5 text-emerald-400" />
-                      Target Efficiency
+                    <span className="text-xs font-semibold text-emerald-300 flex items-center gap-1.5 font-mono">
+                      <Target className="w-4 h-4 text-emerald-400" />
+                      1. TARGET
                     </span>
-                    <span className="text-base font-mono font-extrabold text-emerald-400">
-                      {tracking.targetEfficiency}%
+                    <span className="text-sm font-mono font-extrabold text-emerald-400">
+                      {tracking.targetEfficiency}% Score
                     </span>
                   </div>
                   <input
@@ -236,56 +238,107 @@ export const StudentProfileModal: React.FC<Props> = ({
                     onChange={(e) => handleUpdateTracking({ targetEfficiency: parseInt(e.target.value) })}
                     className="w-full accent-emerald-500 cursor-pointer"
                   />
-                  <div className="flex justify-between text-[10px] text-white/40 font-mono">
-                    <span>60% (Pass Safe)</span>
-                    <span>85% (Distinction)</span>
-                    <span>99% (Topper)</span>
+                  <div className="flex items-center justify-between text-[11px] text-white/60">
+                    <span>Study Target:</span>
+                    <span className="font-mono font-bold text-white">{tracking.targetStudyHoursDaily || 3.5} hrs / day</span>
+                  </div>
+                  <div className="flex items-center gap-2 pt-1">
+                    <span className="text-[10px] text-white/40">Target Exam:</span>
+                    <select
+                      value={tracking.targetExam}
+                      onChange={(e) => handleUpdateTracking({ targetExam: e.target.value as ExamType })}
+                      className="bg-[#151518] border border-white/10 rounded-lg px-2 py-0.5 text-[10px] text-white"
+                    >
+                      <option value="MST-1">MST-1</option>
+                      <option value="MST-2">MST-2</option>
+                      <option value="End-Sem">End-Sem</option>
+                    </select>
                   </div>
                 </div>
 
-                {/* Deadline Card */}
-                <div className="p-4 rounded-2xl bg-[#0b0b0d] border border-white/10 space-y-2.5">
+                {/* 2. ALARM */}
+                <div className="p-4 rounded-2xl bg-[#0b0b0d] border border-amber-500/30 space-y-2.5">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-white/70 flex items-center gap-1.5">
-                      <Clock className="w-3.5 h-3.5 text-amber-400" />
-                      Subject Exam Deadline
+                    <span className="text-xs font-semibold text-amber-300 flex items-center gap-1.5 font-mono">
+                      <Clock className="w-4 h-4 text-amber-400" />
+                      2. ALARM
                     </span>
-                    <span className="text-base font-mono font-extrabold text-amber-400">
-                      {tracking.deadlineDays} Days Left
+                    <span className="text-sm font-mono font-bold text-amber-400">
+                      {tracking.dailyAlarmTime || '06:30'}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] text-white/50 block">Daily Study Alarm Time</label>
+                    <input
+                      type="time"
+                      value={tracking.dailyAlarmTime || '06:30'}
+                      onChange={(e) => handleUpdateTracking({ dailyAlarmTime: e.target.value })}
+                      className="w-full bg-[#151518] border border-white/10 rounded-xl px-2.5 py-1 text-xs text-white focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-[11px] text-white/60">Alarm Active:</span>
+                    <button
+                      type="button"
+                      onClick={() => handleUpdateTracking({ alarmEnabled: !tracking.alarmEnabled })}
+                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold transition cursor-pointer ${
+                        tracking.alarmEnabled !== false
+                          ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                          : 'bg-white/5 text-white/40 border border-white/10'
+                      }`}
+                    >
+                      {tracking.alarmEnabled !== false ? 'ON 🔔' : 'OFF'}
+                    </button>
+                  </div>
+                </div>
+
+                {/* 3. REMAINDER / DEADLINE */}
+                <div className="p-4 rounded-2xl bg-[#0b0b0d] border border-indigo-500/30 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-indigo-300 flex items-center gap-1.5 font-mono">
+                      <Bell className="w-4 h-4 text-indigo-400" />
+                      3. REMAINDER
+                    </span>
+                    <span className="text-sm font-mono font-bold text-indigo-400">
+                      {tracking.deadlineDays}d Left
+                    </span>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-[11px] text-white/60">
+                      <span>Exam Countdown:</span>
+                      <span className="font-mono font-bold text-indigo-300">{tracking.deadlineDays} days</span>
+                    </div>
                     <input
                       type="range"
                       min="1"
                       max="45"
                       value={tracking.deadlineDays}
                       onChange={(e) => handleUpdateTracking({ deadlineDays: parseInt(e.target.value) })}
-                      className="w-full accent-amber-500 cursor-pointer"
+                      className="w-full accent-indigo-500 cursor-pointer"
                     />
                   </div>
-                  <div className="flex gap-1.5">
-                    {[7, 14, 21, 30].map(days => (
-                      <button
-                        key={days}
-                        onClick={() => handleUpdateTracking({ deadlineDays: days })}
-                        className={`text-[10px] font-mono px-2 py-0.5 rounded-lg border transition ${
-                          tracking.deadlineDays === days
-                            ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                            : 'bg-white/5 text-white/50 border-white/5 hover:text-white'
-                        }`}
-                      >
-                        {days}d
-                      </button>
-                    ))}
+                  <div className="space-y-1 pt-0.5">
+                    <label className="text-[10px] text-white/50 block">Remainder Frequency</label>
+                    <select
+                      value={tracking.reminderFrequency || 'daily'}
+                      onChange={(e) => handleUpdateTracking({ reminderFrequency: e.target.value as any })}
+                      className="w-full bg-[#151518] border border-white/10 rounded-lg px-2 py-1 text-[11px] text-white"
+                    >
+                      <option value="daily">Daily Notification</option>
+                      <option value="twice-daily">Morning & Evening</option>
+                      <option value="exam-eve">Final 3 Days Intensive</option>
+                    </select>
                   </div>
                 </div>
               </div>
 
-              {/* Completion Progress Bar */}
+              {/* 4. TASK SECTION */}
               <div className="p-4 rounded-2xl bg-[#0b0b0d] border border-white/10 space-y-2">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="font-semibold text-white">Subject Task Completion</span>
+                  <span className="font-semibold text-white flex items-center gap-1.5 font-mono">
+                    <CheckSquare className="w-4 h-4 text-emerald-400" />
+                    <span>4. SUBJECT TASKS & MILESTONES</span>
+                  </span>
                   <span className="font-mono text-indigo-400 font-bold">
                     {completedCount} of {tasks.length} Done ({completionPercent}%)
                   </span>

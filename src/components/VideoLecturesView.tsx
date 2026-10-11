@@ -309,9 +309,13 @@ export const VideoLecturesView: React.FC<Props> = ({ course, onNavigateTab }) =>
     setCustomSearchQuery('');
   };
 
-  const handleSelectSubtopic = (sub: string) => {
+  const handleSelectSubtopic = (sub: string, unitNum?: number) => {
     setSelectedSubtopic(sub);
     setCustomSearchQuery('');
+    if (sub !== 'all') {
+      // Instantly run Gemini API to fetch videos & syllabus material for this keyword
+      handleFetchViaGemini(sub, unitNum);
+    }
   };
 
   const handleCopyQuery = (queryText: string) => {
@@ -821,29 +825,34 @@ export const VideoLecturesView: React.FC<Props> = ({ course, onNavigateTab }) =>
             {availableSubtopics.map((item, idx) => {
               const robust = buildRobustYouTubeQuery(item.subtopic, course.name, queryMode);
               const isSelected = selectedSubtopic === item.subtopic;
+              const isFetchingThis = isSearching && searchingSubtopic === item.subtopic;
               return (
                 <button
                   key={`${item.unitNumber}-${idx}`}
-                  onClick={() => handleSelectSubtopic(item.subtopic)}
+                  onClick={() => handleSelectSubtopic(item.subtopic, item.unitNumber)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition cursor-pointer flex items-center gap-2 border ${
                     isSelected
                       ? 'bg-indigo-600/30 text-indigo-200 border-indigo-400 shadow-sm'
                       : 'bg-white/5 text-white/70 border-white/10 hover:text-white hover:bg-white/10'
                   }`}
-                  title={item.subtopic}
+                  title={`Click to immediately fetch verified YouTube lectures and study notes for ${item.subtopic}`}
                 >
                   <span className="font-bold text-indigo-400 text-[10px] font-mono">U{item.unitNumber}</span>
                   <span className="truncate max-w-[200px] sm:max-w-[260px]">{item.subtopic}</span>
-                  <span
-                    className={`text-[9px] font-mono px-1.5 py-0.2 rounded border ${
-                      robust.appendedType === 'derivation'
-                        ? 'bg-purple-500/20 text-purple-300 border-purple-500/30'
-                        : 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30'
-                    }`}
-                  >
-                    +{robust.appendedType === 'derivation' ? 'deriv' : 'lecture'}
-                  </span>
-                  <span className="text-[10px] text-emerald-400 font-mono font-bold">3 Links</span>
+                  {isFetchingThis ? (
+                    <span className="w-2.5 h-2.5 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin shrink-0" />
+                  ) : (
+                    <span
+                      className={`text-[9px] font-mono px-1.5 py-0.2 rounded border ${
+                        robust.appendedType === 'derivation'
+                          ? 'bg-purple-500/20 text-purple-300 border-purple-500/30'
+                          : 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30'
+                      }`}
+                    >
+                      +{robust.appendedType === 'derivation' ? 'deriv' : 'lecture'}
+                    </span>
+                  )}
+                  <span className="text-[10px] text-emerald-400 font-mono font-bold">⚡ Fetch</span>
                 </button>
               );
             })}

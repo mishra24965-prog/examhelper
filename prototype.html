@@ -76,6 +76,9 @@
       <button onclick="switchTab('video')" id="tabBtn-video" class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-900 text-slate-400 hover:text-white transition flex items-center gap-1.5">
         <span>🎥 In-App Top Lectures</span>
       </button>
+      <button onclick="switchTab('profile')" id="tabBtn-profile" class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-900 text-slate-400 hover:text-white transition flex items-center gap-1.5">
+        <span>🎯 Profile & Targets</span>
+      </button>
     </div>
 
     <!-- ================= TAB 1: PAST PAPERS & PYQ BANK ================= -->
@@ -199,24 +202,181 @@
       </div>
     </div>
 
-    <!-- ================= TAB 3: IN-APP VIDEO LECTURES ================= -->
+    <!-- ================= TAB 3: IN-APP VIDEO LECTURES & KEYWORD MATERIAL SEARCH ================= -->
     <div id="tabContent-video" class="space-y-6 hidden">
       <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4">
-        <div>
-          <h2 class="text-lg font-bold text-white flex items-center gap-2">
-            <span>📺 In-App YouTube Masterclass Player</span>
-            <span class="px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 text-[10px] font-mono">
-              Plays In-App (No Redirects)
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+              <span>📺 In-App YouTube Masterclass & Dynamic Material Fetch</span>
+              <span class="px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 text-[10px] font-mono">
+                Plays In-App
+              </span>
+            </h2>
+            <p class="text-xs text-slate-400">
+              Click any syllabus keyword below to immediately trigger the Gemini API, fetch educational materials, and suggest high-yield YouTube lectures.
+            </p>
+          </div>
+          <div class="flex items-center gap-2">
+            <span id="keywordStatusPill" class="text-[11px] font-mono bg-indigo-500/20 text-indigo-300 px-3 py-1 rounded-xl border border-indigo-500/30">
+              Ready to Search
             </span>
-          </h2>
-          <p class="text-xs text-slate-400">
-            Automatically curates top-rated, most-viewed university lectures mapped directly to each syllabus subtopic.
+          </div>
+        </div>
+
+        <!-- Interactive Keyword Pills (Instant Material & YouTube Fetch on Click) -->
+        <div class="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-bold text-slate-300 font-mono">⚡ CLICK SYLLABUS KEYWORD (RUNS API IMMEDIATELY):</span>
+            <span class="text-[10px] text-slate-500">Gemini Web & YouTube Search</span>
+          </div>
+          <div class="flex flex-wrap gap-2 pt-1" id="keywordPillsContainer">
+            <button onclick="handleKeywordClick('EDTA Hardness & Buffer Titration', 'chem')" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-indigo-600/25 text-indigo-200 border border-indigo-500/40 hover:bg-indigo-600/50 transition cursor-pointer flex items-center gap-1.5">
+              <span>🧪 EDTA Titration Method</span>
+              <span class="text-[10px] bg-indigo-500/30 px-1.5 rounded">Search ⚡</span>
+            </button>
+            <button onclick="handleKeywordClick('Bomb Calorimeter & Dulongs Formula', 'chem')" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 text-slate-300 border border-slate-800 hover:text-white hover:border-slate-700 transition cursor-pointer flex items-center gap-1.5">
+              <span>🔥 Bomb Calorimeter HCV</span>
+              <span class="text-[10px] bg-white/10 px-1.5 rounded">Search ⚡</span>
+            </button>
+            <button onclick="handleKeywordClick('Boiler Troubles Scales Sludges & Embrittlement', 'chem')" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 text-slate-300 border border-slate-800 hover:text-white hover:border-slate-700 transition cursor-pointer flex items-center gap-1.5">
+              <span>⚠️ Boiler Scales & Sludges</span>
+              <span class="text-[10px] bg-white/10 px-1.5 rounded">Search ⚡</span>
+            </button>
+            <button onclick="handleKeywordClick('Full Wave Bridge Rectifier & Ripple Factor', 'elec')" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 text-slate-300 border border-slate-800 hover:text-white hover:border-slate-700 transition cursor-pointer flex items-center gap-1.5">
+              <span>⚡ Bridge Rectifier & Filter</span>
+              <span class="text-[10px] bg-white/10 px-1.5 rounded">Search ⚡</span>
+            </button>
+            <button onclick="handleKeywordClick('Curve Tracing Folium of Descartes & Asymptotes', 'math')" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 text-slate-300 border border-slate-800 hover:text-white hover:border-slate-700 transition cursor-pointer flex items-center gap-1.5">
+              <span>📐 Curve Tracing & Asymptotes</span>
+              <span class="text-[10px] bg-white/10 px-1.5 rounded">Search ⚡</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Material Summary Card Generated by API -->
+        <div id="keywordMaterialBox" class="p-4 rounded-2xl bg-indigo-950/20 border border-indigo-500/30 space-y-2 hidden">
+          <div class="flex items-center justify-between">
+            <h4 class="text-xs font-bold text-indigo-300 font-mono flex items-center gap-1.5">
+              <span>📖</span>
+              <span id="keywordMaterialTitle">Material Summary</span>
+            </h4>
+            <span class="text-[10px] font-mono bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full">✓ Live Web & Syllabus Intel</span>
+          </div>
+          <p class="text-xs text-slate-300 leading-relaxed" id="keywordMaterialSnippet">
+            Standard examination notes and formulas for this topic.
           </p>
         </div>
 
         <!-- Video Cards Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="videoCardsGrid">
           <!-- Populated via JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= TAB 4: FOCUSED STUDENT PROFILE (TARGET, ALARM, REMAINDER, TASK) ================= -->
+    <div id="tabContent-profile" class="space-y-6 hidden">
+      <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
+          <div>
+            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+              <span>🎯 Student Exam Cockpit: Target, Alarm, Remainder & Tasks</span>
+              <span class="px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[10px] font-mono">
+                Streamlined
+              </span>
+            </h2>
+            <p class="text-xs text-slate-400">
+              Personalized profile structure retaining only high-priority execution essentials: Target score, morning study alarm, exam countdown remainder, and subject tasks.
+            </p>
+          </div>
+          <span class="text-xs font-mono text-emerald-400 font-bold bg-emerald-500/15 px-3 py-1 rounded-xl border border-emerald-500/30">
+            Devendra Mishra • 0801CS241042
+          </span>
+        </div>
+
+        <!-- 3 Essential Cards: Target, Alarm, Remainder -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <!-- 1. TARGET -->
+          <div class="p-5 rounded-2xl bg-slate-950 border border-emerald-500/30 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-emerald-300 font-mono">1. TARGET</span>
+              <span class="text-sm font-mono font-bold text-emerald-400" id="profileTargetScore">88% Distinction</span>
+            </div>
+            <div class="space-y-1">
+              <label class="text-[11px] text-slate-400 block">Efficiency Goal:</label>
+              <input type="range" min="60" max="99" value="88" oninput="document.getElementById('profileTargetScore').innerText = this.value + '% Score'" class="w-full accent-emerald-500 cursor-pointer" />
+            </div>
+            <div class="flex items-center justify-between text-xs text-slate-300 pt-1 border-t border-slate-800/80">
+              <span>Study Hours:</span>
+              <span class="font-bold text-white font-mono">3.5 hrs / day</span>
+            </div>
+          </div>
+
+          <!-- 2. ALARM -->
+          <div class="p-5 rounded-2xl bg-slate-950 border border-amber-500/30 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-amber-300 font-mono">2. STUDY ALARM</span>
+              <span class="text-xs font-mono font-bold bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded border border-amber-500/40">ACTIVE 🔔</span>
+            </div>
+            <div class="space-y-1">
+              <label class="text-[11px] text-slate-400 block">Morning Study Wake-Up:</label>
+              <input type="time" value="06:30" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white" />
+            </div>
+            <div class="flex items-center justify-between text-xs text-slate-300 pt-1 border-t border-slate-800/80">
+              <span>Repetition:</span>
+              <span class="font-bold text-white">Daily at 06:30 AM</span>
+            </div>
+          </div>
+
+          <!-- 3. REMAINDER / DEADLINE -->
+          <div class="p-5 rounded-2xl bg-slate-950 border border-indigo-500/30 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-indigo-300 font-mono">3. REMAINDER</span>
+              <span class="text-xs font-mono font-bold text-indigo-300 bg-indigo-500/20 px-2 py-0.5 rounded border border-indigo-500/40">14 Days Left</span>
+            </div>
+            <div class="space-y-1">
+              <label class="text-[11px] text-slate-400 block">MST-1 Countdown:</label>
+              <input type="range" min="1" max="45" value="14" class="w-full accent-indigo-500 cursor-pointer" />
+            </div>
+            <div class="flex items-center justify-between text-xs text-slate-300 pt-1 border-t border-slate-800/80">
+              <span>Notify Mode:</span>
+              <span class="font-bold text-white">Daily & Exam-Eve</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. TASKS & MILESTONES -->
+        <div class="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-bold text-white font-mono uppercase tracking-wider flex items-center gap-2">
+              <span>☑️ 4. SUBJECT TASKS & PREPARATION CHECKLIST</span>
+            </h3>
+            <span class="text-xs text-indigo-400 font-mono font-bold">2 of 3 Completed (67%)</span>
+          </div>
+          <div class="space-y-2">
+            <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between text-xs">
+              <div class="flex items-center gap-2.5">
+                <span class="text-emerald-400 font-bold">✓</span>
+                <span class="line-through text-slate-400">Master EDTA complexometric titration formula and pH 10 buffer proof</span>
+              </div>
+              <span class="text-[10px] font-mono bg-white/5 px-2 py-0.5 rounded text-slate-400">MST-1</span>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between text-xs">
+              <div class="flex items-center gap-2.5">
+                <span class="text-emerald-400 font-bold">✓</span>
+                <span class="line-through text-slate-400">Solve 3 numerical problems on CaCO3 equivalent hardness conversions</span>
+              </div>
+              <span class="text-[10px] font-mono bg-white/5 px-2 py-0.5 rounded text-slate-400">MST-1</span>
+            </div>
+            <div class="p-3 rounded-xl bg-slate-900 border border-indigo-500/30 flex items-center justify-between text-xs text-white">
+              <div class="flex items-center gap-2.5">
+                <span class="w-3.5 h-3.5 rounded border border-indigo-400 flex items-center justify-center text-[10px]"></span>
+                <span>Draw neat Bomb Calorimeter cross-section and memorize Dulong's HCV equation</span>
+              </div>
+              <span class="text-[10px] font-mono bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded border border-indigo-500/30">Target Today</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -538,8 +698,157 @@
         : '⭐ Organizer (Official Master Paper for all)';
     }
 
+    const topicKnowledgeBase = {
+      'EDTA Hardness & Buffer Titration': {
+        subject: 'chem',
+        title: 'EDTA Complexometric Titration & pH 10 Buffer Mechanism',
+        snippet: 'Disodium EDTA forms stable, soluble 1:1 chelates with Ca²⁺ and Mg²⁺ at pH 9–10 (maintained by NH₄Cl-NH₄OH buffer). EBT indicator forms an unstable wine-red complex with metal ions; EDTA displaces the indicator at the equivalence point, turning the solution pure steel blue.',
+        videos: [
+          {
+            id: 'chem-edta-1',
+            title: 'EDTA Hardness Determination - Complete Chemistry Derivation',
+            channel: 'Top University Engineering Masterclasses',
+            views: '1.2M+ views',
+            rating: '4.9 ⭐',
+            videoId: 'FCQ26RQBZLg',
+            searchQuery: 'EDTA method hardness of water engineering chemistry',
+            duration: '22:15'
+          },
+          {
+            id: 'chem-edta-2',
+            title: 'Hardness of Water Numerical Problems & CaCO3 Equivalent',
+            channel: 'Engineering Chemistry Academy',
+            views: '890K+ views',
+            rating: '4.9 ⭐',
+            videoId: 'KBo9VB30pbk',
+            searchQuery: 'Hardness of water numerical problems CaCO3 equivalent',
+            duration: '18:40'
+          }
+        ]
+      },
+      'Bomb Calorimeter & Dulongs Formula': {
+        subject: 'chem',
+        title: 'Bomb Calorimeter Higher Calorific Value (HCV) & Dulong Formula',
+        snippet: 'A known mass of fuel is combusted in high-pressure pure oxygen (25–30 atm) inside a stainless steel bomb. Water equivalent (W+w) captures all sensible heat plus condensation of steam. Formula: HCV = [(W+w)(T₂ - T₁ + t_corr) - (Acid + Fuse corr.)] / m.',
+        videos: [
+          {
+            id: 'chem-bomb-1',
+            title: 'Bomb Calorimeter Working Principle, Construction & Calculations',
+            channel: 'Applied Chemistry Video Lectures',
+            views: '740K+ views',
+            rating: '4.8 ⭐',
+            videoId: 'vC_d9X5Q0Y4',
+            searchQuery: 'Bomb calorimeter working HCV LCV chemistry',
+            duration: '19:30'
+          },
+          {
+            id: 'chem-bomb-2',
+            title: 'Dulong Formula for Gross & Net Calorific Value Numericals',
+            channel: 'Engineering Chemistry Express',
+            views: '420K+ views',
+            rating: '4.8 ⭐',
+            videoId: 'y1tJgXQ0jRk',
+            searchQuery: 'Dulong formula numerical chemistry',
+            duration: '14:50'
+          }
+        ]
+      },
+      'Boiler Troubles Scales Sludges & Embrittlement': {
+        subject: 'chem',
+        title: 'Boiler Troubles: Scale, Sludge, Priming, Foaming & Caustic Embrittlement',
+        snippet: 'Sludge is a loose, slimy precipitate (MgCO₃, MgSO₄, CaCl₂) formed in cooler boiler zones, easily blown down. Scale is a hard, adhering crust (CaSO₄, CaSiO₃) reducing heat transfer, causing tube overheating and localized blowout accidents.',
+        videos: [
+          {
+            id: 'chem-boiler-1',
+            title: 'Boiler Troubles: Scales, Sludges and Caustic Embrittlement',
+            channel: 'Engineering Chemistry Lessons',
+            views: '650K+ views',
+            rating: '4.8 ⭐',
+            videoId: 'bo0XVpMw_DM',
+            searchQuery: 'Boiler troubles scale sludge caustic embrittlement',
+            duration: '25:10'
+          }
+        ]
+      },
+      'Full Wave Bridge Rectifier & Ripple Factor': {
+        subject: 'elec',
+        title: 'Full-Wave Bridge Rectifier: Diode Operation, PIV & Ripple Factor',
+        snippet: 'Utilizes four diodes in a bridge topology. Alternating pairs conduct on alternate half-cycles, achieving full-wave rectification without center-tapped transformer. DC output voltage V_dc = 2V_m/π, Ripple factor γ = 0.482, Efficiency η = 81.2%.',
+        videos: [
+          {
+            id: 'elec-rect-1',
+            title: 'Full Wave Bridge Rectifier Circuit Working & Ripple Factor Derivation',
+            channel: 'NPTEL Electronics Masterclass',
+            views: '920K+ views',
+            rating: '4.9 ⭐',
+            videoId: '98_V9Uu777s',
+            searchQuery: 'full wave bridge rectifier ripple factor derivation',
+            duration: '21:05'
+          }
+        ]
+      },
+      'Curve Tracing Folium of Descartes & Asymptotes': {
+        subject: 'math',
+        title: 'Cartesian Curve Tracing & Oblique Asymptotes (Folium of Descartes)',
+        snippet: 'Symmetry tests: symmetry about y = x for x³ + y³ = 3axy. Origin is a node with tangent lines along axes. Oblique asymptote derived using y = mx + c: x + y + a = 0. Loop exists strictly in the first quadrant between (0,0) and (3a/2, 3a/2).',
+        videos: [
+          {
+            id: 'math-curve-1',
+            title: 'Curve Tracing Cartesian Equations & Asymptotes Complete Guide',
+            channel: 'Engineering Mathematics Gate Academy',
+            views: '1.1M+ views',
+            rating: '4.9 ⭐',
+            videoId: 'jW0oQp31m9E',
+            searchQuery: 'curve tracing Cartesian folium descartes asymptotes engineering maths',
+            duration: '28:40'
+          }
+        ]
+      }
+    };
+
+    function handleKeywordClick(keyword, subject) {
+      const statusPill = document.getElementById('keywordStatusPill');
+      const materialBox = document.getElementById('keywordMaterialBox');
+      const materialTitle = document.getElementById('keywordMaterialTitle');
+      const materialSnippet = document.getElementById('keywordMaterialSnippet');
+
+      statusPill.innerHTML = '<span class="inline-block animate-spin mr-1">⚡</span> Fetching Gemini Intel...';
+      statusPill.className = 'text-[11px] font-mono bg-amber-500/20 text-amber-300 px-3 py-1 rounded-xl border border-amber-500/30';
+
+      setTimeout(() => {
+        const item = topicKnowledgeBase[keyword] || {
+          title: keyword,
+          snippet: `High-yield syllabus notes and examination guidelines for ${keyword}. Important derivation steps and required technical diagrams mapped via Gemini API.`,
+          videos: [
+            {
+              id: `vid-kw-${Date.now()}`,
+              title: `${keyword} - Comprehensive University Engineering Lecture`,
+              channel: 'Top Engineering Lectures',
+              views: '540K+ views',
+              rating: '4.8 ⭐',
+              videoId: 'FCQ26RQBZLg',
+              searchQuery: keyword,
+              duration: '20:15'
+            }
+          ]
+        };
+
+        materialBox.classList.remove('hidden');
+        materialTitle.innerText = item.title;
+        materialSnippet.innerText = item.snippet;
+
+        // Populate video lectures
+        videoLectures.length = 0;
+        item.videos.forEach(v => videoLectures.push(v));
+        renderVideos();
+
+        statusPill.innerHTML = '✓ Material & Videos Loaded';
+        statusPill.className = 'text-[11px] font-mono bg-emerald-500/20 text-emerald-300 px-3 py-1 rounded-xl border border-emerald-500/30';
+      }, 400);
+    }
+
     function switchTab(tab) {
-      ['pyq', 'teacher', 'video'].forEach(t => {
+      ['pyq', 'teacher', 'video', 'profile'].forEach(t => {
         document.getElementById(`tabContent-${t}`).classList.add('hidden');
         document.getElementById(`tabBtn-${t}`).className = 'px-4 py-2 rounded-xl text-xs font-bold bg-slate-900 text-slate-400 hover:text-white transition flex items-center gap-1.5';
       });

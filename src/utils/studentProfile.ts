@@ -91,7 +91,12 @@ export function loadSubjectTracking(course: Course): SubjectTrackingData {
     deadlineDays: 14,
     targetEfficiency: 85,
     targetExam: 'MST-1',
-    completedTaskIds: []
+    completedTaskIds: [],
+    targetStudyHoursDaily: 3.5,
+    dailyAlarmTime: '06:30',
+    alarmEnabled: true,
+    reminderFrequency: 'daily',
+    reminderNote: 'Review high-yield university derivations & formula sheet'
   };
 }
 
