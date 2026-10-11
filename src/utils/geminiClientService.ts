@@ -1013,3 +1013,119 @@ Provide a concise, crystal-clear explanation under 200 words covering:
     })
   );
 }
+
+// ---------------------------------------------------------------------------
+// 9. Gemini AI Dynamic Video Breakdown & YouTube Fetcher
+// ---------------------------------------------------------------------------
+export async function suggestVideosViaGeminiApi(params: {
+  courseName: string;
+  topicName: string;
+  subtopicName?: string;
+  subtopics?: string[];
+  unitNumber?: number;
+  queryMode?: 'auto' | 'derivation' | 'lecture';
+}): Promise<any> {
+  return safeApiCall(
+    '/api/suggest-videos',
+    params,
+    async () => {
+      const activeSubtopic = params.subtopicName || (params.subtopics && params.subtopics.length > 0 ? params.subtopics[0] : params.topicName);
+      const isDerivation =
+        params.queryMode === 'derivation' ||
+        /(derivation|derive|theorem|proof|formula|equation|sfee|efficiency|leibnitz|euler|otto|diesel|gauss|stokes|laplace|bernoulli|cycle)/i.test(
+          `${params.topicName} ${activeSubtopic}`
+        );
+      const querySuffix = isDerivation ? 'derivation' : 'university lecture';
+
+      const prompt = `You are an expert university academic advisor powered by Gemini AI.
+Break down the syllabus for:
+Course: "${params.courseName}"
+Syllabus Unit: Unit ${params.unitNumber || 1} - "${params.topicName}"
+Active Subtopic: "${activeSubtopic}"
+Subtopics in this unit: ${params.subtopics?.join(', ') || 'N/A'}
+Query Suffix Needed: "${querySuffix}"
+
+Recommend 3 highly-rated educational YouTube videos matching this exact syllabus unit.
+Provide real YouTube video IDs whenever available (or genuine YouTube search titles and channels).
+Channels preferred: Gate Smashers, Neso Academy, Dr. Gajendra Purohit, NPTEL, All About Electronics, Abdul Bari, Knowledge Gate.
+
+IMPORTANT RULES:
+1. Do NOT suggest Leibnitz Theorem unless the course is Mathematics and the active topic is specifically Successive Differentiation / Leibnitz.
+2. For each video, return a real 11-character YouTube videoId if known (e.g. "KBo9VB30pbk", "FCQ26RQBZLg", "b-4QwCOaLio", "5jI35F6kLa8", "rl9FdHTVOWY", "bo0XVpMw_DM").
+3. Set "thumbnailUrl" to "https://img.youtube.com/vi/{videoId}/hqdefault.jpg" using the real videoId.
+
+Return a JSON array of 3 objects matching this exact schema:
+[
+  {
+    "title": "Clear educational lecture title",
+    "channel": "Channel Name",
+    "durationMinutes": 22,
+    "conceptFocus": "Detailed breakdown of the concept and formulas covered",
+    "youtubeSearchQuery": "${activeSubtopic} ${querySuffix}",
+    "subtopicName": "${activeSubtopic}",
+    "youtubeVideoId": "11-character-youtube-id-or-empty",
+    "level": "Beginner" | "Exam-Cram" | "Deep Dive",
+    "complexityCategory": "Foundation" | "Standard Exam" | "Advanced Numerical",
+    "keyTimestamps": [
+      { "time": "02:00", "topic": "Concept introduction" },
+      { "time": "12:30", "topic": "Core derivation / problem" }
+    ]
+  }
+]`;
+
+      const text = await safeGenerateContent((model) => ({
+        model,
+        contents: prompt,
+        config: { responseMimeType: 'application/json' }
+      }));
+
+      const parsed = safeJsonParse(text, []);
+      const formatted = (Array.isArray(parsed) ? parsed : []).map((v: any, idx: number) => {
+        const cleanSub = v.subtopicName || activeSubtopic;
+        const qSuffix = querySuffix;
+        const robustQ = v.youtubeSearchQuery && v.youtubeSearchQuery.toLowerCase().includes(qSuffix)
+          ? v.youtubeSearchQuery
+          : `${params.courseName} ${cleanSub} ${qSuffix}`;
+
+        let ytId = v.youtubeVideoId && /^[a-zA-Z0-9_-]{11}$/.test(v.youtubeVideoId) ? v.youtubeVideoId : undefined;
+
+        // Ensure thumbnail is strictly from YouTube
+        let thumbUrl = ytId
+          ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`
+          : undefined;
+
+        return {
+          id: `gemini-yt-${Date.now()}-${idx}`,
+          topicId: `u${params.unitNumber || 1}`,
+          topicName: params.topicName,
+          subtopicName: cleanSub,
+          unitNumber: params.unitNumber || 1,
+          title: v.title || `${cleanSub} (${qSuffix})`,
+          channel: v.channel || 'University Lecture',
+          durationMinutes: v.durationMinutes || 20,
+          conceptFocus: v.conceptFocus || `Academic exam coverage of ${cleanSub}.`,
+          youtubeSearchQuery: robustQ,
+          queryType: qSuffix,
+          youtubeVideoId: ytId,
+          youtubeUrl: ytId
+            ? `https://www.youtube.com/watch?v=${ytId}`
+            : `https://www.youtube.com/results?search_query=${encodeURIComponent(robustQ)}`,
+          thumbnailUrl: thumbUrl,
+          level: v.level || (idx === 0 ? 'Beginner' : idx === 1 ? 'Exam-Cram' : 'Deep Dive'),
+          complexityCategory: v.complexityCategory || (idx === 0 ? 'Foundation' : idx === 1 ? 'Standard Exam' : 'Advanced Numerical'),
+          verified: true,
+          keyTimestamps: v.keyTimestamps || [
+            { time: '01:30', topic: 'Concept Introduction' },
+            { time: '10:00', topic: 'Exam Derivation / Formula' }
+          ]
+        };
+      });
+
+      return { success: true, videos: formatted, aiPowered: true };
+    },
+    () => ({
+      success: true,
+      videos: []
+    })
+  );
+}

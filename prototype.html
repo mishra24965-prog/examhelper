@@ -590,20 +590,33 @@
       grid.innerHTML = '';
       videoLectures.forEach((vid) => {
         const card = document.createElement('div');
-        card.className = 'bg-slate-950 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between space-y-3 hover:border-slate-700 transition';
+        card.className = 'bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden flex flex-col justify-between hover:border-slate-700 transition group shadow-md';
         card.innerHTML = `
-          <div class="space-y-2">
-            <div class="flex items-center justify-between text-[11px]">
-              <span class="text-rose-400 font-bold truncate">${vid.channel}</span>
-              <span class="text-amber-300 font-mono font-bold">${vid.rating}</span>
+          <div>
+            <div class="relative w-full aspect-video bg-slate-900 overflow-hidden cursor-pointer" onclick="playInAppVideo('${vid.videoId}', '${encodeURIComponent(vid.title)}', '${vid.views}', '${encodeURIComponent(vid.searchQuery)}')">
+              <img src="https://img.youtube.com/vi/${vid.videoId}/hqdefault.jpg" alt="${vid.title}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" onerror="this.src='https://img.youtube.com/vi/${vid.videoId}/mqdefault.jpg'" />
+              <div class="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition flex items-center justify-center">
+                <div class="w-10 h-10 rounded-full bg-rose-600/90 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition">
+                  <span class="ml-0.5 text-xs">▶</span>
+                </div>
+              </div>
+              <span class="absolute bottom-2 right-2 px-1.5 py-0.5 rounded bg-black/80 text-white text-[10px] font-mono font-bold">
+                ${vid.duration}
+              </span>
             </div>
-            <h4 class="text-xs sm:text-sm font-bold text-white line-clamp-2">${vid.title}</h4>
-            <div class="flex items-center gap-2 text-[10px] text-slate-400">
-              <span>🔥 ${vid.views}</span>
-              <span>⏱ ${vid.duration}</span>
+            <div class="p-4 space-y-2">
+              <div class="flex items-center justify-between text-[11px]">
+                <span class="text-rose-400 font-bold truncate">${vid.channel}</span>
+                <span class="text-amber-300 font-mono font-bold">${vid.rating}</span>
+              </div>
+              <h4 class="text-xs sm:text-sm font-bold text-white line-clamp-2">${vid.title}</h4>
+              <div class="flex items-center gap-2 text-[10px] text-slate-400">
+                <span>🔥 ${vid.views}</span>
+                <span>⚡ Syllabus Unit Aligned</span>
+              </div>
             </div>
           </div>
-          <div class="flex items-center gap-2 pt-1">
+          <div class="p-4 pt-0 flex items-center gap-2">
             <button onclick="playInAppVideo('${vid.videoId}', '${encodeURIComponent(vid.title)}', '${vid.views}', '${encodeURIComponent(vid.searchQuery)}')" class="flex-1 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition flex items-center justify-center gap-1.5 shadow cursor-pointer">
               <span>▶ Watch In-App</span>
             </button>

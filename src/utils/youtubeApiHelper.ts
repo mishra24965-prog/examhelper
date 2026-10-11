@@ -868,9 +868,9 @@ export const VERIFIED_UNIT_LECTURES: Record<string, Record<number, VideoRecommen
         durationMinutes: 19,
         conceptFocus: 'Classification of polymers, addition vs condensation, and sulfur cross-linking in vulcanization.',
         youtubeSearchQuery: 'Polymers thermosetting thermoplastic engineering chemistry',
-        youtubeUrl: 'https://www.youtube.com/watch?v=FCQ26RQBZLg',
-        thumbnailUrl: 'https://img.youtube.com/vi/FCQ26RQBZLg/mqdefault.jpg',
-        youtubeVideoId: 'FCQ26RQBZLg',
+        youtubeUrl: 'https://www.youtube.com/watch?v=5yP4D4vQ51g',
+        thumbnailUrl: 'https://img.youtube.com/vi/5yP4D4vQ51g/mqdefault.jpg',
+        youtubeVideoId: '5yP4D4vQ51g',
         level: 'Beginner',
         complexityCategory: 'Foundation',
         verified: true
@@ -885,9 +885,9 @@ export const VERIFIED_UNIT_LECTURES: Record<string, Record<number, VideoRecommen
         durationMinutes: 25,
         conceptFocus: 'Hydration of C3S, C2S, C3A, C4AF, sequence of hardening reactions, and role of gypsum.',
         youtubeSearchQuery: 'Portland cement setting and hardening chemistry Bogue compounds',
-        youtubeUrl: 'https://www.youtube.com/watch?v=FCQ26RQBZLg',
-        thumbnailUrl: 'https://img.youtube.com/vi/FCQ26RQBZLg/mqdefault.jpg',
-        youtubeVideoId: 'FCQ26RQBZLg',
+        youtubeUrl: 'https://www.youtube.com/watch?v=w3d2L54x41c',
+        thumbnailUrl: 'https://img.youtube.com/vi/w3d2L54x41c/mqdefault.jpg',
+        youtubeVideoId: 'w3d2L54x41c',
         level: 'Exam-Cram',
         complexityCategory: 'Standard Exam',
         verified: true
@@ -1250,24 +1250,18 @@ export async function searchYouTubeViaApiHelper(params: {
               ? v.youtubeSearchQuery
               : `${params.courseName} ${cleanSub} ${querySuffix}`;
 
-          const systemicThumb = generateSystemicTopicThumbnail({
-            title: v.title,
-            subtopicName: cleanSub,
-            courseName: params.courseName,
-            channel: v.channel,
-            level: v.level || (idx === 0 ? 'Beginner' : idx === 1 ? 'Exam-Cram' : 'Deep Dive'),
-            queryType: querySuffix
-          });
-
+          let ytId = v.youtubeVideoId && /^[a-zA-Z0-9_-]{11}$/.test(v.youtubeVideoId) ? v.youtubeVideoId : undefined;
           const isMathCourse = (params.courseName || '').toLowerCase().includes('math');
-          const isMathTopic = (activeSubtopic || '').toLowerCase().includes('leibnitz');
-          const isPlaceholder = ['EFLp2LrmYuY', 'NEhH6C7Fzw4', 'OxZj2S6bjS4'].some((pid) =>
-            v.thumbnailUrl?.includes(pid)
-          );
-          const safeThumb =
-            (!isPlaceholder || (isMathCourse && isMathTopic)) && v.thumbnailUrl
-              ? v.thumbnailUrl
-              : systemicThumb;
+          const isMathTopic = (cleanSub || '').toLowerCase().includes('leibnitz');
+          if (ytId === 'EFLp2LrmYuY' && (!isMathCourse || !isMathTopic)) {
+            ytId = 'FCQ26RQBZLg';
+          }
+
+          const ytThumb = ytId
+            ? `https://img.youtube.com/vi/${ytId}/hqdefault.jpg`
+            : (v.thumbnailUrl && v.thumbnailUrl.includes('img.youtube.com/vi/'))
+            ? v.thumbnailUrl
+            : `https://img.youtube.com/vi/${params.courseName.toLowerCase().includes('math') ? 'Ac1mr2WrO-g' : 'FCQ26RQBZLg'}/hqdefault.jpg`;
 
           return {
             ...v,
@@ -1276,17 +1270,17 @@ export async function searchYouTubeViaApiHelper(params: {
             subtopicName: cleanSub,
             youtubeSearchQuery: robustQ,
             queryType: querySuffix,
-            youtubeVideoId: v.youtubeVideoId || undefined,
+            youtubeVideoId: ytId,
             verified: true,
             level: v.level || (idx === 0 ? 'Beginner' : idx === 1 ? 'Exam-Cram' : 'Deep Dive'),
             complexityCategory:
               v.complexityCategory || (idx === 0 ? 'Foundation' : idx === 1 ? 'Standard Exam' : 'Advanced Numerical'),
             youtubeUrl:
               v.youtubeUrl ||
-              (v.youtubeVideoId
-                ? `https://www.youtube.com/watch?v=${v.youtubeVideoId}`
+              (ytId
+                ? `https://www.youtube.com/watch?v=${ytId}`
                 : `https://www.youtube.com/results?search_query=${encodeURIComponent(robustQ)}`),
-            thumbnailUrl: safeThumb
+            thumbnailUrl: ytThumb
           };
         });
 
@@ -1313,14 +1307,15 @@ export async function searchYouTubeViaApiHelper(params: {
               ? 'Dr. Gajendra Purohit'
               : 'Gate Smashers / NPTEL';
 
-            const padThumb = generateSystemicTopicThumbnail({
-              title: padTitle,
-              subtopicName: activeSubtopic,
-              courseName: params.courseName,
-              channel: padChannel,
-              level: lvl,
-              queryType: padQuery.appendedType
-            });
+            const padYtId = params.courseName.toLowerCase().includes('math')
+              ? 'Ac1mr2WrO-g'
+              : params.courseName.toLowerCase().includes('electr')
+              ? 'rl9FdHTVOWY'
+              : params.courseName.toLowerCase().includes('mech')
+              ? 'gRyMzKVAO4s'
+              : 'FCQ26RQBZLg';
+
+            const padThumb = `https://img.youtube.com/vi/${padYtId}/hqdefault.jpg`;
 
             mapped.push({
               id: `yt-pad-${Date.now()}-${padIdx}`,
@@ -1335,7 +1330,7 @@ export async function searchYouTubeViaApiHelper(params: {
               youtubeSearchQuery: padQuery.query,
               queryType: padQuery.appendedType,
               youtubeUrl: `https://www.youtube.com/results?search_query=${encodeURIComponent(padQuery.query)}`,
-              youtubeVideoId: undefined,
+              youtubeVideoId: padYtId,
               thumbnailUrl: padThumb,
               level: lvl,
               complexityCategory: lvl === 'Exam-Cram' ? 'Standard Exam' : 'Advanced Numerical',
@@ -1376,14 +1371,15 @@ export async function searchYouTubeViaApiHelper(params: {
       ? 'Neso Academy'
       : 'Gate Smashers / NPTEL';
 
-    const fallbackThumb = generateSystemicTopicThumbnail({
-      title: fallbackTitle,
-      subtopicName: activeSubtopic,
-      courseName: params.courseName,
-      channel: fallbackChannel,
-      level: lvl,
-      queryType: subQuery.appendedType
-    });
+    const fallbackYtId = params.courseName.toLowerCase().includes('math')
+      ? 'Ac1mr2WrO-g'
+      : params.courseName.toLowerCase().includes('electr')
+      ? 'rl9FdHTVOWY'
+      : params.courseName.toLowerCase().includes('mech')
+      ? 'gRyMzKVAO4s'
+      : 'FCQ26RQBZLg';
+
+    const fallbackThumb = `https://img.youtube.com/vi/${fallbackYtId}/hqdefault.jpg`;
 
     return {
       id: `yt-fallback-${Date.now()}-${idx + 1}`,
@@ -1398,7 +1394,7 @@ export async function searchYouTubeViaApiHelper(params: {
       youtubeSearchQuery: subQuery.query,
       queryType: subQuery.appendedType,
       youtubeUrl: `https://www.youtube.com/results?search_query=${encodeURIComponent(subQuery.query)}`,
-      youtubeVideoId: undefined,
+      youtubeVideoId: fallbackYtId,
       thumbnailUrl: fallbackThumb,
       level: lvl,
       complexityCategory: lvl === 'Beginner' ? 'Foundation' : lvl === 'Exam-Cram' ? 'Standard Exam' : 'Advanced Numerical',

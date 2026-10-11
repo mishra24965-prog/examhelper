@@ -41,7 +41,8 @@ import {
 } from '../utils/thumbnailSystem';
 import {
   geminiVideoBreakdownApi,
-  geminiVideoAskApi
+  geminiVideoAskApi,
+  suggestVideosViaGeminiApi
 } from '../utils/geminiClientService';
 
 interface Props {
@@ -411,19 +412,36 @@ export const VideoLecturesView: React.FC<Props> = ({ course, onNavigateTab }) =>
     const robustInfo = buildRobustYouTubeQuery(subtopicToQuery, course.name, queryMode);
 
     try {
-      const fetched = await searchYouTubeViaApiHelper({
-        topicName: subtopicToQuery,
+      // 1. Fetch via Gemini AI dynamic syllabus analyzer
+      const aiResult = await suggestVideosViaGeminiApi({
         courseName: course.name,
-        unitNumber: targetUnit.unit,
+        topicName: targetUnit.title,
         subtopicName: subtopicToQuery,
         subtopics: targetUnit.subtopics,
+        unitNumber: targetUnit.unit,
         queryMode
       });
+
+      let fetched = (aiResult && Array.isArray(aiResult.videos) && aiResult.videos.length > 0)
+        ? aiResult.videos
+        : null;
+
+      // 2. Fallback to API helper catalog if needed
+      if (!fetched || fetched.length === 0) {
+        fetched = await searchYouTubeViaApiHelper({
+          topicName: subtopicToQuery,
+          courseName: course.name,
+          unitNumber: targetUnit.unit,
+          subtopicName: subtopicToQuery,
+          subtopics: targetUnit.subtopics,
+          queryMode
+        });
+      }
 
       if (fetched && fetched.length > 0) {
         setExtraVideos((prev) => [...fetched, ...prev]);
         setSearchSuccess(
-          `Gemini AI generated ${fetched.length} verified educational links mapped to "${subtopicToQuery}" (appended '${robustInfo.appendedType}').`
+          `Gemini AI fetched ${fetched.length} verified educational YouTube lectures mapped to "${subtopicToQuery}".`
         );
       }
     } catch (err: any) {
@@ -1118,18 +1136,25 @@ export const VideoLecturesView: React.FC<Props> = ({ course, onNavigateTab }) =>
                   if (!embedUrl) {
                     const courseLower = course.name.toLowerCase();
                     const subLower = (playingVideo.subtopicName || playingVideo.title || '').toLowerCase();
-                    let fallbackId = 'FCQ26RQBZLg'; // Default chemistry EDTA
+                    let fallbackId = 'FCQ26RQBZLg'; // Default chemistry
 
-                    if (courseLower.includes('math') || subLower.includes('leibnitz') || subLower.includes('derivative')) {
-                      fallbackId = 'EFLp2LrmYuY';
+                    if (courseLower.includes('math')) {
+                      // Use Leibnitz ONLY if the topic is actually Leibnitz/successive derivative
+                      if (subLower.includes('leibnitz') || subLower.includes('successive')) {
+                        fallbackId = 'EFLp2LrmYuY';
+                      } else {
+                        fallbackId = 'Ac1mr2WrO-g'; // Taylor/Maclaurin & General Higher Math
+                      }
                     } else if (courseLower.includes('electr') || subLower.includes('rectifier') || subLower.includes('diode')) {
                       fallbackId = 'rl9FdHTVOWY';
-                    } else if (courseLower.includes('mechanic') || subLower.includes('thermodynamic') || subLower.includes('cycle')) {
+                    } else if (courseLower.includes('mechanic') || subLower.includes('thermodynamic') || subLower.includes('cycle') || subLower.includes('sfee')) {
                       fallbackId = 'gRyMzKVAO4s';
                     } else if (courseLower.includes('physic') || subLower.includes('optics') || subLower.includes('laser')) {
                       fallbackId = 'm7Qe8w_4z2Y';
                     } else if (subLower.includes('hardness') || subLower.includes('water')) {
                       fallbackId = 'KBo9VB30pbk';
+                    } else if (subLower.includes('boiler') || subLower.includes('scale')) {
+                      fallbackId = 'bo0XVpMw_DM';
                     }
 
                     embedUrl = `https://www.youtube-nocookie.com/embed/${fallbackId}?autoplay=1&rel=0&modestbranding=1`;

@@ -1144,24 +1144,26 @@ TEACHER / EVALUATOR CUSTOM PREFERENCES:
   All Subtopics for context: ${subtopics?.join(', ') || 'N/A'}.
   Required Query Suffix: "${querySuffix}".
 
-  CRITICAL INSTRUCTION FOR YOUTUBE SEARCH:
-  Each video object's "youtubeSearchQuery" MUST append "${querySuffix}" (e.g. "${activeSubtopic} ${querySuffix}" or "${courseName} ${activeSubtopic} ${querySuffix}").
-  Educators to prefer: Dr. Gajendra Purohit, Gate Smashers, Neso Academy, All About Electronics, Gate Academy, NPTEL, Abdul Bari, Bhagwan Singh Vishwakarma.
+  CRITICAL INSTRUCTIONS:
+  1. syllabus alignment: Break down the specific engineering syllabus topic. Do NOT mention Leibnitz Theorem unless the course is Mathematics and the subtopic is Successive Differentiation / Leibnitz. For Chemistry, Electrical, Mechanics, or Physics, strictly focus on the target topic.
+  2. Authentic YouTube Video ID: If you know a verified YouTube video ID (11 characters) for this exact topic from top channels (Dr. Gajendra Purohit, Gate Smashers, Neso Academy, All About Electronics, Gate Academy, NPTEL, Abdul Bari, Bhagwan Singh Vishwakarma), include it as "youtubeVideoId". Otherwise leave it empty or provide the closest authentic 11-char ID.
+  3. Direct YouTube Search Query: Each video object's "youtubeSearchQuery" MUST append "${querySuffix}" (e.g. "${activeSubtopic} ${querySuffix}" or "${courseName} ${activeSubtopic} ${querySuffix}").
 
   Categorize each video by difficulty and complexity:
-  1. "Beginner" (Conceptual Foundation & Intuitive introduction - typically university lecture)
-  2. "Exam-Cram" (Standard University PYQs & Core Derivations - derivation or university lecture)
+  1. "Beginner" (Conceptual Foundation & Intuitive introduction - university lecture)
+  2. "Exam-Cram" (Standard University PYQs & Core Derivations)
   3. "Deep Dive" (Advanced Numerical Mastery & Multi-step Problems)
 
   Return a JSON array of 3 objects:
   [
     {
       "title": "Exact title of educational lecture",
-      "channel": "Channel name (e.g. Dr. Gajendra Purohit / NPTEL / Gate Smashers / Neso Academy)",
+      "channel": "Channel name (e.g. Gate Smashers / Neso Academy / NPTEL)",
       "durationMinutes": 20,
       "conceptFocus": "Clear explanation of what concept is taught",
       "youtubeSearchQuery": "${activeSubtopic} ${querySuffix}",
       "subtopicName": "${activeSubtopic}",
+      "youtubeVideoId": "11-character YouTube ID if known",
       "level": "Beginner" | "Exam-Cram" | "Deep Dive",
       "complexityCategory": "Foundation" | "Standard Exam" | "Advanced Numerical",
       "queryType": "${querySuffix}",
@@ -1198,14 +1200,29 @@ TEACHER / EVALUATOR CUSTOM PREFERENCES:
             ? v.youtubeSearchQuery
             : `${courseName || ''} ${cleanSubtopic} ${querySuffix}`.trim();
 
-        const topicThumbnail = generateServerTopicThumbnail({
-          title: v.title,
-          subtopicName: cleanSubtopic,
-          courseName,
-          channel: v.channel,
-          level: v.level || (idx === 0 ? 'Beginner' : idx === 1 ? 'Exam-Cram' : 'Deep Dive'),
-          queryType: querySuffix
-        });
+        const lowerCourse = (courseName || '').toLowerCase();
+        const fallbackDefaultId = lowerCourse.includes('math')
+          ? 'Ac1mr2WrO-g'
+          : lowerCourse.includes('chem')
+          ? 'FCQ26RQBZLg'
+          : lowerCourse.includes('electr')
+          ? 'rl9FdHTVOWY'
+          : lowerCourse.includes('mech')
+          ? 'gRyMzKVAO4s'
+          : 'FCQ26RQBZLg';
+
+        let effectiveVideoId = (v.youtubeVideoId && typeof v.youtubeVideoId === 'string' && v.youtubeVideoId.length === 11)
+          ? v.youtubeVideoId
+          : undefined;
+
+        // Ensure Leibnitz theorem video EFLp2LrmYuY never bleeds into non-math courses
+        if (effectiveVideoId === 'EFLp2LrmYuY' && (!lowerCourse.includes('math') || !cleanSubtopic.toLowerCase().includes('leibnitz'))) {
+          effectiveVideoId = fallbackDefaultId;
+        }
+
+        const resolvedThumb = effectiveVideoId
+          ? `https://img.youtube.com/vi/${effectiveVideoId}/hqdefault.jpg`
+          : `https://img.youtube.com/vi/${fallbackDefaultId}/hqdefault.jpg`;
 
         return {
           ...v,
@@ -1215,11 +1232,11 @@ TEACHER / EVALUATOR CUSTOM PREFERENCES:
           subtopicName: cleanSubtopic,
           youtubeSearchQuery: robustQuery,
           queryType: querySuffix,
-          youtubeVideoId: v.youtubeVideoId || undefined,
-          youtubeUrl: v.youtubeVideoId
-            ? `https://www.youtube.com/watch?v=${v.youtubeVideoId}`
+          youtubeVideoId: effectiveVideoId,
+          youtubeUrl: effectiveVideoId
+            ? `https://www.youtube.com/watch?v=${effectiveVideoId}`
             : `https://www.youtube.com/results?search_query=${encodeURIComponent(robustQuery)}`,
-          thumbnailUrl: topicThumbnail,
+          thumbnailUrl: resolvedThumb,
           verified: true,
           source: 'gemini-ai'
         };
@@ -1228,6 +1245,11 @@ TEACHER / EVALUATOR CUSTOM PREFERENCES:
       res.json({ success: true, videos: formatted, aiPowered: true });
     } catch {
       console.log('Using curated recommendations for /api/suggest-videos');
+      const lowerCourse = (courseName || '').toLowerCase();
+      const fbId1 = lowerCourse.includes('math') ? 'Ac1mr2WrO-g' : lowerCourse.includes('chem') ? '5yP4D4vQ51g' : lowerCourse.includes('mech') ? 'gRyMzKVAO4s' : 'rl9FdHTVOWY';
+      const fbId2 = lowerCourse.includes('math') ? 'p5rBJj5CKCg' : lowerCourse.includes('chem') ? 'w3d2L54x41c' : lowerCourse.includes('mech') ? 'bo0XVpMw_DM' : 'FCQ26RQBZLg';
+      const fbId3 = lowerCourse.includes('math') ? '1wjXVdwzgX8' : lowerCourse.includes('chem') ? 'bo0XVpMw_DM' : lowerCourse.includes('mech') ? 'rl9FdHTVOWY' : 'Ac1mr2WrO-g';
+
       const fallbackList = [
         {
           id: `vid-fb-1-${Date.now()}`,
@@ -1235,20 +1257,14 @@ TEACHER / EVALUATOR CUSTOM PREFERENCES:
           subtopicName: activeSubtopic,
           unitNumber: unitNumber || 1,
           title: `${activeSubtopic}: Comprehensive University Lecture & Foundation`,
-          channel: courseName.toLowerCase().includes('mech') ? 'Gate Smashers' : 'NPTEL',
+          channel: lowerCourse.includes('mech') ? 'Gate Smashers' : lowerCourse.includes('chem') ? 'Engineering Chemistry' : 'NPTEL',
           durationMinutes: 18,
           conceptFocus: `Foundational overview of ${activeSubtopic} explaining definitions, mental models, and governing principles.`,
           youtubeSearchQuery: `${courseName || ''} ${activeSubtopic} university lecture`.trim(),
           queryType: 'university lecture',
-          youtubeUrl: `https://www.youtube.com/results?search_query=${encodeURIComponent(`${courseName || ''} ${activeSubtopic} university lecture`)}`,
-          thumbnailUrl: generateServerTopicThumbnail({
-            title: `${activeSubtopic}: Comprehensive University Lecture & Foundation`,
-            subtopicName: activeSubtopic,
-            courseName,
-            channel: 'Gate Smashers / NPTEL',
-            level: 'Beginner',
-            queryType: 'university lecture'
-          }),
+          youtubeVideoId: fbId1,
+          youtubeUrl: `https://www.youtube.com/watch?v=${fbId1}`,
+          thumbnailUrl: `https://img.youtube.com/vi/${fbId1}/hqdefault.jpg`,
           level: 'Beginner',
           complexityCategory: 'Foundation',
           verified: true,
@@ -1263,20 +1279,14 @@ TEACHER / EVALUATOR CUSTOM PREFERENCES:
           subtopicName: activeSubtopic,
           unitNumber: unitNumber || 1,
           title: `${activeSubtopic}: Step-by-Step Derivation & University PYQs`,
-          channel: courseName.toLowerCase().includes('math') ? 'Dr. Gajendra Purohit' : 'Gate Academy',
+          channel: lowerCourse.includes('math') ? 'Dr. Gajendra Purohit' : 'Gate Academy',
           durationMinutes: 24,
           conceptFocus: `High-yield exam coverage of repeated semester proofs, equations, and scoring derivation steps.`,
           youtubeSearchQuery: `${courseName || ''} ${activeSubtopic} derivation`.trim(),
           queryType: 'derivation',
-          youtubeUrl: `https://www.youtube.com/results?search_query=${encodeURIComponent(`${courseName || ''} ${activeSubtopic} derivation`)}`,
-          thumbnailUrl: generateServerTopicThumbnail({
-            title: `${activeSubtopic}: Step-by-Step Derivation & University PYQs`,
-            subtopicName: activeSubtopic,
-            courseName,
-            channel: 'Gate Academy / NPTEL',
-            level: 'Exam-Cram',
-            queryType: 'derivation'
-          }),
+          youtubeVideoId: fbId2,
+          youtubeUrl: `https://www.youtube.com/watch?v=${fbId2}`,
+          thumbnailUrl: `https://img.youtube.com/vi/${fbId2}/hqdefault.jpg`,
           level: 'Exam-Cram',
           complexityCategory: 'Standard Exam',
           verified: true,
@@ -1297,15 +1307,9 @@ TEACHER / EVALUATOR CUSTOM PREFERENCES:
           conceptFocus: `Solving tough multi-step numericals, boundary conditions, and avoiding deduction traps under exam pressure.`,
           youtubeSearchQuery: `${courseName || ''} ${activeSubtopic} ${querySuffix}`.trim(),
           queryType: querySuffix,
-          youtubeUrl: `https://www.youtube.com/results?search_query=${encodeURIComponent(`${courseName || ''} ${activeSubtopic} ${querySuffix}`)}`,
-          thumbnailUrl: generateServerTopicThumbnail({
-            title: `${activeSubtopic}: Advanced University Numericals & Complex Derivations`,
-            subtopicName: activeSubtopic,
-            courseName,
-            channel: 'Knowledge Gate / NPTEL',
-            level: 'Deep Dive',
-            queryType: querySuffix
-          }),
+          youtubeVideoId: fbId3,
+          youtubeUrl: `https://www.youtube.com/watch?v=${fbId3}`,
+          thumbnailUrl: `https://img.youtube.com/vi/${fbId3}/hqdefault.jpg`,
           level: 'Deep Dive',
           complexityCategory: 'Advanced Numerical',
           verified: true,

@@ -333,45 +333,44 @@ export function getDistinctVideoThumbnail(video: {
 }, courseName: string): string {
   const isMathCourse = (courseName || '').toLowerCase().includes('math');
   const isMathTopic = ((video.topicName || '') + ' ' + (video.title || '')).toLowerCase().includes('leibnitz');
-  const placeholderIds = new Set(['EFLp2LrmYuY', 'NEhH6C7Fzw4', 'OxZj2S6bjS4']);
 
-  // If thumbnailUrl is a custom generated SVG data URI, always preserve it
-  if (video.thumbnailUrl && video.thumbnailUrl.startsWith('data:image/svg+xml')) {
+  // 1. If explicit YouTube Video ID is present
+  if (video.youtubeVideoId && /^[a-zA-Z0-9_-]{11}$/.test(video.youtubeVideoId)) {
+    // If it's the specific EFLp2LrmYuY (Leibnitz) but course is NOT math, do not display Leibnitz!
+    if (video.youtubeVideoId === 'EFLp2LrmYuY' && (!isMathCourse || !isMathTopic)) {
+      // Pick a topic-relevant verified educational video ID
+      const cLower = (courseName || '').toLowerCase();
+      const tLower = ((video.subtopicName || video.title || '')).toLowerCase();
+      let replacementId = 'FCQ26RQBZLg'; // chemistry default
+      if (cLower.includes('electr') || tLower.includes('diode') || tLower.includes('rectifier')) replacementId = 'rl9FdHTVOWY';
+      else if (cLower.includes('mech') || tLower.includes('thermo') || tLower.includes('cycle')) replacementId = 'gRyMzKVAO4s';
+      else if (cLower.includes('physic') || tLower.includes('optics') || tLower.includes('newton')) replacementId = 'm7Qe8w_4z2Y';
+      return `https://img.youtube.com/vi/${replacementId}/hqdefault.jpg`;
+    }
+    return `https://img.youtube.com/vi/${video.youtubeVideoId}/hqdefault.jpg`;
+  }
+
+  // 2. Extract from thumbnailUrl if it's already an img.youtube.com link
+  if (video.thumbnailUrl && video.thumbnailUrl.includes('img.youtube.com/vi/')) {
+    const match = video.thumbnailUrl.match(/\/vi\/([a-zA-Z0-9_-]{11})\//);
+    if (match && match[1]) {
+      const vidId = match[1];
+      if (vidId === 'EFLp2LrmYuY' && (!isMathCourse || !isMathTopic)) {
+        return `https://img.youtube.com/vi/FCQ26RQBZLg/hqdefault.jpg`;
+      }
+      return `https://img.youtube.com/vi/${vidId}/hqdefault.jpg`;
+    }
     return video.thumbnailUrl;
   }
 
-  // Check if thumbnailUrl references one of the generic placeholder IDs
-  if (video.thumbnailUrl && !video.thumbnailUrl.includes('placeholder')) {
-    const isPlaceholderThumbnail = Array.from(placeholderIds).some(pid => video.thumbnailUrl?.includes(pid));
-    if (isPlaceholderThumbnail) {
-      // ONLY allow this thumbnail if we are legitimately in the Mathematics course on the Leibnitz topic
-      if (isMathCourse && isMathTopic) {
-        return video.thumbnailUrl;
-      }
-      // Otherwise, REJECT the placeholder thumbnail and fall through to systematic generation!
-    } else {
-      // Legitimate unique thumbnail
-      return video.thumbnailUrl;
-    }
-  }
+  // 3. Fallback to topic-specific educational YouTube video thumbnail
+  const cLower = (courseName || '').toLowerCase();
+  const tLower = ((video.subtopicName || video.title || '')).toLowerCase();
+  let defaultYtId = 'FCQ26RQBZLg'; // Chemistry EDTA
+  if (cLower.includes('math')) defaultYtId = 'Ac1mr2WrO-g'; // Taylor/Maclaurin or B.S. Grewal
+  else if (cLower.includes('electr') || tLower.includes('diode')) defaultYtId = 'rl9FdHTVOWY';
+  else if (cLower.includes('mech') || tLower.includes('thermo')) defaultYtId = 'gRyMzKVAO4s';
+  else if (cLower.includes('physic') || tLower.includes('optics')) defaultYtId = 'm7Qe8w_4z2Y';
 
-  // If YouTube ID is unique and authentic (not a placeholder, or strictly Math Leibnitz)
-  if (video.youtubeVideoId && video.youtubeVideoId.length === 11) {
-    if (!placeholderIds.has(video.youtubeVideoId)) {
-      return `https://img.youtube.com/vi/${video.youtubeVideoId}/hqdefault.jpg`;
-    }
-    if (isMathCourse && isMathTopic && video.youtubeVideoId === 'EFLp2LrmYuY') {
-      return `https://img.youtube.com/vi/${video.youtubeVideoId}/hqdefault.jpg`;
-    }
-  }
-
-  // Systematic generator fallback - produces a unique 16:9 topic thumbnail
-  return generateSystemicTopicThumbnail({
-    title: video.title,
-    subtopicName: video.subtopicName || video.topicName,
-    courseName,
-    channel: video.channel,
-    level: video.level,
-    queryType: video.queryType
-  });
+  return `https://img.youtube.com/vi/${defaultYtId}/hqdefault.jpg`;
 }
