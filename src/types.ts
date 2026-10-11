@@ -23,6 +23,8 @@ export interface Question {
   tags: string[];
   paperId?: string;
   paperName?: string;
+  isOrganizerQuestion?: boolean;
+  uploadedByUserId?: string;
 }
 
 export interface MindMapBranch {
@@ -80,11 +82,35 @@ export interface TopicWeightage {
   targetExamScope?: ExamType | 'all';
 }
 
+export interface UserTeacherPreference {
+  teacherName?: string;
+  preferredFormatting: {
+    flowchart: boolean;
+    diagram: boolean;
+    stepByStep: boolean;
+    boxedAnswer: boolean;
+    strictDeductions: boolean;
+  };
+  customInstructions: string;
+  languagePreference?: 'English' | 'Hinglish' | 'Hindi';
+  lastUpdated?: string;
+}
+
 export interface StudentProfile {
   name: string;
   college: string;
   branch?: string;
   rollNumber?: string;
+  role?: 'student' | 'organizer';
+  userId?: string;
+  teacherPreferences?: Record<string, UserTeacherPreference>;
+  firebaseConfig?: {
+    apiKey?: string;
+    authDomain?: string;
+    projectId?: string;
+    storageBucket?: string;
+    appId?: string;
+  };
 }
 
 export interface SubjectTaskItem {
@@ -134,6 +160,10 @@ export interface VideoRecommendation {
   verified?: boolean;
   queryType?: 'university lecture' | 'derivation';
   keyTimestamps?: { time: string; topic: string }[];
+  viewCountStr?: string;
+  ratingScore?: number;
+  reviewCountStr?: string;
+  isMostViewed?: boolean;
 }
 
 export interface SpacedRepetitionSession {
@@ -165,6 +195,14 @@ export interface StudyPlan {
   strategicAdvice: string[];
 }
 
+export interface FlowchartNode {
+  stepNumber: number;
+  title: string;
+  detail: string;
+  arrowTo?: string;
+  highlight?: boolean;
+}
+
 export interface ModelAnswer {
   questionId: string;
   questionText: string;
@@ -176,6 +214,8 @@ export interface ModelAnswer {
   }[];
   fullAnswerMarkdown: string;
   diagramDescription?: string;
+  flowchartSteps?: FlowchartNode[];
+  tailoredTeacherNotes?: string;
   teacherProTip: string;
   commonPitfallToAvoid: string;
 }
@@ -191,6 +231,9 @@ export interface ExamPaperRecord {
   rawText?: string;
   cleanedText?: string;
   sourceType: 'pdf' | 'image' | 'text' | 'sample';
+  isOrganizerPaper?: boolean;
+  uploadedByUserId?: string;
+  uploadedByUserName?: string;
 }
 
 export interface DictionaryTerm {

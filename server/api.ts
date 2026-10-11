@@ -671,11 +671,25 @@ CRITICAL REQUIREMENTS:
 
   // 3. Solve PYQ with Teacher-Graded Model Answer
   app.post('/api/solve-pyq', asyncHandler(async (req, res) => {
-    const { questionText, marks, topicName, courseName, referenceBook } = req.body || {};
+    const { questionText, marks, topicName, courseName, referenceBook, teacherPreference } = req.body || {};
     try {
       const ai = getAiClient();
       if (!ai) {
         throw new Error('Gemini API key is not configured.');
+      }
+
+      let customTeacherClause = '';
+      if (teacherPreference) {
+        customTeacherClause = `
+TEACHER / EVALUATOR CUSTOM PREFERENCES:
+- Professor / Evaluator: ${teacherPreference.teacherName || 'College Faculty'}
+- Required Formatting:
+  ${teacherPreference.preferredFormatting?.flowchart ? '• Mandatory Flowchart: Generate an array of 4-6 sequential "flowchartSteps" representing the chemical reaction pathway, thermodynamic cycle, algorithm, or derivation sequence.' : ''}
+  ${teacherPreference.preferredFormatting?.diagram ? '• Detailed diagram/circuit schematic description with labeled nodes.' : ''}
+  ${teacherPreference.preferredFormatting?.stepByStep ? '• Step-by-step breakdown without skipping intermediate arithmetic.' : ''}
+  ${teacherPreference.preferredFormatting?.boxedAnswer ? '• Boxed final answer with engineering/SI units.' : ''}
+- Student Notes in Their Own Words: "${teacherPreference.customInstructions || 'Follow strict university grading.'}"
+`;
       }
 
       const prompt = `You are a university chief examiner preparing a student model answer for this exam question:
@@ -686,6 +700,7 @@ CRITICAL REQUIREMENTS:
 
   Question:
   "${questionText}"
+  ${customTeacherClause}
 
   CRITICAL MATHEMATICAL FORMATTING RULES:
   1. REPLACE ALL COMPLEX LATEX WITH READABLE, STANDARD MATHEMATICAL NOTATION.
@@ -708,7 +723,11 @@ CRITICAL REQUIREMENTS:
       { "step": "Step 1: ...", "marksAwarded": 2, "teacherExpectation": "..." }
     ],
     "fullAnswerMarkdown": "...",
+    "flowchartSteps": [
+      { "stepNumber": 1, "title": "...", "detail": "...", "arrowTo": "..." }
+    ],
     "diagramDescription": "...",
+    "tailoredTeacherNotes": "...",
     "teacherProTip": "...",
     "commonPitfallToAvoid": "..."
   }`;
@@ -921,6 +940,40 @@ CRITICAL REQUIREMENTS:
   • State the physical conclusion / engineering significance in one clear concluding sentence.`;
       }
 
+      const defaultFlowchart: any[] = [];
+      if (qLower.includes('edta') || qLower.includes('hardness') || tLower.includes('water')) {
+        defaultFlowchart.push(
+          { stepNumber: 1, title: 'Sample Preparation', detail: 'Measure 50 mL water sample; add 2 mL NH4OH-NH4Cl buffer to lock pH 9-10', arrowTo: 'Step 2' },
+          { stepNumber: 2, title: 'Add EBT Indicator', detail: 'EBT forms unstable wine-red complex: [Ca²⁺/Mg²⁺] + EBT → [M-EBT] (Wine Red)', arrowTo: 'Step 3' },
+          { stepNumber: 3, title: 'EDTA Titration', detail: 'Add standard 0.01M EDTA from burette; EDTA forms stable colorless chelate with Ca²⁺/Mg²⁺', arrowTo: 'Step 4' },
+          { stepNumber: 4, title: 'Sharp End-Point', detail: 'At equivalence point, EDTA displaces EBT: Wine Red complex turns to Steel Blue', arrowTo: 'Step 5' },
+          { stepNumber: 5, title: 'Hardness Evaluation', detail: 'Total Hardness = (V_EDTA × M × 1000) / V_sample ppm as CaCO3 equivalent', highlight: true }
+        );
+      } else if (qLower.includes('bomb') || qLower.includes('calorific') || tLower.includes('fuel')) {
+        defaultFlowchart.push(
+          { stepNumber: 1, title: 'Fuel Pellet Weighing', detail: 'Weigh 0.85g coal pellet into silica crucible', arrowTo: 'Step 2' },
+          { stepNumber: 2, title: 'Oxygen Pressurization', detail: 'Charge bomb with pure oxygen gas at 25-30 atm', arrowTo: 'Step 3' },
+          { stepNumber: 3, title: 'Initial Temp Baseline', detail: 'Submerge in 2200g water and record initial temperature T1', arrowTo: 'Step 4' },
+          { stepNumber: 4, title: 'Ignition & Heat Release', detail: 'Fire ignition wire to combust fuel; observe peak temperature T2', arrowTo: 'Step 5' },
+          { stepNumber: 5, title: 'Compute HCV & LCV', detail: 'HCV = (W + w)ΔT / m cal/g; LCV = HCV - 0.09 H × 587 cal/g', highlight: true }
+        );
+      } else if (qLower.includes('rectifier') || qLower.includes('ripple') || tLower.includes('diode')) {
+        defaultFlowchart.push(
+          { stepNumber: 1, title: 'AC Secondary Signal', detail: 'Center-tapped transformer provides v_s = V_m sin(ωt)', arrowTo: 'Step 2' },
+          { stepNumber: 2, title: 'Positive Half Cycle', detail: 'Diode D1 is Forward Biased (ON), D2 is Reverse Biased (OFF)', arrowTo: 'Step 3' },
+          { stepNumber: 3, title: 'Negative Half Cycle', detail: 'Diode D2 is Forward Biased (ON), D1 is Reverse Biased (OFF)', arrowTo: 'Step 4' },
+          { stepNumber: 4, title: 'Full Wave Rectification', detail: 'Current flows in identical direction through R_L across both half-cycles', arrowTo: 'Step 5' },
+          { stepNumber: 5, title: 'Calculate Ripple Factor', detail: 'r = sqrt((I_rms/I_dc)² - 1) = sqrt((1.11)² - 1) = 0.482', highlight: true }
+        );
+      } else {
+        defaultFlowchart.push(
+          { stepNumber: 1, title: 'State Governing Law', detail: 'Declare parameters, coordinate axes, and base physical theorem', arrowTo: 'Step 2' },
+          { stepNumber: 2, title: 'Apply Boundary Conditions', detail: 'Identify boundary conditions and system constraints', arrowTo: 'Step 3' },
+          { stepNumber: 3, title: 'Step-by-Step Derivation', detail: 'Substitute parameters without skipping intermediate arithmetic', arrowTo: 'Step 4' },
+          { stepNumber: 4, title: 'Box Final Evaluated Result', detail: 'Box evaluated scalar result with standard SI engineering units', highlight: true }
+        );
+      }
+
       res.json({
         success: true,
         solution: {
@@ -930,7 +983,9 @@ CRITICAL REQUIREMENTS:
             { step: 'Step 3: Final Evaluated Result & Units', marksAwarded: 2, teacherExpectation: 'Box the final scalar value with correct engineering units.' }
           ],
           fullAnswerMarkdown,
+          flowchartSteps: defaultFlowchart,
           diagramDescription: diagramDesc,
+          tailoredTeacherNotes: teacherPreference?.customInstructions ? `Tailored to Professor Instructions: "${teacherPreference.customInstructions}"` : undefined,
           teacherProTip: proTip,
           commonPitfallToAvoid: pitfall
         },

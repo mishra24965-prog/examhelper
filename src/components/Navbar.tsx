@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Course } from '../types';
 import {
   BookOpen,
@@ -16,6 +16,7 @@ import {
   ChevronRight,
   Layers
 } from 'lucide-react';
+import { getUserRole, setUserRole as persistUserRole } from '../utils/userTeacherSettingsService';
 
 interface NavbarProps {
   courses: Course[];
@@ -42,6 +43,12 @@ export const Navbar: React.FC<NavbarProps> = ({
   currentSemester,
   onSelectSemester,
 }) => {
+  const [userRole, setUserRoleState] = useState<'student' | 'organizer'>(() => getUserRole());
+
+  const setUserRole = (role: 'student' | 'organizer') => {
+    setUserRoleState(role);
+    persistUserRole(role);
+  };
   const tabs = [
     {
       id: 'mindmap',
@@ -145,8 +152,36 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
           </div>
 
-          {/* Right: Quick Add action */}
+          {/* Right: User Role Toggle (Student vs Organizer) & Quick Add action */}
           <div className="flex items-center gap-2.5 shrink-0">
+            {/* Role Switcher Pill */}
+            <div className="flex items-center bg-slate-950/80 p-0.5 rounded-xl border border-slate-800 text-xs font-semibold">
+              <button
+                onClick={() => setUserRole('student')}
+                className={`px-2.5 py-1 rounded-lg transition flex items-center gap-1 ${
+                  userRole === 'student'
+                    ? 'bg-indigo-600 text-white shadow-sm'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+                title="Student Mode: Upload your section's MST papers and get personalized teacher solutions"
+              >
+                <span>🎓</span>
+                <span className="hidden sm:inline">Student</span>
+              </button>
+              <button
+                onClick={() => setUserRole('organizer')}
+                className={`px-2.5 py-1 rounded-lg transition flex items-center gap-1 ${
+                  userRole === 'organizer'
+                    ? 'bg-amber-500/25 text-amber-300 border border-amber-500/30 font-bold shadow-sm'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+                title="Organizer Mode: Upload official master question papers visible to all college students"
+              >
+                <span>⭐</span>
+                <span className="hidden sm:inline">Organizer</span>
+              </button>
+            </div>
+
             <button
               onClick={onOpenAddCourse}
               title="Add custom syllabus course"

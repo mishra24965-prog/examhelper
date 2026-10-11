@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Course, TeacherDemandInsight, SyllabusTopic } from '../types';
+import React, { useState, useEffect } from 'react';
+import { Course, TeacherDemandInsight, SyllabusTopic, UserTeacherPreference } from '../types';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -14,9 +14,18 @@ import {
   ArrowRight,
   ShieldAlert,
   BookmarkCheck,
-  Brain
+  Brain,
+  Workflow,
+  Settings,
+  Save,
+  Check
 } from 'lucide-react';
 import { analyzeTeacherDemandsApi } from '../utils/geminiClientService';
+import {
+  getTeacherPreferenceForCourse,
+  saveTeacherPreferenceForCourse
+} from '../utils/userTeacherSettingsService';
+import { syncTeacherPreferencesToDatabase } from '../utils/firebaseSyncService';
 
 interface Props {
   course: Course;
@@ -61,6 +70,22 @@ export const TeacherDemandsView: React.FC<Props> = ({
       bookSectionToPrioritize: `${selectedTopic?.referenceBookChapters || 'Prescribed chapters'}: Focus heavily on solved examples and summary theorem statements.`,
       bookSectionsToSkip: 'Dense theoretical proofs and optional appendices not highlighted in class lectures.'
     };
+
+  const [teacherPref, setTeacherPref] = useState<UserTeacherPreference>(() =>
+    getTeacherPreferenceForCourse(course.id)
+  );
+  const [prefSaveSuccess, setPrefSaveSuccess] = useState(false);
+
+  useEffect(() => {
+    setTeacherPref(getTeacherPreferenceForCourse(course.id));
+  }, [course.id]);
+
+  const handleSaveTeacherPref = () => {
+    saveTeacherPreferenceForCourse(course.id, teacherPref);
+    syncTeacherPreferencesToDatabase(course.id, teacherPref);
+    setPrefSaveSuccess(true);
+    setTimeout(() => setPrefSaveSuccess(false), 2500);
+  };
 
   const handleRunAiAnalysis = async () => {
     if (!selectedTopic) return;
@@ -120,20 +145,252 @@ export const TeacherDemandsView: React.FC<Props> = ({
               </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-              Teacher Grading Mindset & High-Yield Textbook Chapters
+              Teacher Mindset & High-Yield Exam Guide
             </h1>
             <p className="text-sm text-slate-300 max-w-2xl leading-relaxed">
-              Studying hundreds of textbook pages before MSTs and End-sems is impossible. This view pinpoints the exact textbook chapters to master, what your university evaluator awards marks for, and common deduction traps.
+              Every college teacher has their own grading habits. Tell ExamIntel what your teacher prefers (flowcharts, diagrams, formulas) in plain language, and Gemini will automatically tailor step-by-step PYQ solutions for this subject.
             </p>
           </div>
 
           <div className="bg-slate-950/80 p-4 rounded-2xl border border-amber-500/30 text-xs text-slate-300 max-w-xs shrink-0 shadow-inner">
             <div className="font-bold flex items-center gap-1.5 text-amber-400 mb-1">
               <Zap className="w-3.5 h-3.5" />
-              <span>The 80/20 Revision Rule</span>
+              <span>Smart PYQ Solver Sync</span>
             </div>
-            Mastering step-by-step marking rubrics and solved textbook examples yields ~85% of exam marks in ~30% of study time.
+            When you solve questions in the PYQ Bank, Gemini follows these teacher rules automatically.
           </div>
+        </div>
+      </div>
+
+      {/* TEACHER MINDSET STUDIO: Personalize Teacher Rules for this Subject */}
+      <div className="bg-gradient-to-br from-indigo-950/40 via-purple-950/30 to-slate-900/80 border border-indigo-500/30 rounded-3xl p-6 shadow-xl backdrop-blur-xl space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-indigo-600/30 border border-indigo-500/40 flex items-center justify-center text-indigo-300">
+              <Settings className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-base font-bold text-white flex items-center gap-2">
+                <span>Personalized Teacher Mindset: {course.name}</span>
+                <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-mono">
+                  Active
+                </span>
+              </h2>
+              <p className="text-xs text-slate-400">
+                Configure your subject teacher's style. Saved locally and synced to Firebase.
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={handleSaveTeacherPref}
+            className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs flex items-center gap-2 transition cursor-pointer shadow-md shadow-emerald-900/40 self-start sm:self-auto"
+          >
+            {prefSaveSuccess ? (
+              <>
+                <Check className="w-4 h-4" />
+                <span>Saved & Synced!</span>
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4" />
+                <span>Save Teacher Mindset</span>
+              </>
+            )}
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Teacher Name Input */}
+          <div className="lg:col-span-2 space-y-1.5">
+            <label className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+              <span>Teacher / Professor Name</span>
+            </label>
+            <input
+              type="text"
+              value={teacherPref.teacherName || ''}
+              onChange={(e) =>
+                setTeacherPref((prev) => ({ ...prev, teacherName: e.target.value }))
+              }
+              placeholder="e.g. Prof. Sharma / Chemistry Faculty"
+              className="w-full bg-slate-950/80 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+            />
+          </div>
+
+          {/* Language Preference */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-semibold text-slate-300">Explanation Language</label>
+            <select
+              value={teacherPref.languagePreference || 'English'}
+              onChange={(e) =>
+                setTeacherPref((prev) => ({ ...prev, languagePreference: e.target.value }))
+              }
+              className="w-full bg-slate-950/80 border border-slate-700/80 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+            >
+              <option value="English">English (University Exam Standard)</option>
+              <option value="Hinglish">Hinglish (Easy to understand concepts)</option>
+              <option value="Hindi">Hindi (Technical)</option>
+            </select>
+          </div>
+
+          {/* Last Updated badge */}
+          <div className="flex flex-col justify-end">
+            <div className="p-2.5 rounded-xl bg-slate-950/60 border border-slate-800 text-[11px] text-slate-400">
+              <span className="text-indigo-300 font-semibold block">Last Updated:</span>
+              <span>{teacherPref.lastUpdated || 'Initial setup'}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Formatting Toggles */}
+        <div className="space-y-2">
+          <label className="text-xs font-semibold text-slate-300">
+            What does your teacher award maximum marks for?
+          </label>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {/* Flowcharts */}
+            <button
+              type="button"
+              onClick={() =>
+                setTeacherPref((prev) => ({
+                  ...prev,
+                  preferredFormatting: {
+                    ...prev.preferredFormatting,
+                    flowchart: !prev.preferredFormatting.flowchart
+                  }
+                }))
+              }
+              className={`p-3 rounded-2xl border text-left transition flex items-center justify-between cursor-pointer ${
+                teacherPref.preferredFormatting.flowchart
+                  ? 'bg-indigo-600/25 border-indigo-500 text-white shadow-inner'
+                  : 'bg-slate-950/50 border-slate-800 text-slate-400 hover:border-slate-700'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <Workflow className="w-4 h-4 text-indigo-400" />
+                <span className="text-xs font-semibold">Flowcharts</span>
+              </div>
+              <span className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center text-[9px] ${
+                teacherPref.preferredFormatting.flowchart
+                  ? 'bg-indigo-500 border-indigo-400 text-white'
+                  : 'border-slate-600'
+              }`}>
+                {teacherPref.preferredFormatting.flowchart ? '✓' : ''}
+              </span>
+            </button>
+
+            {/* Diagrams */}
+            <button
+              type="button"
+              onClick={() =>
+                setTeacherPref((prev) => ({
+                  ...prev,
+                  preferredFormatting: {
+                    ...prev.preferredFormatting,
+                    diagram: !prev.preferredFormatting.diagram
+                  }
+                }))
+              }
+              className={`p-3 rounded-2xl border text-left transition flex items-center justify-between cursor-pointer ${
+                teacherPref.preferredFormatting.diagram
+                  ? 'bg-indigo-600/25 border-indigo-500 text-white shadow-inner'
+                  : 'bg-slate-950/50 border-slate-800 text-slate-400 hover:border-slate-700'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <Target className="w-4 h-4 text-purple-400" />
+                <span className="text-xs font-semibold">Diagrams</span>
+              </div>
+              <span className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center text-[9px] ${
+                teacherPref.preferredFormatting.diagram
+                  ? 'bg-purple-500 border-purple-400 text-white'
+                  : 'border-slate-600'
+              }`}>
+                {teacherPref.preferredFormatting.diagram ? '✓' : ''}
+              </span>
+            </button>
+
+            {/* Step by Step */}
+            <button
+              type="button"
+              onClick={() =>
+                setTeacherPref((prev) => ({
+                  ...prev,
+                  preferredFormatting: {
+                    ...prev.preferredFormatting,
+                    stepByStep: !prev.preferredFormatting.stepByStep
+                  }
+                }))
+              }
+              className={`p-3 rounded-2xl border text-left transition flex items-center justify-between cursor-pointer ${
+                teacherPref.preferredFormatting.stepByStep
+                  ? 'bg-indigo-600/25 border-indigo-500 text-white shadow-inner'
+                  : 'bg-slate-950/50 border-slate-800 text-slate-400 hover:border-slate-700'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                <span className="text-xs font-semibold">Step-by-Step</span>
+              </div>
+              <span className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center text-[9px] ${
+                teacherPref.preferredFormatting.stepByStep
+                  ? 'bg-emerald-500 border-emerald-400 text-white'
+                  : 'border-slate-600'
+              }`}>
+                {teacherPref.preferredFormatting.stepByStep ? '✓' : ''}
+              </span>
+            </button>
+
+            {/* Boxed Final Answers */}
+            <button
+              type="button"
+              onClick={() =>
+                setTeacherPref((prev) => ({
+                  ...prev,
+                  preferredFormatting: {
+                    ...prev.preferredFormatting,
+                    boxedAnswer: !prev.preferredFormatting.boxedAnswer
+                  }
+                }))
+              }
+              className={`p-3 rounded-2xl border text-left transition flex items-center justify-between cursor-pointer ${
+                teacherPref.preferredFormatting.boxedAnswer
+                  ? 'bg-indigo-600/25 border-indigo-500 text-white shadow-inner'
+                  : 'bg-slate-950/50 border-slate-800 text-slate-400 hover:border-slate-700'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <BookmarkCheck className="w-4 h-4 text-amber-400" />
+                <span className="text-xs font-semibold">Box Final Units</span>
+              </div>
+              <span className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center text-[9px] ${
+                teacherPref.preferredFormatting.boxedAnswer
+                  ? 'bg-amber-500 border-amber-400 text-white'
+                  : 'border-slate-600'
+              }`}>
+                {teacherPref.preferredFormatting.boxedAnswer ? '✓' : ''}
+              </span>
+            </button>
+          </div>
+        </div>
+
+        {/* Natural Language Custom Instructions in Student's Own Words / Hinglish */}
+        <div className="space-y-1.5">
+          <label className="text-xs font-semibold text-slate-300 flex items-center justify-between">
+            <span>Teacher Mindset in your own words (Write in English or Hinglish):</span>
+            <span className="text-[11px] text-indigo-400 font-normal">
+              Gemini understands natural classroom habits!
+            </span>
+          </label>
+          <textarea
+            rows={2}
+            value={teacherPref.customInstructions || ''}
+            onChange={(e) =>
+              setTeacherPref((prev) => ({ ...prev, customInstructions: e.target.value }))
+            }
+            placeholder="e.g. My chemistry sir loves flowcharts for reaction mechanisms, gives zero marks if units are omitted in numericals, and prefers bullet points rather than paragraphs."
+            className="w-full bg-slate-950/80 border border-slate-700/80 rounded-xl p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 leading-relaxed resize-none"
+          />
         </div>
       </div>
 

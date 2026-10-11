@@ -4,6 +4,9 @@ import { inferQuestionMapping } from '../utils/analyticsEngine';
 import { getPresetPapersForCourse } from '../utils/paperStorage';
 import { checkTextAgainstDictionary, DEFAULT_MATH1_DICTIONARY } from '../utils/courseDictionary';
 import { extractTextApi, cleanTextApi, analyzePaperApi } from '../utils/geminiClientService';
+import { getUserRole, setUserRole } from '../utils/userTeacherSettingsService';
+import { loadStudentProfile } from '../utils/studentProfile';
+import { syncPaperToDatabase } from '../utils/firebaseSyncService';
 import {
   X,
   UploadCloud,
@@ -23,7 +26,9 @@ import {
   FileCode,
   Check,
   Database,
-  Search
+  Search,
+  ShieldCheck,
+  GraduationCap
 } from 'lucide-react';
 
 interface Props {
@@ -41,6 +46,7 @@ export const UploadPaperModal: React.FC<Props> = ({
 }) => {
   const [step, setStep] = useState<'input' | 'text_review' | 'questions_review'>('input');
   const [activeMode, setActiveMode] = useState<'preset' | 'file' | 'text'>('file');
+  const [userRole, setLocalUserRole] = useState<'student' | 'organizer'>(() => getUserRole());
   const [paperYear, setPaperYear] = useState<number>(2024);
   const [examType, setExamType] = useState<ExamType>('MST-1');
   const [paperTitle, setPaperTitle] = useState<string>('MST-1 Examination 2024');
@@ -269,6 +275,9 @@ export const UploadPaperModal: React.FC<Props> = ({
     const paperId = `paper-${Date.now()}`;
     const finalPaperName = paperTitle.trim() || `${examType} Examination ${paperYear}`;
     const totalMarks = extractedQuestions.reduce((sum, q) => sum + (q.marks || 0), 0);
+    const profile = loadStudentProfile();
+    const isOrganizer = userRole === 'organizer';
+
     const paperRecord: ExamPaperRecord = {
       id: paperId,
       name: finalPaperName,
@@ -279,8 +288,20 @@ export const UploadPaperModal: React.FC<Props> = ({
       totalMarks: totalMarks > 0 ? totalMarks : 20,
       rawText,
       cleanedText,
-      sourceType: activeMode === 'file' ? (fileType === 'pdf' ? 'pdf' : 'image') : (activeMode === 'preset' ? 'sample' : 'text')
+      sourceType: activeMode === 'file' ? (fileType === 'pdf' ? 'pdf' : 'image') : (activeMode === 'preset' ? 'sample' : 'text'),
+      isOrganizerPaper: isOrganizer,
+      uploadedByUserId: profile.userId || 'local-user',
+      uploadedByUserName: profile.name || (isOrganizer ? 'Course Organizer' : 'Student')
     };
+
+    // Sync to database
+    syncPaperToDatabase({
+      courseId: course.id,
+      paper: paperRecord,
+      isOrganizer,
+      userId: profile.userId || 'local-user',
+      userName: profile.name || (isOrganizer ? 'Course Organizer' : 'Student')
+    });
 
     const linkedQuestions = extractedQuestions.map((q) => ({
       ...q,
@@ -288,7 +309,9 @@ export const UploadPaperModal: React.FC<Props> = ({
       paperName: finalPaperName,
       paperYear,
       examType,
-      tags: Array.from(new Set([...(q.tags || []), 'PYQ', `${paperYear}`, examType, finalPaperName]))
+      isOrganizerQuestion: isOrganizer,
+      uploadedByUserId: profile.userId || 'local-user',
+      tags: Array.from(new Set([...(q.tags || []), 'PYQ', `${paperYear}`, examType, finalPaperName, isOrganizer ? 'Organizer-Verified' : 'Student-Upload']))
     }));
 
     onQuestionsExtracted(linkedQuestions, paperRecord);
@@ -435,6 +458,41 @@ export const UploadPaperModal: React.FC<Props> = ({
           {/* ========================================================================= */}
           {step === 'input' && (
             <div className="space-y-4">
+              {/* Role Context Pill */}
+              <div className="p-3 bg-[#0b0b0d] border border-white/10 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-white/60">Upload Role:</span>
+                  <span className={`px-2.5 py-0.5 rounded-full font-bold text-[10px] uppercase font-mono tracking-wider flex items-center gap-1 ${
+                    userRole === 'organizer'
+                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                      : 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'
+                  }`}>
+                    {userRole === 'organizer' ? (
+                      <>
+                        <ShieldCheck className="w-3 h-3 text-amber-400" />
+                        <span>Organizer Verified (Master Paper for All Students)</span>
+                      </>
+                    ) : (
+                      <>
+                        <GraduationCap className="w-3 h-3 text-indigo-400" />
+                        <span>Student Upload (My Personal MST Paper)</span>
+                      </>
+                    )}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const nextRole = userRole === 'organizer' ? 'student' : 'organizer';
+                    setLocalUserRole(nextRole);
+                    setUserRole(nextRole);
+                  }}
+                  className="text-xs text-indigo-400 hover:text-indigo-300 underline font-medium self-start sm:self-auto cursor-pointer"
+                >
+                  Switch to {userRole === 'organizer' ? 'Student Mode' : 'Organizer Mode'}
+                </button>
+              </div>
+
               {/* Paper Metadata Config */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>

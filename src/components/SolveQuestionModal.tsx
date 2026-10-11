@@ -23,10 +23,13 @@ import {
   DerivationLine
 } from '../utils/mathNotationFormatter';
 import { solvePyqApi } from '../utils/geminiClientService';
+import { getTeacherPreferenceForCourse } from '../utils/userTeacherSettingsService';
+import { Workflow, GraduationCap as TeacherCap } from 'lucide-react';
 
 interface Props {
   question: Question;
   courseName: string;
+  courseId?: string;
   referenceBook?: string;
   onClose: () => void;
 }
@@ -37,6 +40,7 @@ export const cleanMathNotation = formatLatexToStandardMath;
 export const SolveQuestionModal: React.FC<Props> = ({
   question,
   courseName,
+  courseId,
   referenceBook,
   onClose,
 }) => {
@@ -44,7 +48,9 @@ export const SolveQuestionModal: React.FC<Props> = ({
   const [solution, setSolution] = useState<ModelAnswer | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState<boolean>(false);
-  const [viewMode, setViewMode] = useState<'structured' | 'plain'>('structured');
+  const [viewMode, setViewMode] = useState<'flowchart' | 'structured' | 'plain'>('structured');
+
+  const teacherPref = courseId ? getTeacherPreferenceForCourse(courseId) : undefined;
 
   useEffect(() => {
     let isMounted = true;
@@ -58,10 +64,16 @@ export const SolveQuestionModal: React.FC<Props> = ({
           marks: question.marks,
           topicName: question.topicName,
           courseName,
-          referenceBook: referenceBook || 'Standard University Textbook'
+          referenceBook: referenceBook || 'Standard University Textbook',
+          teacherPreference: teacherPref
         });
 
         if (isMounted && data && data.solution) {
+          const hasFlowchart = Array.isArray(data.solution.flowchartSteps) && data.solution.flowchartSteps.length > 0;
+          if (hasFlowchart && (courseName.toLowerCase().includes('chem') || teacherPref?.preferredFormatting?.flowchart)) {
+            setViewMode('flowchart');
+          }
+
           setSolution({
             questionId: question.id,
             questionText: question.text,
@@ -72,6 +84,8 @@ export const SolveQuestionModal: React.FC<Props> = ({
               { step: 'Step 3: Final Answer & Dimensional Units', marksAwarded: 2, teacherExpectation: 'Boxed scalar result with correct engineering units' }
             ],
             fullAnswerMarkdown: data.solution.fullAnswerMarkdown || 'Model solution generation complete.',
+            flowchartSteps: data.solution.flowchartSteps || [],
+            tailoredTeacherNotes: data.solution.tailoredTeacherNotes || (teacherPref?.customInstructions ? `Tailored to Professor: ${teacherPref.customInstructions}` : undefined),
             diagramDescription: data.solution.diagramDescription,
             teacherProTip: data.solution.teacherProTip || 'Always box your final numerical result with units.',
             commonPitfallToAvoid: data.solution.commonPitfallToAvoid || 'Skipping intermediate substitution steps.'
@@ -166,6 +180,21 @@ export const SolveQuestionModal: React.FC<Props> = ({
             </div>
           ) : solution ? (
             <>
+              {/* Tailored Teacher Mindset Callout */}
+              {(solution.tailoredTeacherNotes || teacherPref) && (
+                <div className="p-3.5 bg-gradient-to-r from-amber-500/15 via-indigo-500/10 to-transparent border border-amber-500/30 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-amber-200">
+                  <div className="flex items-center gap-2.5">
+                    <TeacherCap className="w-4 h-4 text-amber-400 shrink-0" />
+                    <span>
+                      <strong>Evaluator Mindset:</strong> {teacherPref?.teacherName || 'University Examiner'} • {teacherPref?.preferredFormatting?.flowchart ? 'Flowcharts & Equations Required' : 'Strict Point-Wise Rubric Applied'}
+                    </span>
+                  </div>
+                  <span className="text-[10px] bg-amber-400/20 text-amber-300 px-2 py-0.5 rounded-full font-mono font-bold self-start sm:self-auto border border-amber-500/30">
+                    Personalized to Teacher
+                  </span>
+                </div>
+              )}
+
               {/* Step Marking Rubric Breakdown */}
               <div className="bg-[#0b0b0d] p-4 sm:p-5 rounded-2xl border border-white/10 space-y-3">
                 <div className="flex items-center justify-between">
@@ -196,7 +225,20 @@ export const SolveQuestionModal: React.FC<Props> = ({
 
               {/* Solution View Controls */}
               <div className="flex items-center justify-between pt-1">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  {solution.flowchartSteps && solution.flowchartSteps.length > 0 && (
+                    <button
+                      onClick={() => setViewMode('flowchart')}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer ${
+                        viewMode === 'flowchart'
+                          ? 'bg-indigo-600 text-white shadow-sm'
+                          : 'bg-white/5 text-white/50 hover:text-white'
+                      }`}
+                    >
+                      <Workflow className="w-3.5 h-3.5 text-amber-300" />
+                      <span>Visual Flowchart ({solution.flowchartSteps.length} Steps)</span>
+                    </button>
+                  )}
                   <button
                     onClick={() => setViewMode('structured')}
                     className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer ${
@@ -206,7 +248,7 @@ export const SolveQuestionModal: React.FC<Props> = ({
                     }`}
                   >
                     <Layers className="w-3.5 h-3.5" />
-                    <span>Structured Derivation Steps</span>
+                    <span>Structured Steps</span>
                   </button>
                   <button
                     onClick={() => setViewMode('plain')}
@@ -217,7 +259,7 @@ export const SolveQuestionModal: React.FC<Props> = ({
                     }`}
                   >
                     <FileText className="w-3.5 h-3.5" />
-                    <span>Simplified Text Format</span>
+                    <span>Simplified Text</span>
                   </button>
                 </div>
 
@@ -230,8 +272,79 @@ export const SolveQuestionModal: React.FC<Props> = ({
                 </button>
               </div>
 
-              {/* View 1: Structured Derivation Cards (Standard Mathematical Notation) */}
-              {viewMode === 'structured' ? (
+              {/* View 1: Interactive Visual Flowchart */}
+              {viewMode === 'flowchart' && solution.flowchartSteps && solution.flowchartSteps.length > 0 ? (
+                <div className="space-y-4">
+                  <div className="p-4 bg-indigo-950/30 border border-indigo-500/20 rounded-2xl flex items-center justify-between">
+                    <div>
+                      <h4 className="text-xs font-bold text-indigo-300 flex items-center gap-1.5">
+                        <Workflow className="w-4 h-4 text-indigo-400" />
+                        <span>Sequential Process Flowchart & Mechanism</span>
+                      </h4>
+                      <p className="text-[11px] text-white/50 mt-0.5">
+                        Structured step sequence formatted specifically to satisfy your university evaluator's marking criteria.
+                      </p>
+                    </div>
+                    <span className="text-[10px] font-mono px-2.5 py-1 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-bold shrink-0">
+                      {solution.flowchartSteps.length} Connected Steps
+                    </span>
+                  </div>
+
+                  <div className="space-y-3">
+                    {solution.flowchartSteps.map((node, nIdx) => (
+                      <div key={node.stepNumber} className="relative">
+                        <div
+                          className={`p-4 sm:p-5 rounded-2xl border transition ${
+                            node.highlight
+                              ? 'bg-emerald-950/30 border-emerald-500/40 shadow-lg shadow-emerald-950/20'
+                              : 'bg-[#0b0b0d] border-white/10 hover:border-white/20'
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-start gap-3.5">
+                              <div
+                                className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs shrink-0 font-mono shadow-sm ${
+                                  node.highlight
+                                    ? 'bg-emerald-500 text-black shadow-emerald-500/30'
+                                    : 'bg-indigo-600 text-white shadow-indigo-600/30'
+                                }`}
+                              >
+                                {node.stepNumber}
+                              </div>
+                              <div className="space-y-1">
+                                <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                                  <span>{node.title}</span>
+                                  {node.highlight && (
+                                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono">
+                                      Key Outcome
+                                    </span>
+                                  )}
+                                </h4>
+                                <p className="text-xs sm:text-sm text-white/80 leading-relaxed font-sans">
+                                  {node.detail}
+                                </p>
+                              </div>
+                            </div>
+                            {node.arrowTo && (
+                              <span className="text-[10px] font-mono font-bold text-indigo-400 bg-indigo-500/10 px-2.5 py-1 rounded-lg border border-indigo-500/20 shrink-0 hidden sm:inline">
+                                Next: {node.arrowTo}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {nIdx < (solution.flowchartSteps?.length || 0) - 1 && (
+                          <div className="flex justify-center my-1.5">
+                            <div className="w-0.5 h-4 bg-indigo-500/40 relative">
+                              <div className="absolute -bottom-1 -left-1 w-2.5 h-2.5 border-r-2 border-b-2 border-indigo-400 rotate-45" />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : viewMode === 'structured' ? (
                 <div className="space-y-4">
                   {derivationSteps.map((step) => (
                     <div

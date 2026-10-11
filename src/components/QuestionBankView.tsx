@@ -38,6 +38,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { loadStoredPapers, saveStoredPapers, isDemoPaper, isDemoQuestion } from '../utils/paperStorage';
+import { isPaperOrganizerUploaded } from '../utils/userTeacherSettingsService';
 
 interface Props {
   course: Course;
@@ -63,6 +64,7 @@ export const QuestionBankView: React.FC<Props> = ({
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [difficultyFilter, setDifficultyFilter] = useState<string>('all');
   const [paperFilter, setPaperFilter] = useState<string>('all');
+  const [paperRoleFilter, setPaperRoleFilter] = useState<'all' | 'organizer' | 'my-uploads'>('all');
   const [sortBy, setSortBy] = useState<'importance' | 'marks' | 'year'>('importance');
   const [onlyHighProbability, setOnlyHighProbability] = useState<boolean>(false);
   const [selectedQuestionForSolving, setSelectedQuestionForSolving] = useState<Question | null>(null);
@@ -369,6 +371,10 @@ export const QuestionBankView: React.FC<Props> = ({
       if (difficultyFilter !== 'all' && q.difficulty !== difficultyFilter) return false;
       if (paperFilter !== 'all' && q.examType !== paperFilter && String(q.paperYear) !== paperFilter) return false;
 
+      // Filter by organizer vs my-uploads
+      if (paperRoleFilter === 'organizer' && !q.isOrganizerQuestion) return false;
+      if (paperRoleFilter === 'my-uploads' && q.isOrganizerQuestion) return false;
+
       if (onlyHighProbability) {
         const info = getQuestionExamImportance(q, topicImportanceScores);
         if (info.importanceScore < 75) return false;
@@ -636,13 +642,24 @@ export const QuestionBankView: React.FC<Props> = ({
                 >
                   <div>
                     <div className="flex items-center justify-between gap-2 mb-2">
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1.5 flex-wrap">
                         <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-bold border border-indigo-500/30">
                           {paper.examType}
                         </span>
                         <span className="text-xs font-mono text-amber-400 font-bold px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20">
                           Year {paper.year}
                         </span>
+                        {isPaperOrganizerUploaded(paper) ? (
+                          <span className="text-[10px] font-mono text-amber-300 font-bold px-1.5 py-0.5 rounded bg-amber-500/20 border border-amber-500/30 flex items-center gap-0.5">
+                            <span>⭐</span>
+                            <span>Organizer Master</span>
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-mono text-indigo-300 font-semibold px-1.5 py-0.5 rounded bg-indigo-500/15 border border-indigo-500/25 flex items-center gap-0.5">
+                            <span>🎓</span>
+                            <span>Student Upload</span>
+                          </span>
+                        )}
                         <span className="text-[10px] font-mono text-white/40 uppercase">
                           {paper.sourceType || 'PDF'}
                         </span>
@@ -763,9 +780,43 @@ export const QuestionBankView: React.FC<Props> = ({
           </div>
         </div>
 
-        {/* Secondary Bar: Sorting, high probability toggle, and active counter */}
+        {/* Secondary Bar: Sorting, paper role filter, high probability toggle, and active counter */}
         <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-800 text-xs">
           <div className="flex items-center gap-3 flex-wrap">
+            {/* Paper Source Role Filter */}
+            <div className="flex items-center bg-slate-950 rounded-xl p-1 border border-slate-800">
+              <button
+                onClick={() => setPaperRoleFilter('all')}
+                className={`px-3 py-1 rounded-lg text-xs font-semibold transition ${
+                  paperRoleFilter === 'all'
+                    ? 'bg-indigo-600 text-white shadow-sm'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                All Papers
+              </button>
+              <button
+                onClick={() => setPaperRoleFilter('organizer')}
+                className={`px-3 py-1 rounded-lg text-xs font-semibold transition flex items-center gap-1 ${
+                  paperRoleFilter === 'organizer'
+                    ? 'bg-amber-500/25 text-amber-300 border border-amber-500/30'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <span>⭐ Organizer Official</span>
+              </button>
+              <button
+                onClick={() => setPaperRoleFilter('my-uploads')}
+                className={`px-3 py-1 rounded-lg text-xs font-semibold transition flex items-center gap-1 ${
+                  paperRoleFilter === 'my-uploads'
+                    ? 'bg-indigo-500/25 text-indigo-300 border border-indigo-500/30'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <span>🎓 My Uploads</span>
+              </button>
+            </div>
+
             <div className="flex items-center gap-1.5 text-slate-400">
               <ArrowUpDown className="w-3.5 h-3.5" />
               <span>Sort by:</span>
@@ -912,6 +963,19 @@ export const QuestionBankView: React.FC<Props> = ({
                       </strong>
                     </span>
 
+                    {/* Organizer Verified vs Student Uploaded Pill */}
+                    {q.isOrganizerQuestion ? (
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-bold flex items-center gap-1">
+                        <span>⭐</span>
+                        <span>Official Master Paper</span>
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/25 font-semibold flex items-center gap-1">
+                        <span>🎓</span>
+                        <span>Student Upload</span>
+                      </span>
+                    )}
+
                     {/* Live Exam Importance Badge */}
                     <div className="flex items-center gap-1.5 ml-1">
                       <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full ${importanceInfo.colorClass}`}>
@@ -1052,6 +1116,7 @@ export const QuestionBankView: React.FC<Props> = ({
         <SolveQuestionModal
           question={selectedQuestionForSolving}
           courseName={course.name}
+          courseId={course.id}
           referenceBook={course.referenceBooks[0]?.title}
           onClose={() => setSelectedQuestionForSolving(null)}
         />
