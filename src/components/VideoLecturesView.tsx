@@ -69,12 +69,45 @@ interface GeminiBreakdownData {
 }
 
 export const VideoLecturesView: React.FC<Props> = ({ course, onNavigateTab }) => {
-  const [selectedUnit, setSelectedUnit] = useState<number | 'all'>('all');
+  // LocalStorage-backed state to survive page refreshes
+  const [selectedUnit, setSelectedUnit] = useState<number | 'all'>(() => {
+    try {
+      const saved = localStorage.getItem(`examintel_unit_${course.id}`);
+      if (saved !== null) {
+        return saved === 'all' ? 'all' : parseInt(saved, 10);
+      }
+    } catch (e) {}
+    return 'all';
+  });
+
   const [selectedSubtopic, setSelectedSubtopic] = useState<string>('all');
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('all');
   const [queryMode, setQueryMode] = useState<'auto' | 'derivation' | 'lecture'>('auto');
   const [viewMode, setViewMode] = useState<'by-subunit' | 'all-grid'>('by-subunit');
-  const [extraVideos, setExtraVideos] = useState<VideoRecommendation[]>([]);
+  
+  const [extraVideos, setExtraVideos] = useState<VideoRecommendation[]>(() => {
+    try {
+      const saved = localStorage.getItem(`examintel_extra_videos_${course.id}`);
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (e) {}
+    return [];
+  });
+
+  // Persist selectedUnit and extraVideos whenever they change
+  useEffect(() => {
+    try {
+      localStorage.setItem(`examintel_unit_${course.id}`, String(selectedUnit));
+    } catch (e) {}
+  }, [selectedUnit, course.id]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(`examintel_extra_videos_${course.id}`, JSON.stringify(extraVideos));
+    } catch (e) {}
+  }, [extraVideos, course.id]);
+
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [searchingSubtopic, setSearchingSubtopic] = useState<string | null>(null);
   const [customSearchQuery, setCustomSearchQuery] = useState<string>('');

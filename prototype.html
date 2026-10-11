@@ -318,205 +318,174 @@
       </div>
     </div>
 
-    <!-- ================= TAB 3: IN-APP VIDEO LECTURES & KEYWORD MATERIAL SEARCH ================= -->
-    <div id="tabContent-video" class="space-y-6 hidden">
-      <div class="bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-4">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+    <!-- ================= TAB 3: IN-APP VIDEO LECTURES & SYLLABUS HUB ================= -->
+    <div id="tabContent-video" class="space-y-5 hidden">
+      <!-- Clean Minimal Header with Quick Actions -->
+      <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 space-y-4 shadow-sm">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-3">
           <div>
-            <h2 class="text-lg font-bold text-white flex items-center gap-2">
-              <span>📺 In-App YouTube Masterclass & Dynamic Material Fetch</span>
-              <span class="px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 text-[10px] font-mono">
-                Plays In-App
+            <h2 class="text-base font-bold text-white flex items-center gap-2">
+              <span class="text-rose-400">📺</span>
+              <span>Syllabus Masterclasses & Video Lectures</span>
+              <span class="px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-300 border border-rose-500/30 text-[10px] font-mono font-medium">
+                In-App HD Player
               </span>
             </h2>
-            <p class="text-xs text-slate-400">
-              Click any syllabus keyword below to immediately trigger the Gemini API, fetch educational materials, and suggest high-yield YouTube lectures.
+            <p class="text-xs text-slate-400 mt-0.5">
+              Organized unit-wise. Select any unit tab below or click a key topic to review concepts and watch university lectures.
             </p>
           </div>
           <div class="flex items-center gap-2">
-            <span id="keywordStatusPill" class="text-[11px] font-mono bg-indigo-500/20 text-indigo-300 px-3 py-1 rounded-xl border border-indigo-500/30">
-              Ready to Search
+            <button
+              onclick="togglePasteBar()"
+              id="btnTogglePaste"
+              class="px-3 py-1.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 text-xs font-semibold transition cursor-pointer flex items-center gap-1.5"
+            >
+              <span>🔗 Add Custom Link</span>
+            </button>
+            <span id="keywordStatusPill" class="text-[11px] font-mono bg-emerald-500/15 text-emerald-300 px-2.5 py-1 rounded-xl border border-emerald-500/30 whitespace-nowrap">
+              ✓ Ready
             </span>
           </div>
         </div>
 
-        <!-- Interactive Keyword Search & Dynamic Request Switcher -->
-        <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-            <span class="font-bold text-slate-200 font-mono flex items-center gap-2">
-              <span class="text-amber-400">⚡</span>
-              <span>DYNAMIC SYLLABUS INTELLIGENCE & YOUTUBE RESOLVER:</span>
+        <!-- Collapsible Paste YouTube Link Panel -->
+        <div id="pasteLinkAccordion" class="hidden p-3.5 rounded-2xl bg-slate-950 border border-rose-500/30 space-y-2.5 transition">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-white font-mono flex items-center gap-1.5">
+              <span>🔗 Add YouTube Lecture to Unit</span>
+              <span class="text-[9px] bg-rose-500/20 text-rose-300 border border-rose-500/30 px-1.5 py-0.5 rounded font-mono">Persisted Locally</span>
             </span>
-            <div class="flex items-center gap-2">
-              <span id="keywordStatusPill" class="text-[11px] font-mono bg-emerald-500/20 text-emerald-300 px-3 py-1 rounded-xl border border-emerald-500/30">
-                ✓ Live Dynamic Query Engine
-              </span>
-            </div>
+            <button onclick="togglePasteBar()" class="text-slate-400 hover:text-white text-xs font-mono">✕ Close</button>
           </div>
-
-          <!-- Unit Selector Tabs (Unit 1 to 5 + Exam Tips) -->
-          <div class="space-y-1.5 pt-1">
-            <div class="flex items-center justify-between">
-              <span class="text-[10px] text-slate-400 font-mono uppercase tracking-wider block">Select Syllabus Unit:</span>
-              <span class="text-[10px] text-indigo-400 font-mono" id="unitStatsBadge">Displaying: All Units (13 Topics Mapped)</span>
+          <div class="flex flex-col sm:flex-row items-center gap-2">
+            <div class="relative flex-1 w-full">
+              <input
+                type="text"
+                id="pasteYoutubeInput"
+                placeholder="Paste YouTube Link (e.g. https://www.youtube.com/watch?v=... or youtu.be/...)"
+                class="w-full bg-slate-900 border border-slate-700 focus:border-rose-500 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none transition font-sans"
+              />
             </div>
-            <div class="flex flex-wrap items-center gap-1.5">
-              <button id="unitBtn-all" onclick="selectUnitTab('all')" class="px-3 py-1.5 rounded-xl bg-indigo-600 text-white font-bold text-xs transition cursor-pointer flex items-center gap-1 shadow-sm">
-                <span>📚 All Units</span>
-              </button>
-              <button id="unitBtn-unit1" onclick="selectUnitTab('unit1')" class="px-3 py-1.5 rounded-xl bg-slate-900 text-slate-400 hover:text-white border border-slate-800 text-xs font-semibold transition cursor-pointer flex items-center gap-1">
-                <span>🧪 Unit 1: Water & Titrations</span>
-              </button>
-              <button id="unitBtn-unit2" onclick="selectUnitTab('unit2')" class="px-3 py-1.5 rounded-xl bg-slate-900 text-slate-400 hover:text-white border border-slate-800 text-xs font-semibold transition cursor-pointer flex items-center gap-1">
-                <span>🔥 Unit 2: Fuels & Combustion</span>
-              </button>
-              <button id="unitBtn-unit3" onclick="selectUnitTab('unit3')" class="px-3 py-1.5 rounded-xl bg-slate-900 text-slate-400 hover:text-white border border-slate-800 text-xs font-semibold transition cursor-pointer flex items-center gap-1">
-                <span>🧬 Unit 3: Polymers & Materials</span>
-              </button>
-              <button id="unitBtn-unit4" onclick="selectUnitTab('unit4')" class="px-3 py-1.5 rounded-xl bg-slate-900 text-slate-400 hover:text-white border border-slate-800 text-xs font-semibold transition cursor-pointer flex items-center gap-1">
-                <span>⚡ Unit 4: Electronics & SFEE</span>
-              </button>
-              <button id="unitBtn-unit5" onclick="selectUnitTab('unit5')" class="px-3 py-1.5 rounded-xl bg-slate-900 text-slate-400 hover:text-white border border-slate-800 text-xs font-semibold transition cursor-pointer flex items-center gap-1">
-                <span>📐 Unit 5: Calculus & Series</span>
-              </button>
-              <button id="unitBtn-strategy" onclick="selectUnitTab('strategy')" class="px-3 py-1.5 rounded-xl bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 border border-amber-500/40 text-xs font-bold transition cursor-pointer flex items-center gap-1">
-                <span>🎯 Exam Strategy & CGPA</span>
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+              <select id="pasteUnitSelect" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none cursor-pointer">
+                <option value="unit1">Unit 1: Water</option>
+                <option value="unit2">Unit 2: Fuels</option>
+                <option value="unit3">Unit 3: Polymers</option>
+                <option value="unit4">Unit 4: Electronics</option>
+                <option value="unit5">Unit 5: Calculus</option>
+                <option value="strategy">Exam Tips</option>
+              </select>
+              <button
+                onclick="handlePasteYouTubeToUnit()"
+                class="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs transition cursor-pointer flex items-center gap-1.5 shadow active:scale-95 shrink-0"
+              >
+                <span>➕ Add</span>
               </button>
             </div>
           </div>
+        </div>
 
-          <!-- Quick Paste YouTube Link directly to Selected Unit -->
-          <div class="p-3.5 rounded-2xl bg-slate-950/90 border border-slate-800 space-y-2">
-            <div class="flex items-center justify-between">
-              <span class="text-[11px] font-bold text-slate-300 font-mono flex items-center gap-1.5">
-                <span>🔗 Paste YouTube Link to Unit</span>
-                <span class="text-[9px] bg-rose-500/20 text-rose-300 border border-rose-500/30 px-1.5 py-0.5 rounded font-mono">Real-Time Ingestion</span>
-              </span>
-              <span class="text-[10px] text-slate-400">Paste any URL (e.g. watch?v=... or youtu.be/...)</span>
-            </div>
-            <div class="flex flex-col sm:flex-row items-center gap-2">
-              <div class="relative flex-1 w-full">
-                <input
-                  type="text"
-                  id="pasteYoutubeInput"
-                  placeholder="https://www.youtube.com/watch?v=... or youtu.be/..."
-                  class="w-full bg-slate-900 border border-slate-700 focus:border-rose-500 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none transition font-sans"
-                />
-              </div>
-              <div class="flex items-center gap-2 w-full sm:w-auto">
-                <select id="pasteUnitSelect" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none cursor-pointer">
-                  <option value="unit1">Unit 1</option>
-                  <option value="unit2">Unit 2</option>
-                  <option value="unit3">Unit 3</option>
-                  <option value="unit4">Unit 4</option>
-                  <option value="unit5">Unit 5</option>
-                  <option value="strategy">Exam Tips</option>
-                </select>
-                <button
-                  onclick="handlePasteYouTubeToUnit()"
-                  class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-rose-600 to-indigo-600 hover:from-rose-500 hover:to-indigo-500 text-white font-bold text-xs transition cursor-pointer flex items-center gap-1.5 shadow active:scale-95 shrink-0"
-                >
-                  <span>➕ Add to Unit</span>
-                </button>
-              </div>
-            </div>
+        <!-- Sleek Unit Selector Tabs -->
+        <div class="space-y-2">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <span class="text-[10px] text-slate-400 font-mono uppercase tracking-wider block">Select Syllabus Unit:</span>
+            <span class="text-[11px] text-indigo-400 font-mono font-medium" id="unitStatsBadge">All Units (13 Topics Mapped)</span>
           </div>
+          <div class="flex flex-wrap items-center gap-1.5 pb-1">
+            <button id="unitBtn-all" onclick="selectUnitTab('all')" class="px-3 py-1.5 rounded-xl bg-indigo-600 text-white font-bold text-xs transition cursor-pointer shadow-sm">
+              All Units
+            </button>
+            <button id="unitBtn-unit1" onclick="selectUnitTab('unit1')" class="px-3 py-1.5 rounded-xl bg-slate-950 text-slate-400 hover:text-white border border-slate-800 text-xs font-semibold transition cursor-pointer">
+              🧪 Unit 1: Water
+            </button>
+            <button id="unitBtn-unit2" onclick="selectUnitTab('unit2')" class="px-3 py-1.5 rounded-xl bg-slate-950 text-slate-400 hover:text-white border border-slate-800 text-xs font-semibold transition cursor-pointer">
+              🔥 Unit 2: Fuels
+            </button>
+            <button id="unitBtn-unit3" onclick="selectUnitTab('unit3')" class="px-3 py-1.5 rounded-xl bg-slate-950 text-slate-400 hover:text-white border border-slate-800 text-xs font-semibold transition cursor-pointer">
+              🧬 Unit 3: Polymers
+            </button>
+            <button id="unitBtn-unit4" onclick="selectUnitTab('unit4')" class="px-3 py-1.5 rounded-xl bg-slate-950 text-slate-400 hover:text-white border border-slate-800 text-xs font-semibold transition cursor-pointer">
+              ⚡ Unit 4: Electronics
+            </button>
+            <button id="unitBtn-unit5" onclick="selectUnitTab('unit5')" class="px-3 py-1.5 rounded-xl bg-slate-950 text-slate-400 hover:text-white border border-slate-800 text-xs font-semibold transition cursor-pointer">
+              📐 Unit 5: Calculus
+            </button>
+            <button id="unitBtn-strategy" onclick="selectUnitTab('strategy')" class="px-3 py-1.5 rounded-xl bg-amber-500/15 text-amber-300 hover:bg-amber-500/25 border border-amber-500/30 text-xs font-bold transition cursor-pointer">
+              🎯 Exam Strategy
+            </button>
+          </div>
+        </div>
 
-          <!-- Live Keyword Input -->
+        <!-- Integrated Search Bar & Fast Topic Chips -->
+        <div class="space-y-2.5 pt-2 border-t border-slate-800/80">
           <div class="flex items-center gap-2">
             <div class="relative flex-1">
               <input
                 type="text"
                 id="keywordSearchInput"
-                placeholder="🔍 Type or click ANY keyword (e.g. EDTA, Bomb Calorimeter, Zener Diode, SFEE, Taylor Series)..."
+                placeholder="🔍 Search topic or formula (e.g. EDTA, Bomb Calorimeter, Zener Diode, SFEE)..."
                 onkeydown="if(event.key==='Enter') searchCustomKeyword()"
-                class="w-full bg-slate-900 border border-slate-700 focus:border-indigo-500 rounded-xl px-4 py-2.5 text-xs text-white placeholder-slate-400 focus:outline-none transition font-sans"
+                class="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-500 focus:outline-none transition font-sans"
               />
             </div>
             <button
               onclick="searchCustomKeyword()"
-              class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-rose-600 hover:from-indigo-500 hover:to-rose-500 text-white font-bold text-xs transition cursor-pointer flex items-center gap-1.5 shadow active:scale-95 shrink-0"
+              class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition cursor-pointer shadow active:scale-95 shrink-0"
             >
-              <span>⚡ Fetch Material & Videos</span>
+              <span>Search</span>
             </button>
           </div>
 
-          <!-- Query Mode Switcher -->
-          <div class="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-800/80 text-xs">
-            <div class="flex items-center gap-2">
-              <span class="text-[10px] text-slate-400 font-mono">Query Mode:</span>
-              <button id="modeBtn-all" onclick="switchKeywordMode('all')" class="px-2.5 py-1 rounded-lg bg-indigo-600 text-white font-bold text-[11px] transition cursor-pointer">
-                ✨ Dual Intel + Videos
-              </button>
-              <button id="modeBtn-intel" onclick="switchKeywordMode('intel')" class="px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-800 text-[11px] transition cursor-pointer">
-                📖 Gemini Intel Only
-              </button>
-              <button id="modeBtn-video" onclick="switchKeywordMode('video')" class="px-2.5 py-1 rounded-lg bg-slate-900 text-slate-400 hover:text-white border border-slate-800 text-[11px] transition cursor-pointer">
-                ▶ YouTube Video Only
-              </button>
-            </div>
-            <div class="flex items-center gap-2" id="externalActionPills">
-              <!-- Dynamically populated external search links -->
-            </div>
-          </div>
-
-          <!-- Quick Syllabus Keyword Pills (Unit-Wise Dynamic Container) -->
-          <div class="space-y-1.5 pt-1">
-            <span class="text-[10px] text-slate-400 font-mono uppercase tracking-wider block">Unit-Filtered High-Yield Syllabus Topics:</span>
-            <div class="flex flex-wrap gap-2" id="keywordPillsContainer">
-              <!-- Dynamically populated unit-wise pills -->
-            </div>
+          <!-- Unit-Filtered Keyword Chips -->
+          <div class="flex flex-wrap items-center gap-1.5" id="keywordPillsContainer">
+            <!-- Dynamically populated unit-wise chips -->
           </div>
         </div>
+      </div>
 
-        <!-- Material Summary Card Generated by API -->
-        <div id="keywordMaterialBox" class="p-5 rounded-2xl bg-indigo-950/20 border border-indigo-500/30 space-y-3">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-indigo-500/20 pb-3">
-            <h4 class="text-sm font-bold text-indigo-200 font-mono flex items-center gap-2">
-              <span class="text-amber-400">📖</span>
-              <span id="keywordMaterialTitle">EDTA Complexometric Titration & pH 10 Buffer Mechanism</span>
+      <!-- Compact Concept & Formula Intel Drawer (Collapsible / Clean) -->
+      <div id="keywordMaterialBox" class="p-4 rounded-2xl bg-indigo-950/20 border border-indigo-500/20 space-y-3">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-indigo-500/15 pb-2.5">
+          <div class="flex items-center gap-2">
+            <span class="text-amber-400 text-sm">📖</span>
+            <h4 class="text-xs sm:text-sm font-bold text-indigo-200 font-mono" id="keywordMaterialTitle">
+              EDTA Complexometric Titration & pH 10 Buffer Mechanism
             </h4>
-            <div class="flex items-center gap-2" id="materialActionButtons">
-              <span class="text-[10px] font-mono bg-emerald-500/20 text-emerald-300 px-2.5 py-1 rounded-full border border-emerald-500/30">
-                ✓ Dynamic Gemini Intel & Verified Lecture
-              </span>
-            </div>
           </div>
-
-          <!-- Concept Notes & Formulas -->
-          <div class="space-y-2 text-xs">
-            <p class="text-slate-200 leading-relaxed font-sans" id="keywordMaterialSnippet">
-              Disodium EDTA forms stable, soluble 1:1 chelates with Ca²⁺ and Mg²⁺ at pH 9–10 (maintained by NH₄Cl-NH₄OH buffer). EBT indicator forms an unstable wine-red complex with metal ions; EDTA displaces the indicator at the equivalence point, turning the solution pure steel blue.
-            </p>
-            <div id="keywordMaterialDetails" class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-              <div class="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1">
-                <span class="text-[10px] font-mono font-bold text-amber-300 uppercase tracking-wider block">⚡ Governing Formula:</span>
-                <code class="text-amber-200 font-mono text-[11px] block" id="keywordMaterialFormula">Total Hardness = (V_EDTA × M_EDTA × 100 × 1000) / V_sample ppm CaCO3 eq.</code>
-              </div>
-              <div class="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1">
-                <span class="text-[10px] font-mono font-bold text-rose-300 uppercase tracking-wider block">⚠️ Common Exam Trap:</span>
-                <span class="text-slate-300 text-[11px] block" id="keywordMaterialTrap">Must maintain pH strictly between 9–10 with NH4Cl-NH4OH buffer, else Ca-EDTA complex dissociates.</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Live External Links Bar -->
-          <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-800/80 text-xs" id="keywordActionToolbar">
-            <div class="flex items-center gap-2">
-              <a id="btnLinkGoogle" href="https://www.google.com/search?q=EDTA+method+hardness+water+engineering+chemistry+notes+pdf" target="_blank" rel="noopener noreferrer" class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-sky-300 border border-slate-800 text-xs font-semibold flex items-center gap-1.5 transition">
-                <span>🌐 Search Notes on Google</span>
-                <span class="text-[10px]">↗</span>
-              </a>
-              <a id="btnLinkYoutube" href="https://www.youtube.com/results?search_query=EDTA+method+hardness+of+water+engineering+chemistry" target="_blank" rel="noopener noreferrer" class="px-3 py-1.5 rounded-xl bg-rose-950/40 hover:bg-rose-900/40 text-rose-300 border border-rose-800/40 text-xs font-semibold flex items-center gap-1.5 transition">
-                <span>▶ Search on YouTube</span>
-                <span class="text-[10px]">↗</span>
-              </a>
-            </div>
-            <span class="text-[10px] text-slate-400 font-mono" id="keywordLectureCount">2 University Lectures Mapped</span>
+          <div class="flex items-center gap-2">
+            <a id="btnLinkGoogle" href="https://www.google.com" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-sky-300 border border-slate-800 text-[11px] font-semibold transition flex items-center gap-1">
+              <span>Google Notes ↗</span>
+            </a>
+            <a id="btnLinkYoutube" href="https://www.youtube.com" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 rounded-lg bg-rose-950/40 hover:bg-rose-900/40 text-rose-300 border border-rose-800/40 text-[11px] font-semibold transition flex items-center gap-1">
+              <span>YouTube ↗</span>
+            </a>
           </div>
         </div>
 
-        <!-- Video Cards Grid -->
+        <div class="space-y-2 text-xs">
+          <p class="text-slate-300 leading-relaxed font-sans" id="keywordMaterialSnippet">
+            Disodium EDTA forms stable, soluble 1:1 chelates with Ca²⁺ and Mg²⁺ at pH 9–10 (maintained by NH₄Cl-NH₄OH buffer). EBT indicator forms an unstable wine-red complex with metal ions; EDTA displaces the indicator at the equivalence point, turning the solution pure steel blue.
+          </p>
+          <div id="keywordMaterialDetails" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+            <div class="p-2.5 rounded-xl bg-slate-950/90 border border-slate-800 space-y-1">
+              <span class="text-[10px] font-mono font-bold text-amber-300 uppercase tracking-wider block">⚡ Governing Formula:</span>
+              <code class="text-amber-200 font-mono text-[11px] block" id="keywordMaterialFormula">Total Hardness = (V_EDTA × M_EDTA × 100 × 1000) / V_sample ppm CaCO3 eq.</code>
+            </div>
+            <div class="p-2.5 rounded-xl bg-slate-950/90 border border-slate-800 space-y-1">
+              <span class="text-[10px] font-mono font-bold text-rose-300 uppercase tracking-wider block">⚠️ Examiner Trap:</span>
+              <span class="text-slate-300 text-[11px] block" id="keywordMaterialTrap">Must maintain pH strictly between 9–10 with NH4Cl-NH4OH buffer, else Ca-EDTA complex dissociates.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Clean Video Cards Grid -->
+      <div class="space-y-2">
+        <div class="flex items-center justify-between text-xs text-slate-400 px-1">
+          <span class="font-mono font-bold uppercase tracking-wider text-[11px]">Recommended Video Masterclasses:</span>
+          <span class="font-mono text-[11px]" id="keywordLectureCount">2 Lectures</span>
+        </div>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="videoCardsGrid">
           <!-- Populated via JS -->
         </div>
@@ -1430,33 +1399,87 @@
       }
     };
 
-    function selectUnitTab(unitKey) {
-      currentSelectedUnit = unitKey;
+    function togglePasteBar() {
+      const panel = document.getElementById('pasteLinkAccordion');
+      const btn = document.getElementById('btnTogglePaste');
+      if (!panel) return;
+      if (panel.classList.contains('hidden')) {
+        panel.classList.remove('hidden');
+        if (btn) btn.innerHTML = '<span>✕ Close Form</span>';
+        const inp = document.getElementById('pasteYoutubeInput');
+        if (inp) inp.focus();
+      } else {
+        panel.classList.add('hidden');
+        if (btn) btn.innerHTML = '<span>🔗 Add Custom Link</span>';
+      }
+    }
+
+    function savePastedVideosToStorage() {
+      try {
+        const customTopics = {};
+        Object.keys(topicKnowledgeBase).forEach(k => {
+          if (k.startsWith('Custom Unit Video')) {
+            customTopics[k] = topicKnowledgeBase[k];
+          }
+        });
+        localStorage.setItem('examintel_custom_topics', JSON.stringify(customTopics));
+      } catch (e) {
+        console.warn('Storage save failed:', e);
+      }
+    }
+
+    function loadPastedVideosFromStorage() {
+      try {
+        const stored = localStorage.getItem('examintel_custom_topics');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          Object.keys(parsed).forEach(k => {
+            topicKnowledgeBase[k] = parsed[k];
+          });
+        }
+      } catch (e) {
+        console.warn('Storage load failed:', e);
+      }
+    }
+
+    function selectUnitTab(unitKey, preserveTopic = false) {
+      currentSelectedUnit = unitKey || 'all';
+      try {
+        localStorage.setItem('examintel_active_unit', currentSelectedUnit);
+      } catch (e) {}
+
       ['all', 'unit1', 'unit2', 'unit3', 'unit4', 'unit5', 'strategy'].forEach(k => {
         const btn = document.getElementById(`unitBtn-${k}`);
         if (!btn) return;
-        if (k === unitKey) {
+        if (k === currentSelectedUnit) {
           btn.className = k === 'strategy' 
-            ? 'px-3 py-1.5 rounded-xl bg-amber-500 text-black font-bold text-xs transition cursor-pointer flex items-center gap-1 shadow-sm'
-            : 'px-3 py-1.5 rounded-xl bg-indigo-600 text-white font-bold text-xs transition cursor-pointer flex items-center gap-1 shadow-sm';
+            ? 'px-3 py-1.5 rounded-xl bg-amber-500 text-black font-bold text-xs transition cursor-pointer shadow-sm'
+            : 'px-3 py-1.5 rounded-xl bg-indigo-600 text-white font-bold text-xs transition cursor-pointer shadow-sm';
         } else {
           btn.className = k === 'strategy'
-            ? 'px-3 py-1.5 rounded-xl bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 border border-amber-500/30 text-xs font-semibold transition cursor-pointer flex items-center gap-1'
-            : 'px-3 py-1.5 rounded-xl bg-slate-900 text-slate-400 hover:text-white border border-slate-800 text-xs font-semibold transition cursor-pointer flex items-center gap-1';
+            ? 'px-3 py-1.5 rounded-xl bg-amber-500/15 text-amber-300 hover:bg-amber-500/25 border border-amber-500/30 text-xs font-bold transition cursor-pointer'
+            : 'px-3 py-1.5 rounded-xl bg-slate-950 text-slate-400 hover:text-white border border-slate-800 text-xs font-semibold transition cursor-pointer';
         }
       });
 
       const statsBadge = document.getElementById('unitStatsBadge');
-      if (statsBadge && unitDefinitions[unitKey]) {
-        statsBadge.innerText = `Displaying: ${unitDefinitions[unitKey].label}`;
+      if (statsBadge && unitDefinitions[currentSelectedUnit]) {
+        statsBadge.innerText = unitDefinitions[currentSelectedUnit].label;
+      }
+
+      // Sync select dropdown in accordion
+      const pasteUnitSelect = document.getElementById('pasteUnitSelect');
+      if (pasteUnitSelect && currentSelectedUnit !== 'all') {
+        pasteUnitSelect.value = currentSelectedUnit;
       }
 
       renderUnitKeywordPills();
 
-      // Trigger first topic in unit
-      const matchingTopics = Object.keys(topicKnowledgeBase).filter(k => unitKey === 'all' || topicKnowledgeBase[k].unit === unitKey);
-      if (matchingTopics.length > 0) {
-        handleKeywordClick(matchingTopics[0], topicKnowledgeBase[matchingTopics[0]].subject);
+      if (!preserveTopic) {
+        const matchingTopics = Object.keys(topicKnowledgeBase).filter(k => currentSelectedUnit === 'all' || topicKnowledgeBase[k].unit === currentSelectedUnit);
+        if (matchingTopics.length > 0) {
+          handleKeywordClick(matchingTopics[0], topicKnowledgeBase[matchingTopics[0]].subject);
+        }
       }
     }
 
@@ -1474,22 +1497,26 @@
         const item = topicKnowledgeBase[tName];
         const btn = document.createElement('button');
         const isStrategy = item.subject === 'strategy';
+        const isCurrentActive = document.getElementById('keywordSearchInput')?.value === tName;
+
         btn.onclick = () => handleKeywordClick(tName, item.subject);
-        btn.className = isStrategy
-          ? 'px-3 py-1.5 rounded-xl text-xs font-semibold bg-amber-500/25 text-amber-200 border border-amber-500/40 hover:bg-amber-500/40 transition cursor-pointer flex items-center gap-1.5 shadow-sm'
-          : 'px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 text-slate-300 border border-slate-800 hover:border-indigo-500/50 hover:text-white transition cursor-pointer flex items-center gap-1.5';
+        btn.className = isCurrentActive
+          ? 'px-3 py-1 rounded-xl text-xs font-bold bg-indigo-600 text-white border border-indigo-400 transition cursor-pointer flex items-center gap-1.5 shadow-sm'
+          : isStrategy
+          ? 'px-3 py-1 rounded-xl text-xs font-semibold bg-amber-500/20 text-amber-200 border border-amber-500/35 hover:bg-amber-500/30 transition cursor-pointer flex items-center gap-1.5'
+          : 'px-3 py-1 rounded-xl text-xs font-semibold bg-slate-950 text-slate-300 border border-slate-800 hover:border-indigo-500/50 hover:text-white transition cursor-pointer flex items-center gap-1.5';
         
-        const badgeColor = item.subject === 'chem' ? 'bg-indigo-500/30 text-indigo-300' 
-          : item.subject === 'elec' ? 'bg-sky-500/30 text-sky-300'
-          : item.subject === 'math' ? 'bg-purple-500/30 text-purple-300'
-          : item.subject === 'mech' ? 'bg-amber-500/30 text-amber-300'
+        const badgeColor = item.subject === 'chem' ? 'bg-indigo-500/25 text-indigo-300' 
+          : item.subject === 'elec' ? 'bg-sky-500/25 text-sky-300'
+          : item.subject === 'math' ? 'bg-purple-500/25 text-purple-300'
+          : item.subject === 'mech' ? 'bg-amber-500/25 text-amber-300'
           : 'bg-amber-500/30 text-amber-200 font-bold';
 
         const unitTag = item.unit ? item.unit.toUpperCase().replace('UNIT', 'U') : 'U';
 
         btn.innerHTML = `
           <span>${isStrategy ? '🎯 ' : ''}${tName}</span>
-          <span class="text-[10px] ${badgeColor} px-1.5 rounded">${unitTag}</span>
+          <span class="text-[9px] font-mono ${badgeColor} px-1.5 py-0.2 rounded">${unitTag}</span>
         `;
         container.appendChild(btn);
       });
@@ -1530,7 +1557,7 @@
       const input = document.getElementById('pasteYoutubeInput');
       const unitSelect = document.getElementById('pasteUnitSelect');
       const rawUrl = (input ? input.value : '').trim();
-      const targetUnit = unitSelect ? unitSelect.value : currentSelectedUnit;
+      const targetUnit = unitSelect ? unitSelect.value : (currentSelectedUnit === 'all' ? 'unit1' : currentSelectedUnit);
 
       if (!rawUrl) {
         alert('Please paste a YouTube URL (e.g. https://www.youtube.com/watch?v=... or youtu.be/...)');
@@ -1581,10 +1608,13 @@
         duration: 'Live Stream'
       });
 
+      savePastedVideosToStorage();
+
       input.value = '';
+      togglePasteBar();
       selectUnitTab(targetUnit);
       handleKeywordClick(newTopicName, 'chem');
-      alert(`✅ YouTube video [${videoId}] successfully mapped to ${unitName}!`);
+      alert(`✅ YouTube video [${videoId}] successfully saved and mapped to ${unitName}!`);
     }
 
     function handleKeywordClick(keyword, subject) {
@@ -1725,21 +1755,40 @@
     }
 
     function switchTab(tab) {
+      try {
+        localStorage.setItem('examintel_active_tab', tab);
+      } catch (e) {}
+
       ['pyq', 'teacher', 'video', 'profile'].forEach(t => {
-        document.getElementById(`tabContent-${t}`).classList.add('hidden');
-        document.getElementById(`tabBtn-${t}`).className = 'px-4 py-2 rounded-xl text-xs font-bold bg-slate-900 text-slate-400 hover:text-white transition flex items-center gap-1.5';
+        const content = document.getElementById(`tabContent-${t}`);
+        const btn = document.getElementById(`tabBtn-${t}`);
+        if (content) content.classList.add('hidden');
+        if (btn) btn.className = 'px-4 py-2 rounded-xl text-xs font-bold bg-slate-900 text-slate-400 hover:text-white transition flex items-center gap-1.5';
       });
-      document.getElementById(`tabContent-${tab}`).classList.remove('hidden');
-      document.getElementById(`tabBtn-${tab}`).className = 'px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white transition flex items-center gap-1.5 shadow';
+      const activeContent = document.getElementById(`tabContent-${tab}`);
+      const activeBtn = document.getElementById(`tabBtn-${tab}`);
+      if (activeContent) activeContent.classList.remove('hidden');
+      if (activeBtn) activeBtn.className = 'px-4 py-2 rounded-xl text-xs font-bold bg-indigo-600 text-white transition flex items-center gap-1.5 shadow';
+
+      // If switching to video tab, ensure unit chips are rendered cleanly
+      if (tab === 'video') {
+        renderUnitKeywordPills();
+      }
     }
 
     function switchSubject(s) {
       currentSubject = s;
+      try {
+        localStorage.setItem('examintel_active_subject', s);
+      } catch (e) {}
+
       ['chem', 'elec', 'math', 'cpp'].forEach(sub => {
         const btn = document.getElementById(`subjBtn-${sub}`);
-        btn.className = sub === s
-          ? 'px-3.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow transition flex items-center gap-1.5 whitespace-nowrap'
-          : 'px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-950 text-slate-400 hover:text-white border border-slate-800 transition flex items-center gap-1.5 whitespace-nowrap';
+        if (btn) {
+          btn.className = sub === s
+            ? 'px-3.5 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow transition flex items-center gap-1.5 whitespace-nowrap'
+            : 'px-3.5 py-1.5 rounded-xl text-xs font-bold bg-slate-950 text-slate-400 hover:text-white border border-slate-800 transition flex items-center gap-1.5 whitespace-nowrap';
+        }
       });
       renderQuestions();
     }
@@ -2203,10 +2252,34 @@
       }
     }
 
-    // Init
+    // Init & State Hydration across reloads
+    loadPastedVideosFromStorage();
     renderQuestions();
     selectQuestionForBento('q1');
-    selectUnitTab('all');
+
+    // Restore saved unit or default to 'all'
+    let savedUnit = 'all';
+    try {
+      savedUnit = localStorage.getItem('examintel_active_unit') || 'all';
+    } catch (e) {}
+    selectUnitTab(savedUnit);
+
+    // Restore saved subject if any
+    try {
+      const savedSubj = localStorage.getItem('examintel_active_subject');
+      if (savedSubj && ['chem', 'elec', 'math', 'cpp'].includes(savedSubj)) {
+        switchSubject(savedSubj);
+      }
+    } catch (e) {}
+
+    // Restore saved tab if any
+    try {
+      const savedTab = localStorage.getItem('examintel_active_tab');
+      if (savedTab && ['pyq', 'teacher', 'video', 'profile'].includes(savedTab)) {
+        switchTab(savedTab);
+      }
+    } catch (e) {}
+
     renderVideos();
   </script>
 </body>
